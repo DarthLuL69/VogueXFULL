@@ -1,0 +1,23 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold mb-8">Designers</h1>
+
+  <div *ngIf="designers.length === 0" class="text-center text-gray-500">
+    Cargando diseñadores...
+  </div>
+
+  <div *ngIf="designers.length > 0">
+    <div *ngFor="let groupKey of Object.keys(groupedDesigners).sort()" class="mb-6">
+      <h2 class="text-xl font-bold mb-3">{{ groupKey }}</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div *ngFor="let designer of groupedDesigners[groupKey]" class="flex items-center justify-between bg-gray-100 p-3 rounded-lg">
+          <span class="text-sm">{{ designer }}</span>
+          <button (click)="toggleFavoriteDesigner(designer)" [class.text-red-500]="isFavoriteDesigner(designer)" class="text-gray-400 hover:text-red-500">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

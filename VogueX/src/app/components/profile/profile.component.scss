@@ -1,0 +1,49 @@
+.profile-container {
+  .profile-picture-container {
+    position: relative;
+    display: inline-block;
+
+    .profile-picture {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border: 3px solid #eee;
+    }
+
+    .edit-photo-button {
+      position: absolute;
+      bottom: 0;
+      right: 10px;
+      transform: translateY(50%);
+      padding: 0.25rem 0.5rem;
+      font-size: 0.8rem;
+      border-radius: 0.5rem;
+    }
+  }
+
+  .stats div {
+    font-size: 1.1rem;
+    font-weight: 500;
+
+    i {
+      margin-right: 5px;
+      color: #007bff; // Bootstrap primary color
+    }
+  }
+
+  .nav-tabs .nav-link {
+    color: #555;
+
+    &.active {
+      color: #000;
+      border-color: #dee2e6 #dee2e6 #fff;
+    }
+  }
+
+  .card {
+    .card-img-top {
+      height: 200px;
+      object-fit: cover;
+    }
+  }
+}

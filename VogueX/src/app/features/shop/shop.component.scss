@@ -1,0 +1,228 @@
+.shop-container {
+  max-width: 1200px; // Ancho máximo del contenedor principal
+  margin: 0 auto; // Centrar el contenedor
+  padding: 20px; // Espaciado interior
+
+  .page-title {
+    font-size: 2rem; // Tamaño del título de la página
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center; // Centrar título en móvil
+  }
+
+  .content-container {
+    display: flex;
+    flex-direction: column; // Apilado por defecto en móvil
+    gap: 30px; // Espacio entre la barra lateral y la lista de productos
+
+    @media (min-width: 768px) {
+      flex-direction: row; // En pantallas grandes, en fila
+    }
+
+    .filter-sidebar {
+      width: 100%; // Ocupa todo el ancho en móvil
+      @media (min-width: 768px) {
+        width: 250px; // Ancho fijo para la barra lateral en desktop
+        flex-shrink: 0; // Evita que se encoja
+      }
+
+      .filter-section {
+        border-bottom: 1px solid #eee; // Separador entre secciones
+        padding-bottom: 15px; // Espacio debajo del contenido de la sección
+        margin-bottom: 15px; // Espacio debajo de la sección completa
+
+        &:last-child {
+          border-bottom: none; // No mostrar borde en la última sección
+          margin-bottom: 0;
+        }
+
+        .filter-title {
+          font-size: 1.1rem; // Tamaño del título del filtro
+          font-weight: bold;
+          margin-bottom: 10px;
+          cursor: pointer; // Indica que es clickeable (para expandir/colapsar en el futuro)
+          display: flex; // Usar flexbox para alinear título y flecha
+          justify-content: space-between; // Espacio entre título y flecha
+          align-items: center; // Centrar verticalmente
+
+          .arrow-icon {
+            width: 14px; // Tamaño de la flecha
+            height: 14px;
+            transition: transform 0.3s ease; // Transición suave para la rotación
+          }
+
+          .arrow-icon.expanded {
+            transform: rotate(180deg); // Rotar 180 grados cuando expandido
+          }
+        }
+
+        .filter-options {
+          font-size: 0.9rem; // Tamaño del texto de las opciones
+
+          .checkbox-option {
+            margin-bottom: 8px; // Espacio entre opciones de checkbox
+
+            label {
+              display: flex; // Permite alinear checkbox y texto
+              align-items: center;
+              cursor: pointer;
+
+              input[type="checkbox"] {
+                margin-right: 8px; // Espacio entre checkbox y label
+                // Aquí podrías añadir estilos personalizados para el checkbox si quieres
+              }
+            }
+          }
+
+          .category-group {
+            margin-top: 10px;
+            margin-bottom: 10px;
+
+            .category-group-title {
+              font-weight: bold;
+              margin-bottom: 8px;
+            }
+          }
+
+          .filter-search {
+            position: relative;
+            margin-bottom: 10px;
+
+            .search-input {
+              width: 100%;
+              padding: 8px 30px 8px 10px; // Espacio a la derecha para el icono
+              border: 1px solid #ccc;
+              border-radius: 4px;
+              font-size: 0.9rem;
+
+              &:focus {
+                outline: none;
+                border-color: #000; // Resaltar borde al enfocar
+              }
+            }
+
+            .search-icon {
+              position: absolute;
+              top: 50%;
+              right: 10px;
+              transform: translateY(-50%);
+              width: 16px;
+              height: 16px;
+              color: #555;
+            }
+          }
+
+          .designer-list {
+              list-style: none; // Eliminar viñetas de la lista
+              padding: 0;
+              margin: 0;
+              max-height: 200px; // Altura máxima para la lista de diseñadores (con scroll)
+              overflow-y: auto; // Añadir scroll si la lista es larga
+
+              li {
+                  margin-bottom: 8px; // Espacio entre diseñadores
+              }
+          }
+
+
+          .price-inputs {
+            display: flex;
+            gap: 10px; // Espacio entre los campos min y max
+
+            .price-input {
+              width: 50%; // Cada campo ocupa la mitad del espacio disponible
+              padding: 8px 10px;
+              border: 1px solid #ccc;
+              border-radius: 4px;
+              font-size: 0.9rem;
+              text-align: center; // Centrar texto en los inputs de precio
+
+               &:focus {
+                outline: none;
+                border-color: #000; // Resaltar borde al enfocar
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .product-list {
+      flex-grow: 1; // Ocupa el resto del espacio disponible
+
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); // Columnas responsive
+        gap: 20px; // Espacio entre productos
+
+        .product-item {
+          border: 1px solid #eee; // Borde ligero alrededor de cada producto
+          border-radius: 4px;
+          overflow: hidden; // Asegura que la imagen redondeada se vea bien
+          background-color: #fff;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); // Sombra sutil
+          cursor: pointer;
+
+          .product-image {
+            width: 100%;
+            height: 200px; // Altura fija para las imágenes (ajusta si es necesario)
+            object-fit: cover; // Asegura que la imagen cubra el área sin distorsionarse
+          }
+
+          .product-info {
+            padding: 10px;
+
+            .product-time {
+              font-size: 0.75rem; // Tamaño pequeño para el tiempo
+              color: #666;
+              margin-bottom: 4px;
+            }
+
+            .product-name {
+              font-size: 0.9rem;
+              font-weight: 600;
+              margin-bottom: 8px;
+            }
+
+            .product-details {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+
+              .product-price {
+                font-size: 1rem;
+                font-weight: bold;
+
+                .original-price {
+                  font-size: 0.8rem;
+                  color: #888;
+                  text-decoration: line-through;
+                  margin-left: 5px;
+                }
+              }
+
+              .favorite-icon {
+                width: 16px;
+                height: 16px;
+                color: #ccc; // Color por defecto
+                &:hover {
+                    color: #ff0000; // Color al pasar el ratón
+                }
+                &.text-red-500 {
+                    color: #ff0000;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      .no-products {
+        text-align: center;
+        color: #666;
+        font-size: 1.1rem;
+        margin-top: 40px;
+      }
+    }
+  }
+} 

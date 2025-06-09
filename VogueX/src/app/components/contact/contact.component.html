@@ -1,0 +1,14 @@
+<div class="contact-container">
+  <h2>Contact Us</h2>
+  <form (ngSubmit)="submitForm()">
+    <input type="text" [(ngModel)]="name" name="name" placeholder="Your Name" required />
+    <input type="email" [(ngModel)]="email" name="email" placeholder="Your Email" required />
+    <textarea [(ngModel)]="message" name="message" placeholder="Your Message" required></textarea>
+
+    <button type="submit" [disabled]="!name || !email || !message">Send Message</button>
+
+    <div class="success-message" *ngIf="submitted">
+      ✅ Message sent successfully!
+    </div>
+  </form>
+</div>

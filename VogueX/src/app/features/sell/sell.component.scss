@@ -1,0 +1,135 @@
+.sell-container {
+  padding: 20px;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40px;
+
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    background-color: black; /* Placeholder */
+    border-radius: 50%;
+    margin-right: 20px;
+  }
+
+  .profile-info {
+    margin-right: 40px;
+
+    .profile-username {
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+
+    .profile-join-date,
+    .profile-location {
+      font-size: 0.9em;
+      color: #555;
+    }
+  }
+
+  .profile-stats {
+    display: flex;
+    margin-right: auto; /* Empuja el botón a la derecha */
+
+    .stat-item {
+      text-align: center;
+      margin-right: 20px;
+
+      .stat-number {
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+
+      .stat-label {
+        font-size: 0.8em;
+        color: #555;
+      }
+    }
+  }
+
+  .new-listing-button {
+    background-color: black;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+  }
+}
+
+.for-sale-section {
+  h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
+
+  .product-list {
+    display: flex; /* Para mostrar los productos en fila */
+    gap: 20px; /* Espacio entre productos */
+
+    .product-item {
+      border: 1px solid #ddd; /* Borde similar al de la imagen */
+      padding: 10px;
+
+      .product-image {
+        width: 150px; /* Ajusta el tamaño según sea necesario */
+        height: 150px; /* Ajusta el tamaño según sea necesario */
+        background-color: #eee; /* Placeholder */
+        margin-bottom: 10px;
+      }
+
+      .product-details {
+        margin-bottom: 10px;
+
+        .product-date {
+          font-size: 0.8em;
+          color: #888;
+        }
+
+        .product-brand {
+          font-weight: bold;
+        }
+
+        .product-name {
+          font-size: 0.9em;
+        }
+
+        .product-price {
+          font-weight: bold;
+          color: green; /* O el color que corresponda */
+        }
+      }
+
+      .product-actions {
+        display: flex;
+        align-items: center;
+
+        .product-likes {
+          margin-right: 10px;
+          font-size: 0.9em;
+          color: #555;
+        }
+
+        button {
+          padding: 5px 10px;
+          margin-right: 5px;
+          cursor: pointer;
+        }
+
+        .price-drop-button {
+          border: 1px solid #555;
+          background-color: white;
+          color: #555;
+        }
+
+        .send-offer-button {
+          border: 1px solid #555;
+          background-color: white;
+          color: #555;
+        }
+      }
+    }
+  }
+} 

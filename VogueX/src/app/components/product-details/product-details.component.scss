@@ -1,0 +1,204 @@
+.product-details-container {
+  max-width: 1200px; // Ancho máximo del contenedor principal
+  margin: 20px auto; // Centrar el contenedor
+  padding: 0 20px; // Espaciado lateral
+  display: flex; // Usar flexbox para las dos columnas principales
+  flex-direction: column; // Apilado por defecto en móvil
+  gap: 30px; // Espacio entre secciones en móvil
+
+  @media (min-width: 768px) {
+    flex-direction: row; // En pantallas grandes, en fila
+    gap: 40px; // Espacio entre las columnas en desktop
+  }
+
+  .image-gallery {
+    width: 100%; // Ocupa todo el ancho en móvil
+    display: flex; // Usar flexbox para la imagen principal y miniaturas
+    flex-direction: column; // Apilado por defecto (imagen principal arriba, miniaturas abajo)
+    gap: 20px; // Espacio entre imagen principal y miniaturas
+
+    @media (min-width: 768px) {
+      width: 60%; // Ocupa el 60% del ancho en desktop (ajusta si es necesario)
+      flex-direction: row-reverse; // Miniaturas a la izquierda, imagen principal a la derecha (como en la captura)
+      gap: 10px; // Espacio entre miniaturas y imagen principal en desktop
+    }
+
+    .main-image-placeholder {
+      width: 100%; // Ocupa todo el ancho disponible
+      height: 500px; // Altura temporal para la imagen principal (ajusta si es necesario)
+      background-color: #f0f0f0; // Color de fondo
+      border: 1px solid #ccc; // Borde
+      flex-shrink: 0; // Evita que se encoja
+
+      @media (min-width: 768px) {
+        width: 80%; // Ocupa el 80% del ancho disponible en la galería (la mayor parte)
+      }
+    }
+
+    .thumbnail-images {
+      display: grid; // Usar grid para las miniaturas
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); // Miniaturas responsive
+      gap: 10px; // Espacio entre miniaturas
+      flex-grow: 1; // Permite que el contenedor de miniaturas crezca
+
+       @media (min-width: 768px) {
+         grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); // Mantener grid para miniaturas en desktop
+         flex-direction: column; // Apilar miniaturas verticalmente
+         width: 100px; // Ancho fijo para la columna de miniaturas
+         flex-shrink: 0; // Evita que se encoja
+       }
+    }
+
+    .thumbnail-placeholder {
+      width: 100%; // Ocupa el ancho de la celda grid
+      height: 60px; // Altura temporal para las miniaturas
+      background-color: #f0f0f0; // Color de fondo
+      border: 1px solid #ccc; // Borde
+      cursor: pointer; // Indica que son clickeables
+    }
+  }
+
+  .product-info-section {
+    width: 100%; // Ocupa todo el ancho en móvil
+    @media (min-width: 768px) {
+      width: 40%; // Ocupa el 40% del ancho en desktop (el resto)
+    }
+
+    .product-title {
+      margin-bottom: 15px; // Espacio debajo del título y subtítulo del producto
+
+      h2 {
+        font-size: 1.8rem; // Tamaño del título del producto
+        font-weight: bold;
+        margin-bottom: 5px; // Espacio debajo del título principal del producto
+      }
+
+      p {
+        font-size: 1.1rem; // Tamaño del subtítulo del producto
+        color: #555;
+      }
+    }
+
+    .favorite {
+      display: flex; // Usar flexbox para alinear icono y número
+      align-items: center;
+      margin-bottom: 20px; // Espacio debajo del favorito
+
+      .favorite-icon {
+        width: 24px; // Tamaño del icono de favorito
+        height: 24px;
+        color: #ccc; // Color por defecto
+        margin-right: 5px; // Espacio entre icono y número
+        cursor: pointer;
+        &:hover {
+           color: #ff0000; // Color al pasar el ratón
+        }
+      }
+
+      span {
+        font-size: 1.1rem;
+        color: #555;
+      }
+    }
+
+    .product-meta {
+      margin-bottom: 20px; // Espacio debajo de size y color
+      p {
+        margin-bottom: 5px; // Espacio entre size y color
+        font-size: 1rem;
+        color: #333;
+      }
+    }
+
+    .product-price {
+      margin-bottom: 20px; // Espacio debajo del precio
+
+      span {
+        font-size: 2rem; // Tamaño del precio principal
+        font-weight: bold;
+        color: #000;
+        display: block; // Asegura que el precio esté en su propia línea
+        margin-bottom: 5px;
+      }
+
+      p {
+        font-size: 0.9rem; // Tamaño del texto de envío
+        color: #555;
+      }
+    }
+
+    .action-buttons {
+      display: flex; // Usar flexbox para los botones
+      flex-direction: column; // Apilado por defecto en móvil
+      gap: 10px; // Espacio entre botones
+      margin-bottom: 20px; // Espacio debajo de los botones
+
+      button {
+        padding: 12px 20px; // Relleno de los botones
+        font-size: 1rem;
+        font-weight: bold;
+        border: 1px solid #000; // Borde por defecto
+        border-radius: 4px; // Bordes redondeados
+        cursor: pointer;
+        text-align: center; // Centrar texto del botón
+
+        &.buy-button {
+          background-color: #000; // Fondo negro para comprar
+          color: #fff; // Texto blanco
+          &:hover {
+            background-color: #333;
+          }
+        }
+
+        &.sell-button, &.message-button {
+          background-color: #fff; // Fondo blanco para vender y mensaje
+          color: #000; // Texto negro
+          &:hover {
+            background-color: #f0f0f0;
+          }
+        }
+      }
+    }
+
+    .seller-info {
+      display: flex; // Usar flexbox para alinear avatar, nombre y transacciones
+      align-items: center;
+      gap: 10px; // Espacio entre elementos
+      margin-bottom: 20px; // Espacio debajo de la información del vendedor
+
+      .seller-avatar-placeholder {
+        width: 40px; // Tamaño del avatar
+        height: 40px;
+        background-color: #f0f0f0; // Color de fondo
+        border-radius: 50%; // Redondo
+        border: 1px solid #ccc;
+        flex-shrink: 0; // Evita que se encoja
+      }
+
+      span {
+        font-weight: bold; // Nombre del vendedor en negrita
+        font-size: 1rem;
+      }
+
+      p {
+        font-size: 0.9rem;
+        color: #555;
+        margin-left: auto; // Empuja las transacciones a la derecha
+      }
+    }
+
+    .seller-description {
+      h3 {
+        font-size: 1.1rem; // Tamaño del título de la descripción del vendedor
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: #333;
+      }
+    }
+  }
+} 

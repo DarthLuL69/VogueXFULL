@@ -1,0 +1,48 @@
+.privacy-container {
+  max-width: 800px; /* Ancho máximo similar al de la captura */
+  margin: 20px auto; /* Centrar el contenedor con margen superior e inferior */
+  padding: 0 20px; /* Espaciado lateral */
+
+  h1 {
+    font-size: 2.5rem; /* Tamaño del título principal */
+    font-weight: bold;
+    margin-bottom: 30px; /* Espacio debajo del título */
+    text-align: center; /* Centrar el título */
+  }
+
+  .privacy-content {
+    font-size: 1rem; /* Tamaño de fuente base para el contenido */
+    line-height: 1.6; /* Espaciado entre líneas cómodo */
+    color: #333; /* Color de texto principal */
+
+    section {
+      margin-bottom: 20px; /* Espacio entre secciones */
+
+      h2 {
+        font-size: 1.5rem; /* Tamaño de los subtítulos */
+        font-weight: bold;
+        margin-bottom: 10px; /* Espacio debajo de los subtítulos */
+        color: #000; /* Color de los subtítulos */
+      }
+
+      p {
+        margin-bottom: 10px; /* Espacio debajo de los párrafos */
+      }
+
+      ul {
+        list-style: disc; /* Estilo de viñeta por defecto */
+        padding-left: 20px; /* Sangría para la lista */
+        margin-bottom: 10px; /* Espacio debajo de la lista */
+
+        li {
+          margin-bottom: 5px; /* Espacio entre elementos de la lista */
+        }
+      }
+
+      /* Ajustes para el espacio entre elementos cuando no son el último */
+      p:last-child, ul:last-child {
+          margin-bottom: 0; /* Eliminar margen inferior si es el último elemento en una sección */
+      }
+    }
+  }
+} 

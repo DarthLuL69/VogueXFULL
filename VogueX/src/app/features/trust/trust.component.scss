@@ -1,0 +1,59 @@
+.trust-container {
+  max-width: 1000px; /* Ancho máximo similar al de la captura */
+  margin: 20px auto; /* Centrar el contenedor con margen superior e inferior */
+  padding: 0 20px; /* Espaciado lateral */
+  text-align: center; /* Centrar el texto por defecto */
+
+  h1 {
+    font-size: 3.5rem; /* Tamaño del título principal */
+    font-weight: bold;
+    margin-bottom: 10px; /* Espacio debajo del título */
+    color: #000; // Color del título principal
+  }
+
+  .trust-subtitle {
+    font-size: 1.1rem; /* Tamaño del subtítulo */
+    color: #555; // Color del subtítulo
+    margin-bottom: 40px; /* Espacio debajo del subtítulo */
+  }
+
+  .trust-columns {
+    display: flex; /* Usar flexbox para las columnas */
+    flex-direction: column; /* Apilado por defecto en móvil */
+    gap: 30px; /* Espacio entre columnas en móvil */
+    align-items: center; // Centrar columnas en móvil
+
+    @media (min-width: 768px) {
+      flex-direction: row; /* En pantallas grandes, en fila */
+      justify-content: space-around; /* Distribuye espacio entre las columnas */
+      gap: 20px; /* Espacio entre columnas en desktop */
+    }
+
+    .trust-column {
+      flex: 1; /* Permite que las columnas crezcan para ocupar el espacio */
+      max-width: 300px; /* Ancho máximo para cada columna */
+      text-align: left; /* Alinear el texto de la columna a la izquierda */
+
+      .image-placeholder {
+        width: 100%; /* El ancho del placeholder es el mismo que el contenedor de la columna */
+        height: 120px; /* Altura temporal para el placeholder */
+        background-color: #f0f0f0; /* Color de fondo para visualizar el área */
+        margin-bottom: 20px; /* Espacio debajo del placeholder */
+        border: 1px solid #ccc; /* Borde para visualizar el área */
+      }
+
+      h2 {
+        font-size: 1.3rem; /* Tamaño de los títulos de columna */
+        font-weight: bold;
+        margin-bottom: 10px; /* Espacio debajo del título */
+        color: #000; // Color de los títulos de columna
+      }
+
+      p {
+        font-size: 0.95rem; /* Tamaño del texto del párrafo */
+        line-height: 1.5; /* Espaciado entre líneas */
+        color: #333; // Color del texto del párrafo
+      }
+    }
+  }
+} 

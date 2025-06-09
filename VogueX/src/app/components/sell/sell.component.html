@@ -1,0 +1,150 @@
+<div class="container mt-4">
+  <h2>Nuevo Producto</h2>
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="mt-4">
+    <!-- Información básica -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="form-group">
+          <label for="name">Nombre del Producto *</label>
+          <input type="text" class="form-control" id="name" formControlName="name" required>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group">
+          <label for="category">Categoría *</label>
+          <select class="form-control" id="category" formControlName="category_id" required>
+            <option value="">Selecciona una categoría</option>
+            <option *ngFor="let category of categories" [value]="category.id">
+              {{category.name}}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Precio y Estado -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="form-group">
+          <label for="price">Precio (€) *</label>
+          <input type="number" class="form-control" id="price" formControlName="price" min="0" step="0.01" required>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group">
+          <label for="condition">Estado del Producto *</label>
+          <select class="form-control" id="condition" formControlName="condition" required>
+            <option value="">Selecciona el estado</option>
+            <option value="new_with_tags">Nuevo con etiquetas</option>
+            <option value="new_without_tags">Nuevo sin etiquetas</option>
+            <option value="like_new">Como nuevo</option>
+            <option value="good">Buen estado</option>
+            <option value="fair">Estado regular</option>
+            <option value="poor">Mal estado</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Talla -->
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="form-group">
+          <label for="size">Talla *</label>
+          <select class="form-control" id="size" formControlName="size" required>
+            <option value="">Selecciona una talla</option>
+            <ng-container *ngIf="selectedCategory?.size_type === 'numeric'">
+              <option *ngFor="let size of numericSizes" [value]="size">{{size}}</option>
+            </ng-container>
+            <ng-container *ngIf="selectedCategory?.size_type === 'standard'">
+              <option *ngFor="let size of standardSizes" [value]="size">{{size}}</option>
+            </ng-container>
+            <ng-container *ngIf="selectedCategory?.size_type === 'shoe'">
+              <option *ngFor="let size of shoeSizes" [value]="size">{{size}}</option>
+            </ng-container>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Descripción y Daños -->
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <div class="form-group">
+          <label for="description">Descripción *</label>
+          <textarea class="form-control" id="description" formControlName="description" rows="3" required></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <div class="form-group">
+          <label for="damages">Daños o Imperfecciones</label>
+          <textarea class="form-control" id="damages" formControlName="damages" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Imágenes -->
+    <div class="row mb-4">
+      <div class="col-md-12">
+        <h4>Fotos del Producto *</h4>
+        <p class="text-muted">Se requieren al menos 6 fotos, incluyendo una vista frontal, trasera, etiquetas y detalles.</p>
+        
+        <div class="image-upload-container">
+          <div class="image-preview-grid">
+            <div class="image-preview-item" *ngFor="let preview of imagePreviews; let i = index">
+              <img [src]="preview" class="preview-image">
+              <button type="button" class="btn btn-danger btn-sm remove-image" (click)="removeImage(i)">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+            
+            <div class="image-upload-box" *ngIf="imagePreviews.length < 6">
+              <label for="imageUpload" class="upload-label">
+                <i class="bi bi-plus-lg"></i>
+                <span>Agregar foto</span>
+              </label>
+              <input 
+                type="file" 
+                id="imageUpload" 
+                multiple 
+                accept="image/*" 
+                (change)="onImageSelect($event)"
+                style="display: none;"
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="image-requirements mt-3">
+          <div class="requirement" [class.fulfilled]="hasFrontImage">
+            <i class="bi" [class.bi-check-circle-fill]="hasFrontImage" [class.bi-circle]="!hasFrontImage"></i>
+            <span>Vista frontal</span>
+          </div>
+          <div class="requirement" [class.fulfilled]="hasBackImage">
+            <i class="bi" [class.bi-check-circle-fill]="hasBackImage" [class.bi-circle]="!hasBackImage"></i>
+            <span>Vista trasera</span>
+          </div>
+          <div class="requirement" [class.fulfilled]="hasTagImage">
+            <i class="bi" [class.bi-check-circle-fill]="hasTagImage" [class.bi-circle]="!hasTagImage"></i>
+            <span>Etiquetas</span>
+          </div>
+          <div class="requirement" [class.fulfilled]="hasBottomImage">
+            <i class="bi" [class.bi-check-circle-fill]="hasBottomImage" [class.bi-circle]="!hasBottomImage"></i>
+            <span>Detalles</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-12">
+        <button type="submit" class="btn btn-primary" [disabled]="!productForm.valid || !isImageRequirementsMet()">
+          Publicar Producto
+        </button>
+      </div>
+    </div>
+  </form>
+</div> 

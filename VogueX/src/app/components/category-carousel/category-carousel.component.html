@@ -1,0 +1,52 @@
+<section class="text-center py-8">
+  <h2 class="text-lg font-bold mb-4">
+    {{ title }}
+  </h2>
+  <div class="relative">
+    <!-- Main Image Container -->
+    <div class="flex justify-center">
+      <div class="relative w-64 h-64 bg-gray-200 flex items-center justify-center overflow-hidden">
+        @for (item of items; track item.id; let i = $index) {
+          <div 
+            class="absolute top-0 left-0 w-full h-full flex items-center justify-center transition-opacity duration-500 ease-in-out"
+            [ngClass]="{'opacity-100': i === currentItem, 'opacity-0': i !== currentItem}"
+            [attr.aria-hidden]="i !== currentItem">
+            <img [src]="item.image" [alt]="item.name" class="max-w-full max-h-full object-contain">
+          </div>
+        }
+      </div>
+    </div>
+    
+    <!-- Navigation buttons -->
+    <button 
+      class="absolute left-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-1 rounded-full focus:outline-none"
+      aria-label="Previous item"
+      (click)="previousItem()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    </button>
+    
+    <button 
+      class="absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-1 rounded-full focus:outline-none"
+      aria-label="Next item"
+      (click)="nextItem()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </button>
+  </div>
+  
+  <!-- Dot indicators -->
+  <div class="flex justify-center space-x-1 mt-4">
+    @for (item of items; track item.id; let i = $index) {
+      <button 
+        class="w-2 h-2 rounded-full focus:outline-none transition-colors duration-200 ease-in-out"
+        [ngClass]="i === currentItem ? 'bg-black' : 'bg-gray-300 hover:bg-gray-400'"
+        (click)="goToItem(i)"
+        [attr.aria-label]="'Go to item ' + (i + 1)"
+        [attr.aria-current]="i === currentItem ? 'true' : 'false'">
+      </button>
+    }
+  </div>
+</section>
