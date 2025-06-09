@@ -1,56 +1,246 @@
-<div class="sell-container">
-  <div class="profile-section">
-    <div class="profile-avatar"></div>
-    <div class="profile-info">
-      <div class="profile-username">&#64;alexr_skrr</div>
-      <div class="profile-join-date">Joined in 2025</div>
-      <div class="profile-location">Europe</div>
-    </div>
-    <div class="profile-stats">
-      <div class="stat-item">
-        <div class="stat-number">0</div>
-        <div class="stat-label">Transactions</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number">0</div>
-        <div class="stat-label">Followers</div>
-      </div>
-    </div>
-    <a routerLink="/new-listing" class="new-listing-button">+ NEW LISTING</a>
+<div class="max-w-3xl mx-auto p-8 bg-white rounded-lg shadow-md">
+  <div class="text-center mb-8">
+    <h2 class="text-2xl font-semibold mb-2">Poner producto en venta</h2>
+    <p class="text-gray-600 text-sm">Completa todos los campos requeridos para crear tu anuncio</p>
   </div>
 
-  <div class="for-sale-section">
-    <h2>For Sale</h2>
-    <div class="product-list">
-      <div class="product-item">
-        <div class="product-image"></div>
-        <div class="product-details">
-          <div class="product-date">3 months ago</div>
-          <div class="product-brand">Off-White</div>
-          <div class="product-name">Digit Bacchus Double String</div>
-          <div class="product-price">726€</div>
-        </div>
-        <div class="product-actions">
-          <div class="product-likes">8 ♡</div>
-          <button class="price-drop-button">PRICE DROP</button>
-          <button class="send-offer-button">SEND OFFER</button>
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="listing-form">
+    <!-- Sección de imágenes -->
+    <div class="mb-8 p-6 bg-gray-50 rounded-md">
+      <h3 class="text-lg font-semibold mb-1">Fotos del producto *</h3>
+      <p class="text-gray-600 text-sm mb-4">Se requieren al menos 6 fotos, incluyendo una vista frontal, trasera, etiquetas y detalles.</p>
+      
+      <div class="mt-4">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+          <div class="relative aspect-square overflow-hidden rounded-md border border-gray-300" *ngFor="let preview of imagePreviews; let i = index">
+            <img [src]="preview" class="w-full h-full object-cover">
+            <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" (click)="removeImage(i)">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+          
+          <div class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center transition-all duration-200"
+               *ngIf="imagePreviews.length < 6"
+               (dragover)="onDragOver($event)"
+               (dragleave)="onDragLeave($event)"
+               (drop)="onDrop($event)"
+               [class.border-blue-500]="isDragging"
+               [class.bg-blue-50]="isDragging">
+            <label for="imageUpload" class="flex flex-col items-center justify-center cursor-pointer p-4 text-center">
+              <i class="bi bi-plus-lg text-gray-400 text-2xl"></i>
+              <span class="text-gray-500 text-sm mt-2">Arrastra y suelta imágenes aquí</span>
+              <span class="text-gray-400 text-xs mt-1">o</span>
+              <span class="text-blue-500 text-sm font-medium mt-1">Selecciona archivos</span>
+            </label>
+            <input 
+              type="file" 
+              id="imageUpload" 
+              multiple 
+              accept="image/*" 
+              (change)="onImageSelect($event)"
+              class="hidden"
+            >
+          </div>
         </div>
       </div>
-      <div class="product-item">
-        <div class="product-image"></div>
-        <div class="product-details">
-          <div class="product-date">3 months ago</div>
-          <div class="product-brand">Off-White</div>
-          <div class="product-name">Digit Bacchus Double String</div>
-          <div class="product-price">726€</div>
-        </div>
-        <div class="product-actions">
-          <div class="product-likes">8 ♡</div>
-          <button class="price-drop-button">PRICE DROP</button>
-          <button class="send-offer-button">SEND OFFER</button>
-        </div>
-      </div>
-      <!-- Puedes añadir más product-item si es necesario -->
     </div>
-  </div>
+
+    <!-- Información básica -->
+    <div class="mb-8 p-6 bg-gray-50 rounded-md">
+      <h3 class="text-lg font-semibold mb-1">Información básica</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex flex-col">
+          <label for="product-name" class="block text-gray-700 font-medium mb-1">Nombre del producto *</label>
+          <input type="text" id="product-name" formControlName="name" placeholder="Ej: Nike Air Force 1 Low" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-black">
+        </div>
+
+        <div class="flex flex-col">
+          <label for="product-brand" class="block text-gray-700 font-medium mb-1">Marca *</label>
+          <input type="text" id="product-brand" formControlName="brand" placeholder="Ej: Nike" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-black">
+        </div>
+      </div>
+
+      <div class="flex flex-col">
+        <label for="product-description" class="block text-gray-700 font-medium mb-1">Descripción *</label>
+        <textarea 
+          id="product-description" 
+          formControlName="description" 
+          placeholder="Describe el estado, detalles y características de tu producto..."
+          rows="4"
+          class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-black resize-y min-h-[100px]"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Precio y detalles -->
+    <div class="mb-8 p-6 bg-gray-50 rounded-md">
+      <h3 class="text-lg font-semibold mb-1">Precio y detalles</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex flex-col">
+          <label for="product-price" class="block text-gray-700 font-medium mb-1">Precio *</label>
+          <div class="relative flex items-center">
+            <span class="absolute left-3 text-gray-600">€</span>
+            <input type="number" id="product-price" formControlName="price" min="0" step="0.01" class="w-full p-2 pl-8 border border-gray-300 rounded-md focus:outline-none focus:border-black">
+          </div>
+        </div>
+
+        <div class="flex flex-col">
+          <label for="condition" class="block text-gray-700 font-medium mb-1">Estado del producto</label>
+          <div class="relative">
+            <div class="relative w-full p-2 border border-gray-300 rounded-md bg-white cursor-pointer flex items-center justify-between" (click)="toggleConditionDropdown()">
+              <div class="flex items-center" *ngIf="productForm.get('condition')?.value">
+                <div class="w-4 h-4 rounded-full mr-2" [style.background-color]="getConditionColor(productForm.get('condition')?.value)"></div>
+                <span class="text-gray-800">{{getConditionName(productForm.get('condition')?.value)}}</span>
+              </div>
+              <div class="text-gray-500" *ngIf="!productForm.get('condition')?.value">
+                Selecciona el estado
+              </div>
+              <div class="text-gray-500">
+                <i class="bi bi-chevron-down"></i>
+              </div>
+            </div>
+            
+            <div class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 overflow-hidden" *ngIf="isDropdownOpen">
+              <div class="max-h-60 overflow-y-auto">
+                <div *ngFor="let condition of productConditions" 
+                     class="flex items-center p-3 cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                     (mouseenter)="onConditionHover(condition)"
+                     (mouseleave)="onConditionLeave()"
+                     (click)="selectCondition(condition)">
+                  <div class="w-4 h-4 rounded-full mr-3" [style.background-color]="condition.color"></div>
+                  <div class="flex flex-col">
+                    <span class="font-medium text-gray-800">{{condition.name}}</span>
+                    <p class="text-gray-500 text-sm">{{condition.description}}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-gray-600 text-sm mt-2" *ngIf="productForm.get('condition')?.value">
+              <p>{{getConditionDescription(productForm.get('condition')?.value)}}</p>
+            </div>
+          </div>
+          <div *ngIf="productForm.get('condition')?.invalid && productForm.get('condition')?.touched" class="text-red-500 text-sm mt-1">
+            Por favor, selecciona el estado del producto
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div class="flex flex-col">
+          <label for="size" class="block text-gray-700 font-medium mb-1">Talla</label>
+          <div class="mt-2" *ngIf="productForm.get('finalCategory')?.value">
+            <div class="flex flex-wrap gap-2">
+              <button type="button"
+                      *ngFor="let size of getAvailableSizes()"
+                      [class.bg-black]="productForm.get('size')?.value === size"
+                      [class.text-white]="productForm.get('size')?.value === size"
+                      [class.bg-gray-200]="productForm.get('size')?.value !== size"
+                      [class.text-gray-800]="productForm.get('size')?.value !== size"
+                      class="px-4 py-2 rounded-md font-medium transition-colors duration-200 hover:bg-gray-300"
+                      (click)="productForm.patchValue({size: size})">
+                {{size}}
+              </button>
+            </div>
+          </div>
+          <div *ngIf="!productForm.get('finalCategory')?.value" class="text-gray-500 text-sm mt-2">
+            Selecciona primero una categoría de producto
+          </div>
+          <div *ngIf="productForm.get('size')?.invalid && productForm.get('size')?.touched" class="text-red-500 text-sm mt-1">
+            Por favor, selecciona una talla
+          </div>
+        </div>
+
+        <div class="flex flex-col">
+          <label for="main-category" class="block text-gray-700 font-medium mb-1">
+            Categoría Principal *
+            <i class="bi bi-info-circle text-gray-400 ml-1 cursor-help" 
+               [title]="'Selecciona la categoría principal de tu producto'"></i>
+          </label>
+          <select 
+            id="main-category" 
+            formControlName="mainCategory"
+            (change)="onMainCategoryChange($any($event.target).value)"
+            [class.border-red-500]="productForm.get('mainCategory')?.invalid && productForm.get('mainCategory')?.touched"
+            class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-black transition-colors duration-200">
+            <option value="">Selecciona una categoría principal</option>
+            <option *ngFor="let category of categories" [value]="category.id">
+              {{category.name}}
+            </option>
+          </select>
+          <div *ngIf="productForm.get('mainCategory')?.invalid && productForm.get('mainCategory')?.touched" 
+               class="text-red-500 text-sm mt-1">
+            Por favor, selecciona una categoría principal
+          </div>
+        </div>
+
+        <!-- Vista previa de la ruta de categoría -->
+        <div class="flex flex-col" *ngIf="selectedMainCategory">
+          <label class="block text-gray-700 font-medium mb-1">Ruta de categoría seleccionada</label>
+          <div class="flex items-center space-x-2 text-sm text-gray-600">
+            <span class="font-medium">{{getMainCategoryName()}}</span>
+            <i class="bi bi-chevron-right text-gray-400" *ngIf="selectedSubCategory"></i>
+            <span class="font-medium" *ngIf="selectedSubCategory">{{getSubCategoryName()}}</span>
+            <i class="bi bi-chevron-right text-gray-400" *ngIf="selectedFinalCategory"></i>
+            <span class="font-medium" *ngIf="selectedFinalCategory">{{getFinalCategoryName()}}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" *ngIf="selectedMainCategory">
+        <div class="flex flex-col">
+          <label for="sub-category" class="block text-gray-700 font-medium mb-1">
+            Subcategoría *
+            <i class="bi bi-info-circle text-gray-400 ml-1 cursor-help" 
+               [title]="'Selecciona la subcategoría específica de tu producto'"></i>
+          </label>
+          <select 
+            id="sub-category" 
+            formControlName="subCategory"
+            (change)="onSubCategoryChange($any($event.target).value)"
+            [class.border-red-500]="productForm.get('subCategory')?.invalid && productForm.get('subCategory')?.touched"
+            class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-black transition-colors duration-200">
+            <option value="">Selecciona una subcategoría</option>
+            <option *ngFor="let subcategory of getSubCategories()" [value]="subcategory.id">
+              {{subcategory.name}}
+            </option>
+          </select>
+          <div *ngIf="productForm.get('subCategory')?.invalid && productForm.get('subCategory')?.touched" 
+               class="text-red-500 text-sm mt-1">
+            Por favor, selecciona una subcategoría
+          </div>
+        </div>
+
+        <div class="flex flex-col" *ngIf="selectedSubCategory">
+          <label for="final-category" class="block text-gray-700 font-medium mb-1">
+            Tipo de Producto *
+            <i class="bi bi-info-circle text-gray-400 ml-1 cursor-help" 
+               [title]="'Selecciona el tipo específico de producto que estás vendiendo'"></i>
+          </label>
+          <select 
+            id="final-category" 
+            formControlName="finalCategory"
+            (change)="onFinalCategoryChange($any($event.target).value)"
+            [class.border-red-500]="productForm.get('finalCategory')?.invalid && productForm.get('finalCategory')?.touched"
+            class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-black transition-colors duration-200">
+            <option value="">Selecciona el tipo de producto</option>
+            <option *ngFor="let finalCategory of getFinalCategories()" [value]="finalCategory.id">
+              {{finalCategory.name}}
+            </option>
+          </select>
+          <div *ngIf="productForm.get('finalCategory')?.invalid && productForm.get('finalCategory')?.touched" 
+               class="text-red-500 text-sm mt-1">
+            Por favor, selecciona el tipo de producto
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors duration-200" (click)="onCancel()">Cancelar</button>
+      <button type="submit" class="bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800 transition-colors duration-200" [disabled]="!productForm.valid">Crear Anuncio</button>
+    </div>
+  </form>
 </div> 

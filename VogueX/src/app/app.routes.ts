@@ -22,6 +22,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/favourites/favourites.component').then(m => m.FavouritesComponent)
   },
   {
+    path: 'profile',
+    loadComponent: () => import('./components/profile/profile.component').then(m => m.ProfileComponent)
+  },
+  {
     path: 'user',
     loadComponent: () => import('./features/user/user.component').then(m => m.UserComponent)
   },
@@ -48,13 +52,5 @@ export const routes: Routes = [
   {
     path: 'product/:id',
     loadComponent: () => import('./components/product-details/product-details.component').then(m => m.ProductDetailsComponent)
-  },
-  {
-    path: 'new-listing',
-    loadComponent: () => import('./features/new-listing/new-listing.component').then(m => m.NewListingComponent)
-  },
-  {
-    path: '**',
-    redirectTo: ''
   }
 ];

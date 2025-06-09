@@ -11,7 +11,7 @@ import { RouterModule } from '@angular/router';
       <div class="container mx-auto px-4 flex items-center justify-between text-sm text-gray-600">
         <div class="flex space-x-6">
           <a routerLink="/about" class="hover:underline">ABOUT</a>
-          <a routerLink="/your-privacy-choices" class="hover:underline">YOUR PRIVACY CHOICES</a>
+          <a routerLink="/privacy#your-privacy-choices" class="hover:underline">YOUR PRIVACY CHOICES</a>
           <a routerLink="/terms" class="hover:underline">TERMS</a>
           <a routerLink="/privacy" class="hover:underline">PRIVACY</a>
           <a routerLink="/trust" class="hover:underline">TRUST</a>

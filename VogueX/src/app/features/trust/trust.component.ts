@@ -7,42 +7,42 @@ import { RouterModule } from '@angular/router';
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="trust-container">
-      <h1>Trust.</h1>
-      <p class="trust-subtitle">
+    <div class="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+      <h1 class="text-4xl font-bold text-center mb-8">Trust.</h1>
+      <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-16">
         The shared experiences between buyers and sellers
-        on Grailed is our #1 priority. We take actions that
+        on VogueX is our #1 priority. We take actions that
         protect our community and prevent risk.
       </p>
       
-      <div class="trust-columns">
-        <div class="trust-column">
-          <div class="image-placeholder"></div>
-          <h2>Authentication</h2>
-          <p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div class="flex flex-col items-center text-center">
+          <div class="w-24 h-24 bg-gray-200 rounded-full mb-6"></div>
+          <h2 class="text-2xl font-semibold mb-4">Authentication</h2>
+          <p class="text-gray-600">
             Brand and marketplace experts take a
             hands-on approach to digital
             moderation.
           </p>
         </div>
 
-        <div class="trust-column">
-          <div class="image-placeholder"></div>
-          <h2>Legit Sellers</h2>
-          <p>
+        <div class="flex flex-col items-center text-center">
+          <div class="w-24 h-24 bg-gray-200 rounded-full mb-6"></div>
+          <h2 class="text-2xl font-semibold mb-4">Legit Sellers</h2>
+          <p class="text-gray-600">
             A strong feedback system utilizes the
             opinions and experiences of the
-            Grailed community to create a
+            VogueX community to create a
             barometer of trust.
           </p>
         </div>
 
-        <div class="trust-column">
-          <div class="image-placeholder"></div>
-          <h2>VogueX Purchase<br>Protection</h2>
-          <p>
+        <div class="flex flex-col items-center text-center">
+          <div class="w-24 h-24 bg-gray-200 rounded-full mb-6"></div>
+          <h2 class="text-2xl font-semibold mb-4">VogueX Purchase<br>Protection</h2>
+          <p class="text-gray-600">
             We want you to feel confident buying
-            and selling on Grailed. That's why we
+            and selling on VogueX. That's why we
             offer Purchase Protection on qualifying
             orders. In the rare case that something
             goes wrong with your sale or order, our
@@ -53,6 +53,6 @@ import { RouterModule } from '@angular/router';
       </div>
     </div>
   `,
-  styleUrls: ['./trust.component.scss']
+  styles: []
 })
 export class TrustComponent {} 
