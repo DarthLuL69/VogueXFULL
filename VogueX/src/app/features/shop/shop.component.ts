@@ -146,4 +146,13 @@ export class ShopComponent implements OnInit {
      else if (months < 12) return months + ' months ago';
      else return years + ' years ago';
    }
+
+   onCategoryChange(category: string, event: any): void {
+      if (event.target.checked) {
+        this.selectedCategory = category;
+        // Aquí podrías recargar productos según la categoría si lo deseas
+      } else {
+        this.selectedCategory = null;
+      }
+    }
 } 

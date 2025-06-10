@@ -14,17 +14,22 @@ export class ContactComponent {
   email = '';
   message = '';
   submitted = false;
+  errorMessage = '';
 
   submitForm() {
     if (this.name && this.email && this.message) {
       this.submitted = true;
-      // Aquí podrías conectarlo a un servicio real
+      this.errorMessage = '';
+
+      // Simula envío con un pequeño delay
       setTimeout(() => {
         this.name = '';
         this.email = '';
         this.message = '';
         this.submitted = false;
       }, 3000);
+    } else {
+      this.errorMessage = 'Por favor, completa todos los campos.';
     }
   }
 }

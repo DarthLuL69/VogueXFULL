@@ -11,12 +11,18 @@
           <svg class="w-4 h-4 transition-transform duration-300" [class.rotate-180]="isFilterExpanded('department')" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
         </h3>
         <div class="text-sm" *ngIf="isFilterExpanded('department')">
-          <div class="mb-2 last:mb-0">
-            <label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2"> Menswear</label>
-          </div>
-          <div class="mb-2 last:mb-0">
-            <label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2"> Womenswear</label>
-          </div>
+          <label class="flex items-center cursor-pointer">
+            <input type="checkbox" class="mr-2"
+                  [checked]="selectedCategory === 'menswear'"
+                  (change)="onCategoryChange('menswear', $event)">
+            Menswear
+          </label>
+          <label class="flex items-center cursor-pointer">
+            <input type="checkbox" class="mr-2"
+                  [checked]="selectedCategory === 'womenswear'"
+                  (change)="onCategoryChange('womenswear', $event)">
+            Womenswear
+          </label>
         </div>
       </div>
 
@@ -28,8 +34,12 @@
         </h3>
         <div class="text-sm" *ngIf="isFilterExpanded('category')">
           <!-- Aquí podrías iterar sobre tus categorías dinámicamente -->
-          <div class="mt-2 mb-2">
-            <p class="font-bold mb-2">Menswear</p>
+          <label class="flex items-center cursor-pointer">
+            <input type="checkbox" class="mr-2"
+                  [checked]="selectedCategory === 'menswear'"
+                  (change)="onCategoryChange('menswear', $event)">
+            Menswear
+          </label>
             <div class="mb-2 last:mb-0"><label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2"> All Tops</label></div>
             <div class="mb-2 last:mb-0"><label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2"> Long Sleeve T-Shirts</label></div>
             <div class="mb-2 last:mb-0"><label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2"> Hoodies</label></div>
@@ -37,11 +47,12 @@
             <div class="mb-2 last:mb-0"><label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2"> Short Sleeve T-Shirts</label></div>
             <div class="mb-2 last:mb-0"><label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2"> Sweaters & Knitwear</label></div>
             <div class="mb-2 last:mb-0"><label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2"> Sweatshirts & Hoodies</label></div>
-          </div>
-           <div class="mt-2 mb-2">
-            <p class="font-bold mb-2">Womenswear</p>
-             <div class="mb-2 last:mb-0"><label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2"> Dresses</label></div>
-          </div>
+          <label class="flex items-center cursor-pointer">
+            <input type="checkbox" class="mr-2"
+                  [checked]="selectedCategory === 'womenswear'"
+                  (change)="onCategoryChange('womenswear', $event)">
+            Womenswear
+          </label>
           <!-- Los items actuales del template -->
            <div class="mb-2 last:mb-0"><label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2"> All Tops</label></div>
           <div class="mb-2 last:mb-0"><label class="flex items-center cursor-pointer"><input type="checkbox" class="mr-2"> Long Sleeve T-Shirts</label></div>
