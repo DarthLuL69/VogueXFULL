@@ -1,23 +1,93 @@
-<div class="container mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold mb-8">Designers</h1>
-
-  <div *ngIf="designers.length === 0" class="text-center text-gray-500">
-    Cargando diseñadores...
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="text-center mb-12">
+    <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Explora por Diseñador</h1>
+    <p class="text-xl text-gray-600">Descubre tus marcas y diseñadores favoritos en VogueX.</p>
   </div>
 
-  <div *ngIf="designers.length > 0">
-    <div *ngFor="let groupKey of Object.keys(groupedDesigners).sort()" class="mb-6">
-      <h2 class="text-xl font-bold mb-3">{{ groupKey }}</h2>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div *ngFor="let designer of groupedDesigners[groupKey]" class="flex items-center justify-between bg-gray-100 p-3 rounded-lg">
-          <span class="text-sm">{{ designer }}</span>
-          <button (click)="toggleFavoriteDesigner(designer)" [class.text-red-500]="isFavoriteDesigner(designer)" class="text-gray-400 hover:text-red-500">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
-            </svg>
-          </button>
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+    <!-- Tarjeta de Diseñador 1 -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden group">
+      <div class="relative w-full h-48 sm:h-64 overflow-hidden">
+        <img src="https://via.placeholder.com/400x300?text=Off-White" alt="Off-White" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+        <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <a href="#" class="text-white text-lg font-semibold">Ver Productos</a>
         </div>
+      </div>
+      <div class="p-6">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-2">Off-White</h3>
+        <p class="text-gray-600 text-sm">Lujo urbano, ropa de calle de alta gama con un toque artístico.</p>
+      </div>
+    </div>
+
+    <!-- Tarjeta de Diseñador 2 -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden group">
+      <div class="relative w-full h-48 sm:h-64 overflow-hidden">
+        <img src="https://via.placeholder.com/400x300?text=Gucci" alt="Gucci" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+        <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <a href="#" class="text-white text-lg font-semibold">Ver Productos</a>
+        </div>
+      </div>
+      <div class="p-6">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-2">Gucci</h3>
+        <p class="text-gray-600 text-sm">Elegancia italiana, alta costura y marroquinería icónica.</p>
+      </div>
+    </div>
+
+    <!-- Tarjeta de Diseñador 3 -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden group">
+      <div class="relative w-full h-48 sm:h-64 overflow-hidden">
+        <img src="https://via.placeholder.com/400x300?text=Balenciaga" alt="Balenciaga" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+        <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <a href="#" class="text-white text-lg font-semibold">Ver Productos</a>
+        </div>
+      </div>
+      <div class="p-6">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-2">Balenciaga</h3>
+        <p class="text-gray-600 text-sm">Diseño vanguardista, siluetas atrevidas y moda de lujo.</p>
+      </div>
+    </div>
+
+    <!-- Tarjeta de Diseñador 4 -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden group">
+      <div class="relative w-full h-48 sm:h-64 overflow-hidden">
+        <img src="https://via.placeholder.com/400x300?text=Prada" alt="Prada" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+        <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <a href="#" class="text-white text-lg font-semibold">Ver Productos</a>
+        </div>
+      </div>
+      <div class="p-6">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-2">Prada</h3>
+        <p class="text-gray-600 text-sm">Minimalismo sofisticado, moda de lujo con un toque intelectual.</p>
+      </div>
+    </div>
+
+    <!-- Tarjeta de Diseñador 5 -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden group">
+      <div class="relative w-full h-48 sm:h-64 overflow-hidden">
+        <img src="https://via.placeholder.com/400x300?text=Louis+Vuitton" alt="Louis Vuitton" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+        <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <a href="#" class="text-white text-lg font-semibold">Ver Productos</a>
+        </div>
+      </div>
+      <div class="p-6">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-2">Louis Vuitton</h3>
+        <p class="text-gray-600 text-sm">Lujo atemporal, monogramas icónicos y artesanía excepcional.</p>
+      </div>
+    </div>
+
+    <!-- Tarjeta de Diseñador 6 -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden group">
+      <div class="relative w-full h-48 sm:h-64 overflow-hidden">
+        <img src="https://via.placeholder.com/400x300?text=Versace" alt="Versace" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+        <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <a href="#" class="text-white text-lg font-semibold">Ver Productos</a>
+        </div>
+      </div>
+      <div class="p-6">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-2">Versace</h3>
+        <p class="text-gray-600 text-sm">Glamour audaz, lujo exuberante y estética provocativa.</p>
       </div>
     </div>
   </div>
 </div>
+

@@ -14,7 +14,9 @@ import { HttpClientModule } from '@angular/common/http';
     <div class="bg-white border-b">
       <div class="container mx-auto flex items-center justify-between py-4 px-4">
         <!-- Logo -->
-        <img src="" alt="Logo de VogueX" class="w-32 h-10 object-contain">
+        <a routerLink="/" class="cursor-pointer">
+          <img src="assets/images/Logo.png" alt="Logo de VogueX" class="w-32 h-10 object-contain">
+        </a>
         <!-- Buscador -->
         <div class="flex-1 mx-8 relative">
           <input type="text" placeholder="Search..." class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none" [formControl]="searchControl">
@@ -38,7 +40,7 @@ import { HttpClientModule } from '@angular/common/http';
           <a routerLink="/shop" class="hover:underline">SHOP</a>
           <a routerLink="/contact" class="hover:underline">CONTACT</a>
           <a routerLink="/favourites" class="text-2xl">♡</a>
-          <div class="w-8 h-8 bg-black rounded-full"></div>
+          <a routerLink="/profile" class="w-8 h-8 bg-black rounded-full cursor-pointer"></a>
         </div>
       </div>
       <!-- Menú horizontal -->

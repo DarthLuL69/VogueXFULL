@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './about-section.component.html',
-  styleUrls: ['./about-section.component.scss']
+  styles: []
 })
 export class AboutSectionComponent {
 

@@ -9,7 +9,7 @@ import { ApiService } from '../../services/api.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './upload-product.component.html',
-  styleUrls: ['./upload-product.component.scss']
+  styles: []
 })
 export class UploadProductComponent implements OnInit {
   categories: any[] = [];
