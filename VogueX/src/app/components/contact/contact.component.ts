@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './contact.component.html',
-  styles: []
+  styleUrls: ['./contact.component.css']
 })
 export class ContactComponent {
   name = '';

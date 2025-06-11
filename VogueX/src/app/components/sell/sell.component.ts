@@ -2,11 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-sell',
   templateUrl: './sell.component.html',
-  styleUrls: ['./sell.component.scss']
+  styleUrls: ['./sell.component.scss'],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule]
 })
 export class SellComponent implements OnInit {
   productForm: FormGroup;
@@ -32,14 +36,13 @@ export class SellComponent implements OnInit {
     private router: Router
   ) {
     this.productForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(3)]],
+      name: ['', Validators.required],
       category_id: ['', Validators.required],
       price: ['', [Validators.required, Validators.min(0)]],
-      size: ['', Validators.required],
       condition: ['', Validators.required],
-      description: ['', [Validators.required, Validators.minLength(10)]],
-      damages: [''],
-      images: [[], [Validators.required, Validators.minLength(6)]]
+      size: ['', Validators.required],
+      description: ['', Validators.required],
+      damages: ['']
     });
   }
 
@@ -106,7 +109,13 @@ export class SellComponent implements OnInit {
            this.hasBottomImage;
   }
 
-  async onSubmit() {
+  cancelForm() {
+    if (confirm('¿Estás seguro de que quieres cancelar? Se perderán todos los datos ingresados.')) {
+      this.router.navigate(['/']);
+    }
+  }
+
+  onSubmit() {
     if (this.productForm.valid && this.isImageRequirementsMet()) {
       const formData = new FormData();
       
@@ -128,6 +137,8 @@ export class SellComponent implements OnInit {
       } catch (error) {
         console.error('Error al crear el producto:', error);
       }
+    } else {
+      this.productForm.markAllAsTouched();
     }
   }
 }
