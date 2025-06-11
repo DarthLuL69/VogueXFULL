@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { GrailedApiService } from '../../shared/services/grailed-api.service';
+import { GrailedApiService } from '../../../shared/services';
 
 @Component({
   selector: 'app-home',

@@ -3,54 +3,50 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
+    loadComponent: () => import('./features/home/components/home.component').then(m => m.HomeComponent)
   },
   {
     path: 'shop',
-    loadComponent: () => import('./features/shop/shop.component').then(m => m.ShopComponent)
+    loadComponent: () => import('./features/shop/components/shop.component').then(m => m.ShopComponent)
   },
   {
     path: 'sell',
-    loadComponent: () => import('./features/sell/sell.component').then(m => m.SellComponent)
+    loadComponent: () => import('./features/sell/components/sell.component').then(m => m.SellComponent)
   },
   {
     path: 'contact',
-    loadComponent: () => import('./features/contact/contact.component').then(m => m.ContactComponent)
+    loadComponent: () => import('./features/contact/components/contact.component').then(m => m.ContactComponent)
   },
   {
     path: 'favourites',
-    loadComponent: () => import('./features/favourites/favourites.component').then(m => m.FavouritesComponent)
+    loadComponent: () => import('./features/favourites/components/favourites.component').then(m => m.FavouritesComponent)
   },
   {
     path: 'profile',
-    loadComponent: () => import('./components/profile/profile.component').then(m => m.ProfileComponent)
+    loadComponent: () => import('./features/profile/components/profile.component').then(m => m.ProfileComponent)
   },
   {
     path: 'user',
-    loadComponent: () => import('./features/user/user.component').then(m => m.UserComponent)
+    loadComponent: () => import('./features/user/components/user.component').then(m => m.UserComponent)
   },
   {
     path: 'about',
-    loadComponent: () => import('./features/about/about.component').then(m => m.AboutComponent)
+    loadComponent: () => import('./features/about/components/about.component').then(m => m.AboutComponent)
   },
   {
     path: 'terms',
-    loadComponent: () => import('./features/terms/terms.component').then(m => m.TermsComponent)
+    loadComponent: () => import('./features/terms/components/terms.component').then(m => m.TermsComponent)
   },
   {
     path: 'privacy',
-    loadComponent: () => import('./features/privacy/privacy.component').then(m => m.PrivacyComponent)
+    loadComponent: () => import('./features/privacy/components/privacy.component').then(m => m.PrivacyComponent)
   },
   {
     path: 'trust',
-    loadComponent: () => import('./features/trust/trust.component').then(m => m.TrustComponent)
+    loadComponent: () => import('./features/trust/components/trust.component').then(m => m.TrustComponent)
   },
   {
     path: 'designers',
-    loadComponent: () => import('./features/designers/designers.component').then(m => m.DesignersComponent)
-  },
-  {
-    path: 'product/:id',
-    loadComponent: () => import('./components/product-details/product-details.component').then(m => m.ProductDetailsComponent)
+    loadComponent: () => import('./features/designers/components/designers.component').then(m => m.DesignersComponent)
   }
 ];

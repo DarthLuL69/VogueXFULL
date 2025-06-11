@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { ApiService } from '../../services/api.service';
+import { ApiService } from '../../../core/services';
 import { Router } from '@angular/router';
 
 @Component({
@@ -123,3 +123,4 @@ export class ProfileComponent implements OnInit {
   // loadFavorites() { ... }
   // ...
 }
+

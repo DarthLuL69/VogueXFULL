@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { FavoriteService } from '../../shared/services/favorite.service';
-import { GrailedApiService } from '../../shared/services/grailed-api.service';
+import { FavoriteService } from '../../../shared/services';
+import { GrailedApiService } from '../../../shared/services';
 import { HttpClientModule } from '@angular/common/http';
 
 @Component({

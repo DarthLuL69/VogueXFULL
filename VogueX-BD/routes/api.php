@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\SearchHistoryController;
 use App\Http\Controllers\Api\StockXController;
+use App\Http\Controllers\Api\DesignerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,6 +39,24 @@ Route::middleware('auth:sanctum')->group(function () {
 // Rutas públicas
 Route::apiResource('search-history', SearchHistoryController::class);
 Route::get('products/search', [ProductController::class, 'search']);
+Route::get('products/brands', [ProductController::class, 'getBrands']); // Nueva ruta
+
+// Designers routes (públicas)
+Route::prefix('designers')->group(function () {
+    Route::get('/', [DesignerController::class, 'index']);
+    Route::get('/popular', [DesignerController::class, 'popular']);
+    Route::get('/featured', [DesignerController::class, 'featured']);
+    Route::get('/{designer}', [DesignerController::class, 'show']);
+});
+
+// Rutas administrativas para designers (requieren autenticación)
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/designers', [DesignerController::class, 'store']);
+    Route::put('/designers/{designer}', [DesignerController::class, 'update']);
+    Route::delete('/designers/{designer}', [DesignerController::class, 'destroy']);
+    Route::post('/designers/sync', [DesignerController::class, 'syncData']);
+    Route::post('/designers/scrape-grailed', [DesignerController::class, 'scrapeGrailed']); // Nueva ruta
+});
 
 // Test CORS route
 Route::get('/test-cors', function () {

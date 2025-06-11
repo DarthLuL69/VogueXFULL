@@ -57,7 +57,29 @@
 
         <div class="flex flex-col">
           <label for="product-brand" class="block text-gray-700 font-medium mb-1">Marca *</label>
-          <input type="text" id="product-brand" formControlName="brand" placeholder="Ej: Nike" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-black">
+          <div class="relative">
+            <input 
+              type="text" 
+              id="product-brand" 
+              formControlName="brand" 
+              placeholder="Ej: Nike, Adidas, Gucci..." 
+              (input)="onBrandInput($event)"
+              class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-black"
+              autocomplete="off">
+            
+            <!-- Dropdown de sugerencias -->
+            <div 
+              *ngIf="brandSuggestions.length > 0" 
+              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+              <div 
+                *ngFor="let brand of brandSuggestions"
+                (click)="selectBrand(brand)"
+                class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center">
+                <span class="font-medium">{{ brand.name }}</span>
+                <span class="text-sm text-gray-500">{{ brand.items_count }} items</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -243,4 +265,4 @@
       <button type="submit" class="bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800 transition-colors duration-200" [disabled]="!productForm.valid">Crear Anuncio</button>
     </div>
   </form>
-</div> 
+</div>

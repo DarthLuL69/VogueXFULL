@@ -8,6 +8,19 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 class Kernel extends ConsoleKernel
 {
     /**
+     * The Artisan commands provided by your application.
+     *
+     * @var array
+     */
+    protected $commands = [
+        Commands\SyncDesignersCommand::class,
+        Commands\RecalculateDesignerCounts::class,
+        Commands\ScrapeGrailedDesignersCommand::class,
+        Commands\ScrapeGrailedDesignersPageCommand::class,
+        Commands\RefreshDesignerLogosCommand::class, // Nuevo comando
+    ];
+
+    /**
      * Define the application's command schedule.
      *
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
@@ -15,7 +28,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Ejecutar scrape de Grailed una vez por semana
+        $schedule->command('grailed:scrape-designers')->weekly();
+        
+        // Recalcular contadores diariamente
+        $schedule->command('designers:recalculate')->daily();
     }
 
     /**

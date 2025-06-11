@@ -14,54 +14,47 @@ export interface Designer {
   providedIn: 'root'
 })
 export class DesignersService {
-  private apiUrl = 'https://www.grailed.com/api/designers';
+  private apiUrl = 'http://localhost:8000/api/designers';
 
   constructor(private http: HttpClient) { }
 
   getPopularDesigners(): Observable<Designer[]> {
-    return this.http.get<any>(`${this.apiUrl}/popular`).pipe(
-      map(response => response.data.map((designer: any) => ({
-        id: designer.id,
-        name: designer.name,
-        imageUrl: designer.image_url,
-        itemsCount: designer.items_count,
-        isPopular: true
-      })))
+    return this.http.get<{data: Designer[]}>(`${this.apiUrl}/popular`).pipe(
+      map(response => response.data)
+    );
+  }
+
+  getFeaturedDesigners(): Observable<Designer[]> {
+    return this.http.get<{data: Designer[]}>(`${this.apiUrl}/featured`).pipe(
+      map(response => response.data)
     );
   }
 
   getDesignersByLetter(letter: string): Observable<Designer[]> {
-    return this.http.get<any>(`${this.apiUrl}/letter/${letter}`).pipe(
-      map(response => response.data.map((designer: any) => ({
-        id: designer.id,
-        name: designer.name,
-        imageUrl: designer.image_url,
-        itemsCount: designer.items_count
-      })))
+    return this.http.get<{data: Designer[]}>(`${this.apiUrl}`, {
+      params: { letter }
+    }).pipe(
+      map(response => response.data)
     );
   }
 
   searchDesigners(query: string): Observable<Designer[]> {
-    return this.http.get<any>(`${this.apiUrl}/search`, {
-      params: { q: query }
+    return this.http.get<{data: Designer[]}>(`${this.apiUrl}`, {
+      params: { search: query }
     }).pipe(
-      map(response => response.data.map((designer: any) => ({
-        id: designer.id,
-        name: designer.name,
-        imageUrl: designer.image_url,
-        itemsCount: designer.items_count
-      })))
+      map(response => response.data)
     );
   }
 
-  getAllDesigners(): Observable<Designer[]> {
-    return this.http.get<any>(`${this.apiUrl}`).pipe(
-      map(response => response.data.map((designer: any) => ({
-        id: designer.id,
-        name: designer.name,
-        imageUrl: designer.image_url,
-        itemsCount: designer.items_count
-      })))
+  getAllDesigners(limit: number = 20): Observable<Designer[]> {
+    return this.http.get<{data: Designer[]}>(`${this.apiUrl}`, {
+      params: { limit: limit.toString() }
+    }).pipe(
+      map(response => response.data)
     );
   }
-} 
+
+  getDesigner(id: string): Observable<Designer> {
+    return this.http.get<Designer>(`${this.apiUrl}/${id}`);
+  }
+}

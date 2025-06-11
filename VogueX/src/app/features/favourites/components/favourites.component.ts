@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { FavoriteService } from '../../shared/services/favorite.service';
+import { FavoriteService } from '../../../shared/services';
 
 // Define una interfaz para la estructura mínima de un producto en favoritos (debe coincidir con la del servicio)
 interface FavoriteProduct {

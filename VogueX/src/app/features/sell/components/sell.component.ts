@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ApiService } from '../../../core/services';
+import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
 interface Category {
   id: string;
@@ -29,7 +31,7 @@ interface SizeSystem {
   templateUrl: './sell.component.html',
   styles: []
 })
-export class SellComponent {
+export class SellComponent implements OnInit {
   productForm: FormGroup;
   imagePreviews: string[] = [];
   maxImages = 6;
@@ -280,9 +282,13 @@ export class SellComponent {
     'dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL']
   };
 
+  brandSuggestions: any[] = [];
+  brandSearchSubject = new Subject<string>();
+
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private apiService: ApiService
   ) {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -299,6 +305,20 @@ export class SellComponent {
     // Suscribirse a cambios en la categoría final para actualizar los sistemas de tallas
     this.productForm.get('finalCategory')?.valueChanges.subscribe(category => {
       this.updateSizeSystems(category);
+    });
+  }
+
+  ngOnInit(): void {
+    // Setup brand autocomplete
+    this.brandSearchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(query => {
+        if (query.length < 2) return [];
+        return this.apiService.searchBrands(query);
+      })
+    ).subscribe(brands => {
+      this.brandSuggestions = brands;
     });
   }
 
@@ -505,4 +525,16 @@ export class SellComponent {
     console.log('Tallas disponibles:', sizes);
     return sizes;
   }
-} 
+
+  onBrandInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    if (target) {
+      this.brandSearchSubject.next(target.value);
+    }
+  }
+
+  selectBrand(brand: any): void {
+    this.productForm.patchValue({ brand: brand.name });
+    this.brandSuggestions = [];
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "/api/grailed/*": {
+    "target": "https://www.grailed.com",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/api/grailed": "/api"
+    }
+  }
+}

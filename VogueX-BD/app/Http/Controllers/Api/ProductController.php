@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\Designer;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -34,8 +35,28 @@ class ProductController extends Controller
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
+            'brand' => 'nullable|string|max:255',
+            'size' => 'nullable|string|max:50',
+            'condition' => 'nullable|in:new,like_new,excellent,good,fair',
+            'original_price' => 'nullable|numeric|min:0',
             'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
+
+        // Buscar o crear diseñador por nombre de marca
+        $designer = null;
+        if (!empty($validated['brand'])) {
+            $designer = Designer::firstOrCreate(
+                ['name' => $validated['brand']],
+                [
+                    'slug' => Str::slug($validated['brand']),
+                    'description' => "Fashion brand: {$validated['brand']}",
+                    'is_popular' => false,
+                    'is_featured' => false,
+                    'items_count' => 0
+                ]
+            );
+            $validated['designer_id'] = $designer->id;
+        }
 
         // Crear el producto
         $product = Product::create([
@@ -43,6 +64,7 @@ class ProductController extends Controller
             'description' => $validated['description'],
             'price' => $validated['price'],
             'category_id' => $validated['category_id'],
+            'designer_id' => $validated['designer_id'] ?? null,
             'is_active' => true
         ]);
 
@@ -61,7 +83,7 @@ class ProductController extends Controller
             $product->save();
         }
 
-        return response()->json($product->load('category'), 201);
+        return response()->json($product->load(['category', 'designer']), 201);
     }
 
     /**
@@ -143,17 +165,61 @@ class ProductController extends Controller
     public function search(Request $request)
     {
         $query = $request->get('q');
+        $designer = $request->get('designer');
+        $category = $request->get('category');
+        $minPrice = $request->get('min_price');
+        $maxPrice = $request->get('max_price');
+        $condition = $request->get('condition');
         
-        if (empty($query)) {
-            return response()->json([]);
+        $products = Product::query()->where('is_active', true);
+
+        if (!empty($query)) {
+            $products->where(function($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%")
+                  ->orWhere('description', 'LIKE', "%{$query}%")
+                  ->orWhere('brand', 'LIKE', "%{$query}%");
+            });
         }
 
-        $products = Product::where('name', 'LIKE', "%{$query}%")
-            ->orWhere('description', 'LIKE', "%{$query}%")
-            ->with('category')
-            ->limit(5)
-            ->get();
+        if (!empty($designer)) {
+            $products->whereHas('designer', function($q) use ($designer) {
+                $q->where('name', 'LIKE', "%{$designer}%");
+            });
+        }
+
+        if (!empty($category)) {
+            $products->where('category_id', $category);
+        }
+
+        if (!empty($minPrice)) {
+            $products->where('price', '>=', $minPrice);
+        }
+
+        if (!empty($maxPrice)) {
+            $products->where('price', '<=', $maxPrice);
+        }
+
+        if (!empty($condition)) {
+            $products->where('condition', $condition);
+        }
+
+        $products = $products->with(['category', 'designer'])
+                           ->orderBy('created_at', 'desc')
+                           ->paginate(20);
 
         return response()->json($products);
+    }
+
+    public function getBrands(Request $request)
+    {
+        $query = $request->get('q', '');
+        
+        $brands = Designer::where('name', 'LIKE', "%{$query}%")
+                         ->orderBy('items_count', 'desc')
+                         ->orderBy('name')
+                         ->limit(10)
+                         ->get(['id', 'name', 'items_count']);
+
+        return response()->json($brands);
     }
 }

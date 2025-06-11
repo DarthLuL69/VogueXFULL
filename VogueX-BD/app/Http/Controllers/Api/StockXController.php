@@ -58,6 +58,17 @@ class StockXController extends Controller
         ]);
     }
 
+    public function getDesigners()
+    {
+        // Alias for getBrands - designers and brands are essentially the same
+        $designers = $this->stockXService->getBrands();
+
+        return response()->json([
+            'designers' => $designers,
+            'brands' => $designers // Keep both for compatibility
+        ]);
+    }
+
     public function searchProducts(Request $request)
     {
         $request->validate([
@@ -91,4 +102,4 @@ class StockXController extends Controller
 
         return response()->json($recommendation);
     }
-} 
+}

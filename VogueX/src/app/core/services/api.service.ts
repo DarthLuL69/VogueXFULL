@@ -31,8 +31,24 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/products/${id}`);
   }
 
-  searchProducts(term: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/products/search?q=${term}`);
+  // Búsqueda de marcas para autocompletado
+  searchBrands(query: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/products/brands`, {
+      params: { q: query }
+    });
+  }
+
+  // Búsqueda de productos con filtros
+  searchProducts(filters: any): Observable<any> {
+    let params = new URLSearchParams();
+    
+    Object.keys(filters).forEach(key => {
+      if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
+        params.append(key, filters[key]);
+      }
+    });
+
+    return this.http.get(`${this.apiUrl}/products/search?${params.toString()}`);
   }
 
   // Categorías
