@@ -13,34 +13,24 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        Commands\SyncDesignersCommand::class,
-        Commands\RecalculateDesignerCounts::class,
-        Commands\ScrapeGrailedDesignersCommand::class,
-        Commands\ScrapeGrailedDesignersPageCommand::class,
-        Commands\RefreshDesignerLogosCommand::class, // Nuevo comando
+        Commands\ShowTableStructure::class,
+        Commands\ScrapeGrailedDesigners::class,
+        Commands\SeedDesigners::class,
+        Commands\ScrapeGrailedDesignerPage::class,
     ];
 
     /**
      * Define the application's command schedule.
-     *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
-     * @return void
      */
-    protected function schedule(Schedule $schedule)
+    protected function schedule(Schedule $schedule): void
     {
-        // Ejecutar scrape de Grailed una vez por semana
-        $schedule->command('grailed:scrape-designers')->weekly();
-        
-        // Recalcular contadores diariamente
-        $schedule->command('designers:recalculate')->daily();
+        // $schedule->command('inspire')->hourly();
     }
 
     /**
      * Register the commands for the application.
-     *
-     * @return void
      */
-    protected function commands()
+    protected function commands(): void
     {
         $this->load(__DIR__.'/Commands');
 

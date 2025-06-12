@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { DesignersService, Designer } from '../../../shared/services';
+import { DesignersService, Designer } from '../../../shared/services/designers.service';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { FavoriteService } from '../../../shared/services';
+import { FavoriteService, FavoriteDesigner } from '../../../shared/services/favorite.service';
 import { HttpClientModule } from '@angular/common/http';
 
 @Component({
@@ -102,8 +102,8 @@ export class DesignersComponent implements OnInit, OnDestroy {
 
   loadAllDesigners(): void {
     this.loading = true;
-    // Solo cargar 20 diseñadores por defecto para mejorar velocidad
-    this.designersService.getAllDesigners(20)
+    // Remover el parámetro (20) de esta llamada
+    this.designersService.getAllDesigners()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (designers) => {
@@ -119,6 +119,23 @@ export class DesignersComponent implements OnInit, OnDestroy {
           this.error = 'Unable to load designers. Please try again later.';
           this.loading = false;
           console.error('Error loading all designers:', error);
+        }
+      });
+  }
+
+  loadDesigners(): void {
+    this.loading = true;
+    
+    this.designersService.getAllDesigners() // Remover el parámetro (20)
+      .subscribe({
+        next: (designers) => {
+          this.allDesigners = designers;
+          this.applyFilter(); // Cambiar de applyFilters a applyFilter si es necesario
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading designers:', error);
+          this.loading = false;
         }
       });
   }
@@ -256,16 +273,30 @@ export class DesignersComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleFavoriteDesigner(designerName: string): void {
-    if (this.favoriteService.isFavoriteDesigner(designerName)) {
-      this.favoriteService.removeFavoriteDesigner(designerName);
-    } else {
-      this.favoriteService.addFavoriteDesigner(designerName);
+  // Método corregido para manejar favoritos
+  toggleFavoriteDesigner(designer: Designer, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
     }
+
+    const favoriteDesigner: FavoriteDesigner = {
+      id: designer.id.toString(),
+      name: designer.name,
+      imageUrl: designer.imageUrl,
+      itemsCount: designer.itemsCount
+    };
+    
+    this.favoriteService.toggleFavoriteDesigner(favoriteDesigner);
   }
 
-  isFavoriteDesigner(designerName: string): boolean {
-    return this.favoriteService.isFavoriteDesigner(designerName);
+  // Método simplificado para añadir a favoritos (mantener por compatibilidad)
+  addToFavorites(designer: Designer): void {
+    this.toggleFavoriteDesigner(designer);
+  }
+
+  isFavoriteDesigner(designerId: string): boolean {
+    return this.favoriteService.isFavoriteDesigner(designerId);
   }
 }
 

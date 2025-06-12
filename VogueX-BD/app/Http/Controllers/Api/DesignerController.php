@@ -4,20 +4,15 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Designer;
-use App\Services\DesignerDataService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DesignerController extends Controller
 {
-    protected $designerDataService;
-
-    public function __construct(DesignerDataService $designerDataService)
-    {
-        $this->designerDataService = $designerDataService;
-    }
-
     public function index(Request $request)
     {
+        Log::info('DesignerController@index called', $request->all());
+        
         $query = Designer::query();
 
         // Filtros
@@ -29,29 +24,62 @@ class DesignerController extends Controller
             $query->where('is_featured', true);
         }
 
-        if ($request->has('letter')) {
-            $letter = strtoupper($request->letter);
-            if ($letter === '#') {
-                $query->whereRaw('UPPER(LEFT(name, 1)) NOT REGEXP "[A-Z]"');
-            } else {
-                $query->whereRaw('UPPER(LEFT(name, 1)) = ?', [$letter]);
-            }
-        }
-
         if ($request->has('search')) {
-            $query->where('name', 'LIKE', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where('name', 'LIKE', '%' . $search . '%');
+            Log::info('Searching designers with term: ' . $search);
         }
 
-        if ($request->has('limit')) {
-            $query->limit($request->limit);
+        // Paginación mejorada
+        $perPage = $request->get('per_page', 50); // Aumentar por defecto
+        $maxPerPage = $request->get('limit', 100); // Límite máximo
+        
+        if ($maxPerPage && $maxPerPage <= 500) {
+            $perPage = $maxPerPage;
         }
 
-        $designers = $query->orderBy('name')->get();
+        // Si hay búsqueda, no paginar para el autocompletado
+        if ($request->has('search') && $request->has('limit')) {
+            $designers = $query->orderBy('name')
+                ->limit($request->limit)
+                ->get();
+            
+            Log::info('Search results count: ' . $designers->count());
 
-        return response()->json([
-            'data' => $designers,
-            'total' => $designers->count()
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $designers,
+                'total' => $designers->count()
+            ]);
+        }
+
+        // Paginación normal
+        if ($request->has('all') && $request->all === 'true') {
+            // Devolver todos los diseñadores (con límite de seguridad)
+            $designers = $query->orderBy('name')->limit(2500)->get();
+        } else {
+            // Paginación estándar
+            $designers = $query->orderBy('name')->paginate($perPage);
+        }
+        
+        Log::info('Total designers in response: ' . $designers->count());
+
+        if ($designers instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+            return response()->json([
+                'success' => true,
+                'data' => $designers->items(),
+                'total' => $designers->total(),
+                'current_page' => $designers->currentPage(),
+                'last_page' => $designers->lastPage(),
+                'per_page' => $designers->perPage()
+            ]);
+        } else {
+            return response()->json([
+                'success' => true,
+                'data' => $designers,
+                'total' => $designers->count()
+            ]);
+        }
     }
 
     public function show($id)

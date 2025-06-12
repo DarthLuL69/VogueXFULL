@@ -3,223 +3,292 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Product;
-use App\Models\Designer;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('category')->get();
-        return response()->json($products);
+        $query = Product::active();
+
+        // Filtros
+        if ($request->has('category')) {
+            $query->byCategory($request->category);
+        }
+
+        if ($request->has('subcategory')) {
+            $query->bySubcategory($request->subcategory);
+        }
+
+        if ($request->has('brand') || $request->has('designer')) {
+            $brand = $request->brand ?: $request->designer;
+            $query->byBrand($brand);
+        }
+
+        if ($request->has('search')) {
+            $query->search($request->search);
+        }
+
+        // Ordenamiento
+        $sortBy = $request->get('sort', 'created_at');
+        $sortOrder = $request->get('order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        // Paginación
+        $perPage = $request->get('per_page', 20);
+        $products = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $products->items(),
+            'pagination' => [
+                'current_page' => $products->currentPage(),
+                'per_page' => $products->perPage(),
+                'total' => $products->total(),
+                'last_page' => $products->lastPage(),
+            ]
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'brand' => 'nullable|string|max:255',
-            'size' => 'nullable|string|max:50',
-            'condition' => 'nullable|in:new,like_new,excellent,good,fair',
-            'original_price' => 'nullable|numeric|min:0',
-            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
+        Log::info('=== PRODUCT STORE METHOD CALLED ===');
+        Log::info('Request method: ' . $request->method());
+        Log::info('Request URL: ' . $request->url());
+        Log::info('Request data (excluding images): ', $request->except(['images']));
 
-        // Buscar o crear diseñador por nombre de marca
-        $designer = null;
-        if (!empty($validated['brand'])) {
-            $designer = Designer::firstOrCreate(
-                ['name' => $validated['brand']],
-                [
-                    'slug' => Str::slug($validated['brand']),
-                    'description' => "Fashion brand: {$validated['brand']}",
-                    'is_popular' => false,
-                    'is_featured' => false,
-                    'items_count' => 0
-                ]
-            );
-            $validated['designer_id'] = $designer->id;
+        try {
+            // Validación
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'brand' => 'required|string|max:255',
+                'description' => 'required|string|min:5',
+                'price' => 'required|numeric|min:0',
+                'condition' => 'required|string',
+                'size' => 'required|string',
+                'mainCategory' => 'required|string',
+                'subCategory' => 'required|string',
+                'finalCategory' => 'required|string',
+            ]);
+
+            Log::info('Validation passed successfully');
+
+            // Procesar imágenes
+            $imageUrls = [];
+            
+            for ($i = 0; $i < 10; $i++) {
+                if ($request->has("images.{$i}")) {
+                    Log::info("Found image {$i}");
+                    
+                    $base64Image = $request->input("images.{$i}");
+                    
+                    if (preg_match('/^data:image\/(\w+);base64,/', $base64Image)) {
+                        $imageUrl = $this->saveBase64Image($base64Image);
+                        if ($imageUrl) {
+                            $imageUrls[] = $imageUrl;
+                            Log::info("Image {$i} saved successfully: {$imageUrl}");
+                        }
+                    }
+                }
+            }
+
+            if (empty($imageUrls)) {
+                Log::warning('No images were saved');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Se requiere al menos una imagen válida'
+                ], 422);
+            }
+
+            // Buscar o crear category_id basado en main_category
+            $categoryId = $this->getOrCreateCategoryId($validated['mainCategory']);
+
+            // Crear producto
+            $product = Product::create([
+                'name' => $validated['name'],
+                'brand' => $validated['brand'],
+                'description' => $validated['description'],
+                'price' => $validated['price'],
+                'condition' => $validated['condition'],
+                'size' => $validated['size'],
+                'main_category' => $validated['mainCategory'],
+                'sub_category' => $validated['subCategory'],
+                'final_category' => $validated['finalCategory'],
+                'images' => $imageUrls,
+                'image_url' => $imageUrls[0],
+                'category_id' => $categoryId,
+                'is_active' => true,
+                'status' => 'active',
+                'user_id' => null,
+            ]);
+
+            Log::info('Product created successfully with ID: ' . $product->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Producto creado exitosamente',
+                'data' => $product
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation failed: ', $e->errors());
+            return response()->json([
+                'success' => false,
+                'message' => 'Errores de validación',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Exception in store method: ' . $e->getMessage());
+            Log::error('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error interno del servidor',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function getOrCreateCategoryId($mainCategory)
+    {
+        // Mapeo de categorías principales a IDs
+        $categoryMap = [
+            'menswear' => 1,
+            'womenswear' => 2,
+            'sneakers' => 3,
+            'footwear' => 3,
+        ];
+
+        $categoryId = $categoryMap[$mainCategory] ?? 1;
+
+        // Verificar si existe, si no, crear
+        $category = \DB::table('categories')->where('id', $categoryId)->first();
+        
+        if (!$category) {
+            $categoryName = ucfirst($mainCategory);
+            $slug = \Str::slug($categoryName);
+            
+            \DB::table('categories')->insert([
+                'id' => $categoryId,
+                'name' => $categoryName,
+                'slug' => $slug,
+                'description' => 'Categoría ' . $categoryName,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
 
-        // Crear el producto
-        $product = Product::create([
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'price' => $validated['price'],
-            'category_id' => $validated['category_id'],
-            'designer_id' => $validated['designer_id'] ?? null,
-            'is_active' => true
-        ]);
+        return $categoryId;
+    }
 
-        // Procesar y guardar las imágenes
-        if ($request->hasFile('images')) {
-            $imageUrls = [];
-            foreach ($request->file('images') as $image) {
-                $filename = Str::random(40) . '.' . $image->getClientOriginalExtension();
-                $path = $image->storeAs('products', $filename, 'public');
-                $imageUrls[] = Storage::url($path);
+    private function saveBase64Image($base64String)
+    {
+        try {
+            Log::info('Starting image save process');
+            
+            if (!preg_match('/^data:image\/(\w+);base64,/', $base64String, $matches)) {
+                Log::error('Invalid base64 format');
+                return null;
             }
             
-            // Guardar las URLs de las imágenes en el producto
-            $product->image_url = $imageUrls[0]; // Primera imagen como principal
-            $product->images = $imageUrls; // Todas las imágenes
-            $product->save();
+            $extension = $matches[1] ?? 'png';
+            
+            $imageData = preg_replace('/^data:image\/\w+;base64,/', '', $base64String);
+            $imageData = base64_decode($imageData);
+            
+            if ($imageData === false) {
+                Log::error('Failed to decode base64');
+                return null;
+            }
+            
+            // Crear directorio si no existe
+            $productsDir = storage_path('app/public/products');
+            if (!file_exists($productsDir)) {
+                mkdir($productsDir, 0755, true);
+                Log::info('Created products directory');
+            }
+            
+            // Generar nombre único
+            $filename = 'products/' . Str::uuid() . '.' . $extension;
+            $fullPath = storage_path('app/public/' . $filename);
+            
+            // Guardar archivo
+            $result = file_put_contents($fullPath, $imageData);
+            
+            if ($result === false) {
+                Log::error('Failed to write file');
+                return null;
+            }
+            
+            Log::info('File saved successfully');
+            return $filename;
+            
+        } catch (\Exception $e) {
+            Log::error('Exception in saveBase64Image: ' . $e->getMessage());
+            return null;
         }
-
-        return response()->json($product->load(['category', 'designer']), 201);
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show(Product $product)
     {
-        return response()->json($product->load('category'));
+        return response()->json([
+            'success' => true,
+            'data' => $product
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
             'name' => 'string|max:255',
-            'description' => 'string',
+            'brand' => 'string|max:255',
+            'description' => 'string|min:5',
             'price' => 'numeric|min:0',
-            'category_id' => 'exists:categories,id',
-            'is_active' => 'boolean',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'condition' => 'string',
+            'size' => 'string',
+            'status' => 'in:active,sold,inactive',
         ]);
 
         $product->update($validated);
 
-        // Procesar nuevas imágenes si se proporcionan
-        if ($request->hasFile('images')) {
-            // Eliminar imágenes antiguas
-            if ($product->images) {
-                foreach ($product->images as $oldImage) {
-                    $path = str_replace('/storage/', '', $oldImage);
-                    Storage::disk('public')->delete($path);
-                }
-            }
-
-            $imageUrls = [];
-            foreach ($request->file('images') as $image) {
-                $filename = Str::random(40) . '.' . $image->getClientOriginalExtension();
-                $path = $image->storeAs('products', $filename, 'public');
-                $imageUrls[] = Storage::url($path);
-            }
-            
-            $product->image_url = $imageUrls[0];
-            $product->images = $imageUrls;
-            $product->save();
-        }
-
-        return response()->json($product);
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto actualizado exitosamente',
+            'data' => $product
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy(Product $product)
     {
-        // Eliminar imágenes
         if ($product->images) {
             foreach ($product->images as $image) {
-                $path = str_replace('/storage/', '', $image);
-                Storage::disk('public')->delete($path);
+                Storage::disk('public')->delete($image);
             }
         }
 
         $product->delete();
-        return response()->json(null, 204);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto eliminado exitosamente'
+        ]);
     }
 
-    public function search(Request $request)
+    public function getBrands()
     {
-        $query = $request->get('q');
-        $designer = $request->get('designer');
-        $category = $request->get('category');
-        $minPrice = $request->get('min_price');
-        $maxPrice = $request->get('max_price');
-        $condition = $request->get('condition');
-        
-        $products = Product::query()->where('is_active', true);
+        $brands = Product::select('brand')
+            ->whereNotNull('brand')
+            ->distinct()
+            ->orderBy('brand')
+            ->pluck('brand');
 
-        if (!empty($query)) {
-            $products->where(function($q) use ($query) {
-                $q->where('name', 'LIKE', "%{$query}%")
-                  ->orWhere('description', 'LIKE', "%{$query}%")
-                  ->orWhere('brand', 'LIKE', "%{$query}%");
-            });
-        }
-
-        if (!empty($designer)) {
-            $products->whereHas('designer', function($q) use ($designer) {
-                $q->where('name', 'LIKE', "%{$designer}%");
-            });
-        }
-
-        if (!empty($category)) {
-            $products->where('category_id', $category);
-        }
-
-        if (!empty($minPrice)) {
-            $products->where('price', '>=', $minPrice);
-        }
-
-        if (!empty($maxPrice)) {
-            $products->where('price', '<=', $maxPrice);
-        }
-
-        if (!empty($condition)) {
-            $products->where('condition', $condition);
-        }
-
-        $products = $products->with(['category', 'designer'])
-                           ->orderBy('created_at', 'desc')
-                           ->paginate(20);
-
-        return response()->json($products);
-    }
-
-    public function getBrands(Request $request)
-    {
-        $query = $request->get('q', '');
-        
-        $brands = Designer::where('name', 'LIKE', "%{$query}%")
-                         ->orderBy('items_count', 'desc')
-                         ->orderBy('name')
-                         ->limit(10)
-                         ->get(['id', 'name', 'items_count']);
-
-        return response()->json($brands);
+        return response()->json([
+            'success' => true,
+            'data' => $brands
+        ]);
     }
 }

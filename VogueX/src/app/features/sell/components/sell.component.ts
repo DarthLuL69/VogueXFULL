@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../../core/services';
+import { DesignersService, Designer } from '../../../shared/services';
 import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
 interface Category {
@@ -16,12 +17,6 @@ interface ProductCondition {
   name: string;
   color: string;
   description: string;
-}
-
-interface SizeSystem {
-  id: string;
-  name: string;
-  sizes: string[];
 }
 
 @Component({
@@ -38,156 +33,8 @@ export class SellComponent implements OnInit {
   isDragging = false;
   isDropdownOpen = false;
   hoveredCondition: ProductCondition | null = null;
-  selectedSizeSystem: SizeSystem | null = null;
 
-  sizeSystems: { [key: string]: SizeSystem[] } = {
-    // Ropa superior
-    'tshirts': [
-      {
-        id: 'eu',
-        name: 'Tallas Europeas',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-      },
-      {
-        id: 'us',
-        name: 'Tallas USA',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-      },
-      {
-        id: 'uk',
-        name: 'Tallas UK',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-      }
-    ],
-    'shirts': [
-      {
-        id: 'eu',
-        name: 'Tallas Europeas',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-      },
-      {
-        id: 'us',
-        name: 'Tallas USA',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-      },
-      {
-        id: 'uk',
-        name: 'Tallas UK',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-      }
-    ],
-    // Ropa inferior
-    'pants': [
-      {
-        id: 'waist',
-        name: 'Talla de Cintura (cm)',
-        sizes: ['28', '30', '32', '34', '36', '38', '40', '42']
-      },
-      {
-        id: 'eu',
-        name: 'Tallas Europeas',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-      },
-      {
-        id: 'us',
-        name: 'Tallas USA',
-        sizes: ['28', '30', '32', '34', '36', '38', '40', '42']
-      }
-    ],
-    'jeans': [
-      {
-        id: 'waist',
-        name: 'Talla de Cintura (cm)',
-        sizes: ['28', '30', '32', '34', '36', '38', '40', '42']
-      },
-      {
-        id: 'eu',
-        name: 'Tallas Europeas',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-      },
-      {
-        id: 'us',
-        name: 'Tallas USA',
-        sizes: ['28', '30', '32', '34', '36', '38', '40', '42']
-      }
-    ],
-    // Calzado
-    'shoes': [
-      {
-        id: 'eu',
-        name: 'Tallas Europeas',
-        sizes: ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46']
-      },
-      {
-        id: 'uk',
-        name: 'Tallas UK',
-        sizes: ['3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13']
-      },
-      {
-        id: 'us',
-        name: 'Tallas USA',
-        sizes: ['5', '6', '7', '8', '9', '10', '11', '12', '13', '14']
-      }
-    ],
-    // Vestidos
-    'dresses': [
-      {
-        id: 'eu',
-        name: 'Tallas Europeas',
-        sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-      },
-      {
-        id: 'us',
-        name: 'Tallas USA',
-        sizes: ['0', '2', '4', '6', '8', '10', '12', '14', '16']
-      },
-      {
-        id: 'uk',
-        name: 'Tallas UK',
-        sizes: ['4', '6', '8', '10', '12', '14', '16', '18', '20']
-      }
-    ]
-  };
-
-  productConditions: ProductCondition[] = [
-    {
-      id: 'new_with_tags',
-      name: 'Nuevo con etiquetas',
-      color: '#4CAF50', // Verde fuerte
-      description: 'Producto completamente nuevo con todas sus etiquetas originales'
-    },
-    {
-      id: 'new_without_tags',
-      name: 'Nuevo sin etiquetas',
-      color: '#8BC34A', // Verde claro
-      description: 'Producto nuevo pero sin etiquetas originales'
-    },
-    {
-      id: 'like_new',
-      name: 'Como nuevo',
-      color: '#CDDC39', // Verde lima
-      description: 'Producto usado una o dos veces, en excelente estado'
-    },
-    {
-      id: 'good',
-      name: 'Buen estado',
-      color: '#FFC107', // Amarillo
-      description: 'Producto usado pero en buen estado, con signos mínimos de uso'
-    },
-    {
-      id: 'fair',
-      name: 'Estado regular',
-      color: '#FF9800', // Naranja
-      description: 'Producto usado con signos visibles de uso pero funcional'
-    },
-    {
-      id: 'poor',
-      name: 'Mal estado',
-      color: '#F44336', // Rojo
-      description: 'Producto muy usado o con daños significativos'
-    }
-  ];
-
+  // Categorías actualizadas
   categories: Category[] = [
     {
       id: 'menswear',
@@ -197,28 +44,41 @@ export class SellComponent implements OnInit {
           id: 'tops',
           name: 'Tops',
           subcategories: [
-            { id: 'tshirts', name: 'T-Shirts' },
+            { id: 't-shirts', name: 'T-Shirts' },
             { id: 'shirts', name: 'Shirts' },
-            { id: 'polos', name: 'Polos' },
-            { id: 'sweaters', name: 'Sweaters' }
+            { id: 'hoodies', name: 'Hoodies' },
+            { id: 'sweaters', name: 'Sweaters' },
+            { id: 'polos', name: 'Polos' }
           ]
         },
         {
           id: 'bottoms',
           name: 'Bottoms',
           subcategories: [
-            { id: 'pants', name: 'Pants' },
             { id: 'jeans', name: 'Jeans' },
-            { id: 'shorts', name: 'Shorts' }
+            { id: 'pants', name: 'Pants' },
+            { id: 'shorts', name: 'Shorts' },
+            { id: 'joggers', name: 'Joggers' }
           ]
         },
         {
-          id: 'footwear',
-          name: 'Footwear',
+          id: 'outerwear',
+          name: 'Outerwear',
           subcategories: [
-            { id: 'shoes', name: 'Shoes' },
-            { id: 'sneakers', name: 'Sneakers' },
-            { id: 'boots', name: 'Boots' }
+            { id: 'jackets', name: 'Jackets' },
+            { id: 'coats', name: 'Coats' },
+            { id: 'blazers', name: 'Blazers' },
+            { id: 'vests', name: 'Vests' }
+          ]
+        },
+        {
+          id: 'accessories',
+          name: 'Accessories',
+          subcategories: [
+            { id: 'belts', name: 'Belts' },
+            { id: 'watches', name: 'Watches' },
+            { id: 'bags', name: 'Bags' },
+            { id: 'hats', name: 'Hats' }
           ]
         }
       ]
@@ -231,26 +91,208 @@ export class SellComponent implements OnInit {
           id: 'tops',
           name: 'Tops',
           subcategories: [
-            { id: 'tops', name: 'Tops' },
-            { id: 'blouses', name: 'Blouses' }
-          ]
-        },
-        {
-          id: 'dresses',
-          name: 'Dresses',
-          subcategories: [
-            { id: 'dresses', name: 'Dresses' }
+            { id: 'blouses', name: 'Blouses' },
+            { id: 't-shirts', name: 'T-Shirts' },
+            { id: 'sweaters', name: 'Sweaters' },
+            { id: 'tank-tops', name: 'Tank Tops' }
           ]
         },
         {
           id: 'bottoms',
           name: 'Bottoms',
           subcategories: [
+            { id: 'jeans', name: 'Jeans' },
             { id: 'skirts', name: 'Skirts' },
-            { id: 'pants', name: 'Pants' }
+            { id: 'pants', name: 'Pants' },
+            { id: 'shorts', name: 'Shorts' }
+          ]
+        },
+        {
+          id: 'dresses',
+          name: 'Dresses',
+          subcategories: [
+            { id: 'casual-dresses', name: 'Casual Dresses' },
+            { id: 'evening-dresses', name: 'Evening Dresses' },
+            { id: 'maxi-dresses', name: 'Maxi Dresses' }
+          ]
+        },
+        {
+          id: 'outerwear',
+          name: 'Outerwear',
+          subcategories: [
+            { id: 'jackets', name: 'Jackets' },
+            { id: 'coats', name: 'Coats' },
+            { id: 'cardigans', name: 'Cardigans' }
+          ]
+        },
+        {
+          id: 'accessories',
+          name: 'Accessories',
+          subcategories: [
+            { id: 'bags', name: 'Bags' },
+            { id: 'jewelry', name: 'Jewelry' },
+            { id: 'scarves', name: 'Scarves' },
+            { id: 'belts', name: 'Belts' }
           ]
         }
       ]
+    },
+    {
+      id: 'sneakers',
+      name: 'Footwear',
+      subcategories: [
+        {
+          id: 'sneakers',
+          name: 'Sneakers',
+          subcategories: [
+            { id: 'low-top-sneakers', name: 'Low Top Sneakers' },
+            { id: 'high-top-sneakers', name: 'High Top Sneakers' },
+            { id: 'mid-top-sneakers', name: 'Mid Top Sneakers' },
+            { id: 'slip-on-sneakers', name: 'Slip-On Sneakers' },
+            { id: 'running-shoes', name: 'Running Shoes' },
+            { id: 'basketball-shoes', name: 'Basketball Shoes' }
+          ]
+        },
+        {
+          id: 'boots',
+          name: 'Boots',
+          subcategories: [
+            { id: 'ankle-boots', name: 'Ankle Boots' },
+            { id: 'combat-boots', name: 'Combat Boots' },
+            { id: 'chelsea-boots', name: 'Chelsea Boots' },
+            { id: 'work-boots', name: 'Work Boots' },
+            { id: 'hiking-boots', name: 'Hiking Boots' },
+            { id: 'desert-boots', name: 'Desert Boots' }
+          ]
+        },
+        {
+          id: 'casual',
+          name: 'Casual',
+          subcategories: [
+            { id: 'loafers', name: 'Loafers' },
+            { id: 'moccasins', name: 'Moccasins' },
+            { id: 'boat-shoes', name: 'Boat Shoes' },
+            { id: 'espadrilles', name: 'Espadrilles' },
+            { id: 'canvas-shoes', name: 'Canvas Shoes' }
+          ]
+        },
+        {
+          id: 'sandals',
+          name: 'Sandals',
+          subcategories: [
+            { id: 'flip-flops', name: 'Flip Flops' },
+            { id: 'slides', name: 'Slides' },
+            { id: 'sport-sandals', name: 'Sport Sandals' },
+            { id: 'dress-sandals', name: 'Dress Sandals' }
+          ]
+        },
+        {
+          id: 'formal',
+          name: 'Formal',
+          subcategories: [
+            { id: 'oxford-shoes', name: 'Oxford Shoes' },
+            { id: 'derby-shoes', name: 'Derby Shoes' },
+            { id: 'brogues', name: 'Brogues' },
+            { id: 'monk-straps', name: 'Monk Straps' },
+            { id: 'dress-boots', name: 'Dress Boots' }
+          ]
+        }
+      ]
+    }
+  ];
+
+  // Sistema de tallas
+  sizeMappings: { [key: string]: string[] } = {
+    't-shirts': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'shirts': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'polos': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'sweaters': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'hoodies': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'blouses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'tank-tops': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'jeans': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48'],
+    'pants': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48'],
+    'shorts': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48'],
+    'joggers': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'skirts': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48'],
+    'low-top-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'high-top-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'mid-top-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'slip-on-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'running-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'basketball-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'ankle-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'combat-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'chelsea-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'work-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'hiking-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'desert-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'loafers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'moccasins': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'boat-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'espadrilles': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'canvas-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'flip-flops': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'slides': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'sport-sandals': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'dress-sandals': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'oxford-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'derby-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'brogues': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'monk-straps': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'dress-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'jackets': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'coats': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'blazers': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'vests': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'cardigans': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'casual-dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'evening-dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'maxi-dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'belts': ['S', 'M', 'L', 'XL'],
+    'watches': ['One Size'],
+    'bags': ['One Size'],
+    'hats': ['S', 'M', 'L', 'XL'],
+    'jewelry': ['One Size'],
+    'scarves': ['One Size']
+  };
+
+  productConditions: ProductCondition[] = [
+    {
+      id: 'new_with_tags',
+      name: 'Nuevo con etiquetas',
+      color: '#4CAF50',
+      description: 'Producto completamente nuevo con todas sus etiquetas originales'
+    },
+    {
+      id: 'new_without_tags',
+      name: 'Nuevo sin etiquetas',
+      color: '#8BC34A',
+      description: 'Producto nuevo pero sin etiquetas originales'
+    },
+    {
+      id: 'like_new',
+      name: 'Como nuevo',
+      color: '#CDDC39',
+      description: 'Producto usado una o dos veces, en excelente estado'
+    },
+    {
+      id: 'good',
+      name: 'Buen estado',
+      color: '#FFC107',
+      description: 'Producto usado pero en buen estado, con signos mínimos de uso'
+    },
+    {
+      id: 'fair',
+      name: 'Estado regular',
+      color: '#FF9800',
+      description: 'Producto usado con signos visibles de uso pero funcional'
+    },
+    {
+      id: 'poor',
+      name: 'Mal estado',
+      color: '#F44336',
+      description: 'Producto muy usado o con daños significativos'
     }
   ];
 
@@ -258,37 +300,16 @@ export class SellComponent implements OnInit {
   selectedSubCategory: string = '';
   selectedFinalCategory: string = '';
 
-  sizeMappings: { [key: string]: string[] } = {
-    // Ropa superior
-    'tshirts': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'shirts': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'polos': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'sweaters': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'tops': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'blouses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    
-    // Ropa inferior - incluye tanto tallas numéricas como letras
-    'pants': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'jeans': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'shorts': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'skirts': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    
-    // Calzado
-    'shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    
-    // Vestidos
-    'dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-  };
-
-  brandSuggestions: any[] = [];
+  // Designer search functionality
+  designerSuggestions: Designer[] = [];
+  showDesignerSuggestions = false;
   brandSearchSubject = new Subject<string>();
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private designersService: DesignersService
   ) {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -301,85 +322,27 @@ export class SellComponent implements OnInit {
       subCategory: ['', Validators.required],
       finalCategory: ['', Validators.required]
     });
-
-    // Suscribirse a cambios en la categoría final para actualizar los sistemas de tallas
-    this.productForm.get('finalCategory')?.valueChanges.subscribe(category => {
-      this.updateSizeSystems(category);
-    });
   }
 
   ngOnInit(): void {
-    // Setup brand autocomplete
     this.brandSearchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(query => {
-        if (query.length < 2) return [];
-        return this.apiService.searchBrands(query);
+        if (query.length < 2) {
+          this.designerSuggestions = [];
+          this.showDesignerSuggestions = false;
+          return [];
+        }
+        return this.designersService.searchDesigners(query);
       })
-    ).subscribe(brands => {
-      this.brandSuggestions = brands;
+    ).subscribe(designers => {
+      this.designerSuggestions = designers.slice(0, 10);
+      this.showDesignerSuggestions = this.designerSuggestions.length > 0;
     });
   }
 
-  onMainCategoryChange(categoryId: string): void {
-    this.selectedMainCategory = categoryId;
-    this.selectedSubCategory = '';
-    this.selectedFinalCategory = '';
-    this.productForm.patchValue({
-      subCategory: '',
-      finalCategory: ''
-    });
-  }
-
-  onSubCategoryChange(categoryId: string): void {
-    this.selectedSubCategory = categoryId;
-    this.selectedFinalCategory = '';
-    this.productForm.patchValue({
-      finalCategory: ''
-    });
-  }
-
-  onFinalCategoryChange(event: Event): void {
-    const category = (event.target as HTMLSelectElement).value;
-    console.log('Cambio de categoría a:', category);
-    
-    // Resetear la talla cuando cambia la categoría
-    this.productForm.patchValue({ size: '' });
-    
-    // Actualizar la categoría final
-    this.selectedFinalCategory = category;
-  }
-
-  getSubCategories(): Category[] {
-    const mainCategory = this.categories.find(cat => cat.id === this.selectedMainCategory);
-    return mainCategory?.subcategories || [];
-  }
-
-  getFinalCategories(): Category[] {
-    const mainCategory = this.categories.find(cat => cat.id === this.selectedMainCategory);
-    const subCategory = mainCategory?.subcategories?.find(sub => sub.id === this.selectedSubCategory);
-    return subCategory?.subcategories || [];
-  }
-
-  getMainCategoryName(): string {
-    const category = this.categories.find(cat => cat.id === this.selectedMainCategory);
-    return category?.name || '';
-  }
-
-  getSubCategoryName(): string {
-    const mainCategory = this.categories.find(cat => cat.id === this.selectedMainCategory);
-    const subCategory = mainCategory?.subcategories?.find(sub => sub.id === this.selectedSubCategory);
-    return subCategory?.name || '';
-  }
-
-  getFinalCategoryName(): string {
-    const mainCategory = this.categories.find(cat => cat.id === this.selectedMainCategory);
-    const subCategory = mainCategory?.subcategories?.find(sub => sub.id === this.selectedSubCategory);
-    const finalCategory = subCategory?.subcategories?.find(final => final.id === this.selectedFinalCategory);
-    return finalCategory?.name || '';
-  }
-
+  // Image handling methods
   onDragOver(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
@@ -411,7 +374,6 @@ export class SellComponent implements OnInit {
   }
 
   private handleFiles(files: File[]): void {
-    // Verificar si excedemos el límite de imágenes
     if (this.imagePreviews.length + files.length > this.maxImages) {
       alert(`Solo puedes subir un máximo de ${this.maxImages} imágenes`);
       return;
@@ -432,32 +394,123 @@ export class SellComponent implements OnInit {
     this.imagePreviews.splice(index, 1);
   }
 
-  onSubmit(): void {
-    if (this.productForm.valid && this.imagePreviews.length > 0) {
-      // Aquí iría la lógica para enviar el formulario al backend
-      console.log('Formulario enviado:', {
-        ...this.productForm.value,
-        images: this.imagePreviews
+  // Category methods
+  onMainCategoryChange(categoryId: string): void {
+    this.selectedMainCategory = categoryId;
+    this.selectedSubCategory = '';
+    this.selectedFinalCategory = '';
+    
+    this.productForm.patchValue({
+      mainCategory: categoryId,
+      subCategory: '',
+      finalCategory: '',
+      size: ''
+    });
+  }
+
+  onSubCategoryChange(categoryId: string): void {
+    this.selectedSubCategory = categoryId;
+    this.selectedFinalCategory = '';
+    
+    this.productForm.patchValue({
+      subCategory: categoryId,
+      finalCategory: '',
+      size: ''
+    });
+  }
+
+  onFinalCategoryChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const category = target?.value;
+    
+    if (category) {
+      this.productForm.patchValue({ 
+        finalCategory: category,
+        size: '' 
       });
-      
-      // Redirigir a la página de éxito o lista de productos
-      this.router.navigate(['/profile']);
-    } else {
-      if (this.imagePreviews.length === 0) {
-        alert('Debes subir al menos una imagen');
-      }
-      // Marcar todos los campos como touched para mostrar errores
-      Object.keys(this.productForm.controls).forEach(key => {
-        const control = this.productForm.get(key);
-        control?.markAsTouched();
-      });
+      this.selectedFinalCategory = category;
     }
   }
 
-  onCancel(): void {
-    if (confirm('¿Estás seguro de que quieres cancelar? Se perderán todos los datos.')) {
-      this.router.navigate(['/profile']);
+  getSubCategories(): Category[] {
+    const mainCategory = this.categories.find(cat => cat.id === this.selectedMainCategory);
+    return mainCategory?.subcategories || [];
+  }
+
+  getFinalCategories(): Category[] {
+    const mainCategory = this.categories.find(cat => cat.id === this.selectedMainCategory);
+    const subCategory = mainCategory?.subcategories?.find(sub => sub.id === this.selectedSubCategory);
+    return subCategory?.subcategories || [];
+  }
+
+  getMainCategoryName(): string {
+    const category = this.categories.find(cat => cat.id === this.selectedMainCategory);
+    return category?.name || '';
+  }
+
+  getSubCategoryName(): string {
+    const mainCategory = this.categories.find(cat => cat.id === this.selectedMainCategory);
+    const subCategory = mainCategory?.subcategories?.find(sub => sub.id === this.selectedSubCategory);
+    return subCategory?.name || '';
+  }
+
+  getFinalCategoryName(): string {
+    const mainCategory = this.categories.find(cat => cat.id === this.selectedMainCategory);
+    const subCategory = mainCategory?.subcategories?.find(sub => sub.id === this.selectedSubCategory);
+    const finalCategory = subCategory?.subcategories?.find(final => final.id === this.selectedFinalCategory);
+    return finalCategory?.name || '';
+  }
+
+  // Size methods
+  getAvailableSizes(): string[] {
+    const selectedCategory = this.productForm.get('finalCategory')?.value;
+    if (!selectedCategory) {
+      return [];
     }
+    return this.sizeMappings[selectedCategory] || [];
+  }
+
+  // Brand/Designer methods
+  onBrandInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    if (target) {
+      this.brandSearchSubject.next(target.value);
+    }
+  }
+
+  onBrandFocus(): void {
+    if (this.designerSuggestions.length > 0) {
+      this.showDesignerSuggestions = true;
+    }
+  }
+
+  onBrandBlur(): void {
+    setTimeout(() => {
+      this.showDesignerSuggestions = false;
+    }, 200);
+  }
+
+  selectDesigner(designer: Designer): void {
+    this.productForm.patchValue({ brand: designer.name });
+    this.showDesignerSuggestions = false;
+  }
+
+  // Condition methods
+  toggleConditionDropdown(): void {
+    this.isDropdownOpen = !this.isDropdownOpen;
+  }
+
+  onConditionHover(condition: ProductCondition): void {
+    this.hoveredCondition = condition;
+  }
+
+  onConditionLeave(): void {
+    this.hoveredCondition = null;
+  }
+
+  selectCondition(condition: ProductCondition): void {
+    this.productForm.patchValue({ condition: condition.id });
+    this.isDropdownOpen = false;
   }
 
   getConditionColor(conditionId: string): string {
@@ -475,66 +528,97 @@ export class SellComponent implements OnInit {
     return condition?.name || '';
   }
 
-  toggleConditionDropdown() {
-    this.isDropdownOpen = !this.isDropdownOpen;
+  // Form validation methods
+  isFormValid(): boolean {
+    const formValid = this.productForm.valid;
+    const hasImages = this.imagePreviews.length > 0;
+    const hasAllCategories = !!(this.selectedMainCategory && this.selectedSubCategory && this.selectedFinalCategory);
+    
+    return formValid && hasImages && hasAllCategories;
   }
 
-  onConditionHover(condition: ProductCondition) {
-    this.hoveredCondition = condition;
+  getFormErrors(): any {
+    const errors: any = {};
+    Object.keys(this.productForm.controls).forEach(key => {
+      const control = this.productForm.get(key);
+      if (control && control.errors) {
+        errors[key] = control.errors;
+      }
+    });
+    return errors;
   }
 
-  onConditionLeave() {
-    this.hoveredCondition = null;
-  }
+  // Submit methods
+  onSubmit(): void {
+    if (!this.isFormValid()) {
+      this.showFormErrors();
+      return;
+    }
 
-  selectCondition(condition: ProductCondition) {
-    this.productForm.patchValue({ condition: condition.id });
-    this.isDropdownOpen = false;
-  }
+    const formData = new FormData();
+    
+    Object.keys(this.productForm.value).forEach(key => {
+      const value = this.productForm.value[key];
+      if (value !== null && value !== undefined) {
+        formData.append(key, value);
+      }
+    });
+    
+    this.imagePreviews.forEach((preview, index) => {
+      formData.append(`images[${index}]`, preview);
+    });
 
-  updateSizeSystems(category: string) {
-    const systems = this.sizeSystems[category] || [];
-    this.selectedSizeSystem = null;
-    this.productForm.patchValue({
-      sizeSystem: '',
-      size: ''
+    this.apiService.createProduct(formData).subscribe({
+      next: (response: any) => {
+        alert('¡Producto publicado exitosamente!');
+        this.resetForm();
+        this.router.navigate(['/shop']);
+      },
+      error: (error: any) => {
+        console.error('Error creating product:', error);
+        alert('Error al publicar el producto. Intenta de nuevo.');
+      }
     });
   }
 
-  onSizeSystemChange(systemId: string) {
-    const category = this.productForm.get('finalCategory')?.value;
-    const systems = this.sizeSystems[category] || [];
-    this.selectedSizeSystem = systems.find(s => s.id === systemId) || null;
-    this.productForm.patchValue({ size: '' });
-  }
-
-  getAvailableSizeSystems(): SizeSystem[] {
-    const category = this.productForm.get('finalCategory')?.value;
-    return this.sizeSystems[category] || [];
-  }
-
-  getAvailableSizes(): string[] {
-    const selectedCategory = this.productForm.get('finalCategory')?.value;
-    console.log('Categoría seleccionada:', selectedCategory);
-    
-    if (!selectedCategory) {
-      return [];
+  private showFormErrors(): void {
+    if (this.imagePreviews.length === 0) {
+      alert('Debes subir al menos una imagen');
+      return;
     }
 
-    const sizes = this.sizeMappings[selectedCategory] || [];
-    console.log('Tallas disponibles:', sizes);
-    return sizes;
-  }
+    if (!this.selectedMainCategory || !this.selectedSubCategory || !this.selectedFinalCategory) {
+      alert('Debes seleccionar todas las categorías');
+      return;
+    }
 
-  onBrandInput(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    if (target) {
-      this.brandSearchSubject.next(target.value);
+    const errors: string[] = [];
+    Object.keys(this.productForm.controls).forEach(key => {
+      const control = this.productForm.get(key);
+      if (control && control.invalid) {
+        control.markAsTouched();
+        if (control.errors?.['required']) {
+          errors.push(`${key} es requerido`);
+        }
+      }
+    });
+
+    if (errors.length > 0) {
+      alert(`Errores: ${errors.join(', ')}`);
     }
   }
 
-  selectBrand(brand: any): void {
-    this.productForm.patchValue({ brand: brand.name });
-    this.brandSuggestions = [];
+  private resetForm(): void {
+    this.productForm.reset();
+    this.imagePreviews = [];
+    this.selectedMainCategory = '';
+    this.selectedSubCategory = '';
+    this.selectedFinalCategory = '';
+  }
+
+  onCancel(): void {
+    if (confirm('¿Seguro que quieres cancelar?')) {
+      this.router.navigate(['/profile']);
+    }
   }
 }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FavoriteService } from '../../../shared/services';
 import { GrailedApiService } from '../../../shared/services';
+import { ApiService } from '../../../core/services';
 import { DesignersService, Designer } from '../../../shared/services';
 import { HttpClientModule } from '@angular/common/http';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
@@ -48,39 +49,59 @@ export class ShopComponent implements OnInit, OnDestroy {
       accessories: ['Bags', 'Jewelry', 'Scarves', 'Belts']
     },
     sneakers: {
-      style: ['Low Top', 'High Top', 'Mid Top', 'Slip-On'],
-      type: ['Running', 'Basketball', 'Lifestyle', 'Skateboarding'],
-      brand: ['Nike', 'Adidas', 'Jordan', 'Converse', 'Vans']
+      sneakers: ['Low Top Sneakers', 'High Top Sneakers', 'Mid Top Sneakers', 'Slip-On Sneakers', 'Running Shoes', 'Basketball Shoes'],
+      boots: ['Ankle Boots', 'Combat Boots', 'Chelsea Boots', 'Work Boots', 'Hiking Boots', 'Desert Boots'],
+      casual: ['Loafers', 'Moccasins', 'Boat Shoes', 'Espadrilles', 'Canvas Shoes'],
+      sandals: ['Flip Flops', 'Slides', 'Sport Sandals', 'Dress Sandals'],
+      formal: ['Oxford Shoes', 'Derby Shoes', 'Brogues', 'Monk Straps', 'Dress Boots']
     }
   };
 
-  // Sistema de tallas (copiado del componente sell)
+  // Sistema de tallas actualizado para coincidir con sell
   sizeMappings: { [key: string]: string[] } = {
     // Ropa superior
-    'tshirts': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    't-shirts': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'shirts': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'polos': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'sweaters': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'hoodies': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'blouses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'tank tops': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'tank-tops': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     
-    // Ropa inferior - incluye tanto tallas numéricas como letras
+    // Ropa inferior
     'jeans': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'pants': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'shorts': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'joggers': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'skirts': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
     
-    // Calzado
-    'low top': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'high top': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'mid top': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'slip-on': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'running': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'basketball': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'lifestyle': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'skateboarding': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    // Calzado - todas las subcategorías específicas
+    'low-top-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'high-top-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'mid-top-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'slip-on-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'running-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'basketball-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'ankle-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'combat-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'chelsea-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'work-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'hiking-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'desert-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'loafers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'moccasins': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'boat-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'espadrilles': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'canvas-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'flip-flops': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'slides': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'sport-sandals': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'dress-sandals': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'oxford-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'derby-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'brogues': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'monk-straps': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'dress-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
     
     // Abrigos y chaquetas
     'jackets': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
@@ -90,11 +111,11 @@ export class ShopComponent implements OnInit, OnDestroy {
     'cardigans': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
 
     // Vestidos
-    'casual dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'evening dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'maxi dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'casual-dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'evening-dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'maxi-dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
 
-    // Accesorios (talla única o rangos específicos)
+    // Accesorios
     'belts': ['S', 'M', 'L', 'XL'],
     'watches': ['One Size'],
     'bags': ['One Size'],
@@ -113,7 +134,8 @@ export class ShopComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute, 
     private favoriteService: FavoriteService, 
-    private apiService: GrailedApiService,
+    private grailedApiService: GrailedApiService,
+    private apiService: ApiService,
     private designersService: DesignersService
   ) { 
     // Setup designer search autocomplete
@@ -148,37 +170,44 @@ export class ShopComponent implements OnInit, OnDestroy {
       this.selectedCategory = params['category'] || null;
       this.selectedSubcategory = params['subcategory'] || null;
       const searchTerm = params['search'] || null;
+      const designerFilter = params['designer'] || null;
 
       console.log('Categoría seleccionada:', this.selectedCategory);
       console.log('Subcategoría seleccionada:', this.selectedSubcategory);
       console.log('Término de búsqueda:', searchTerm);
+      console.log('Filtro de diseñador:', designerFilter);
 
+      // Cargar productos de nuestra API local primero
+      this.loadLocalProducts({ 
+        category: this.selectedCategory, 
+        subcategory: this.selectedSubcategory, 
+        search: searchTerm,
+        designer: designerFilter 
+      });
+
+      // También buscar en Grailed API si hay término de búsqueda
       if (searchTerm) {
-        this.apiService.search(searchTerm).subscribe(results => {
-           if (results && results.hits) {
-             this.products = results.hits.map((hit: any) => ({
-               id: hit.id,
-               name: hit.name || hit.title,
-               imageUrl: hit.image_url || hit.photo_url,
-               price: hit.price,
-               timeAgo: hit.listed_at ? this.getTimeAgo(new Date(hit.listed_at * 1000)) : '',
-               originalPrice: hit.original_price || undefined,
-               size: hit.size || undefined,
-             }));
-           } else {
-             this.products = [];
-           }
-          console.log('API Search Results for Products:', this.products);
+        this.grailedApiService.search(searchTerm).subscribe(results => {
+          if (results && results.hits) {
+            const grailedProducts = results.hits.map((hit: any) => ({
+              id: `grailed_${hit.id}`,
+              name: hit.name || hit.title,
+              imageUrl: hit.image_url || hit.photo_url,
+              price: hit.price,
+              timeAgo: hit.listed_at ? this.getTimeAgo(new Date(hit.listed_at * 1000)) : '',
+              originalPrice: hit.original_price || undefined,
+              size: hit.size || undefined,
+              source: 'grailed'
+            }));
+            
+            // Combinar productos locales con Grailed
+            this.products = [...this.products, ...grailedProducts];
+          }
+          console.log('Combined products:', this.products);
         });
-      } else if (this.selectedCategory) {
-        console.log('Implementar búsqueda por categoría si es necesario.');
-         this.products = [];
-      } else {
-        console.log('Implementar carga de productos por defecto o mensaje.');
-         this.products = [];
       }
 
-      this.apiService.search('', 1, 50, 'mostrecent').subscribe(results => {
+      this.grailedApiService.search('', 1, 50, 'mostrecent').subscribe(results => {
         console.log('API Search Results for Designers (initial load):', results);
          if (results && results.hits && results.hits.length > 0) {
             const extractedDesigners = results.hits
@@ -189,6 +218,81 @@ export class ShopComponent implements OnInit, OnDestroy {
          }
       });
     });
+  }
+
+  private loadLocalProducts(filters: any): void {
+    this.apiService.getProducts(filters).subscribe({
+      next: (response: any) => {
+        console.log('Local products response:', response);
+        if (response && response.success && response.data) {
+          this.products = response.data.map((product: any) => ({
+            id: product.id,
+            name: product.name,
+            brand: product.brand || 'Sin marca',
+            imageUrl: this.getProductImageUrl(product),
+            price: product.price,
+            timeAgo: product.created_at ? this.getTimeAgo(new Date(product.created_at)) : 'Recién subido',
+            originalPrice: product.original_price || undefined,
+            size: product.size || undefined,
+            condition: product.condition,
+            source: 'local'
+          }));
+          console.log('Productos locales procesados:', this.products);
+        } else {
+          this.products = [];
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading local products:', error);
+        this.products = [];
+      }
+    });
+  }
+
+  private getProductImageUrl(product: any): string {
+    // Si tiene imágenes en array, usar la primera
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      return `http://localhost:8000/storage/${product.images[0]}`;
+    }
+    
+    // Si tiene image_url, usarla
+    if (product.image_url) {
+      return `http://localhost:8000/storage/${product.image_url}`;
+    }
+    
+    // Imagen por defecto
+    return 'https://via.placeholder.com/300x300?text=No+Image';
+  }
+
+  getProductImage(product: any): string {
+    if (product.source === 'local') {
+      return product.imageUrl;
+    } else if (product.source === 'grailed' && product.imageUrl) {
+      return product.imageUrl;
+    }
+    return 'https://via.placeholder.com/300x300?text=No+Image';
+  }
+
+  onImageError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.src = 'https://via.placeholder.com/300x300?text=No+Image';
+    }
+  }
+
+  sendOffer(product: any): void {
+    // Placeholder para funcionalidad de ofertas
+    alert(`Función de ofertas no disponible aún para: ${product.name}\nMarca: ${product.brand}\nPrecio: €${product.price}`);
+    console.log('Enviar oferta para producto:', product);
+  }
+
+  viewOnGrailed(product: any): void {
+    // Abrir producto en Grailed
+    if (product.grailedUrl) {
+      window.open(product.grailedUrl, '_blank');
+    } else {
+      alert('URL de Grailed no disponible');
+    }
   }
 
   ngOnDestroy(): void {
@@ -398,7 +502,7 @@ export class ShopComponent implements OnInit, OnDestroy {
   }
 
   private searchProductsByDesigners(designerQuery: string): void {
-    this.apiService.search(designerQuery).subscribe(results => {
+    this.grailedApiService.search(designerQuery).subscribe(results => {
       if (results && results.hits) {
         // Filtrar productos que coincidan con los diseñadores seleccionados
         const filteredProducts = results.hits.filter((hit: any) => {

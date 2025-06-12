@@ -77,10 +77,10 @@
             (error)="onImageError($event, designer.name)"
             loading="lazy">
           <button 
-            (click)="toggleFavoriteDesigner(designer.name); $event.stopPropagation()"
+            (click)="toggleFavoriteDesigner(designer, $event)"
             class="absolute top-2 right-2 w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
             <svg 
-              [class]="isFavoriteDesigner(designer.name) ? 'text-red-500' : 'text-gray-600'"
+              [class]="isFavoriteDesigner(designer.id) ? 'text-red-500' : 'text-gray-600'"
               class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
             </svg>
@@ -114,10 +114,10 @@
               (error)="onImageError($event, designer.name)"
               loading="lazy">
             <button 
-              (click)="toggleFavoriteDesigner(designer.name); $event.stopPropagation()"
+              (click)="toggleFavoriteDesigner(designer, $event)"
               class="absolute top-2 right-2 w-8 h-8 bg-white bg-opacity-80 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <svg 
-                [class]="isFavoriteDesigner(designer.name) ? 'text-red-500' : 'text-gray-600'"
+                [class]="isFavoriteDesigner(designer.id) ? 'text-red-500' : 'text-gray-600'"
                 class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
               </svg>
@@ -144,17 +144,17 @@
                   [src]="designer.imageUrl" 
                   [alt]="designer.name"
                   class="w-full h-full object-cover"
-                  (error)="onImageError($event, 'https://via.placeholder.com/48x48?text=' + encodeURIComponent(designer.name.charAt(0)))">
+                  (error)="onImageError($event, designer.name)">
               </div>
               <div class="flex-1 min-w-0">
                 <h3 class="font-medium text-sm text-gray-900 group-hover:underline">{{ designer.name }}</h3>
                 <p class="text-xs text-gray-500">{{ designer.itemsCount }} items</p>
               </div>
               <button 
-                (click)="toggleFavoriteDesigner(designer.name); $event.stopPropagation()"
-                class="opacity-0 group-hover:opacity-100 transition-opacity">
+                (click)="toggleFavoriteDesigner(designer, $event)"
+                [class]="isFavoriteDesigner(designer.id) ? 'text-red-500' : 'text-gray-400'"
+                class="hover:text-red-500 transition-colors duration-200 focus:outline-none">
                 <svg 
-                  [class]="isFavoriteDesigner(designer.name) ? 'text-red-500' : 'text-gray-400'"
                   class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
                 </svg>

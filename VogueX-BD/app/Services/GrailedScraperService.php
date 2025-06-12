@@ -18,19 +18,21 @@ class GrailedScraperService
 
     public function scrapeAllDesigners()
     {
-        $this->info('Starting Grailed designers scrape...');
+        $this->info('Starting comprehensive Grailed designers scrape...');
         
         $allDesigners = [];
         $designerCounts = [];
         
-        // Buscar por letras del alfabeto y marcas populares
-        $searchTerms = array_merge(
-            range('a', 'z'),
-            ['nike', 'adidas', 'supreme', 'off-white', 'gucci', 'louis vuitton', 'balenciaga', 'yeezy', 'jordan', 'dior']
-        );
+        // Empezar con términos más simples para debugging
+        $searchTerms = [
+            'nike', 'adidas', 'supreme', 'gucci', 'off-white'
+        ];
         
         foreach ($searchTerms as $term) {
-            $designers = $this->scrapeDesignersByTerm($term);
+            $this->info("Scraping term: {$term}");
+            
+            $designers = $this->scrapeDesignersByTerm($term, 1);
+            $this->info("Found " . count($designers) . " designers for term: {$term}");
             
             foreach ($designers as $designer) {
                 $designerName = $designer['name'];
@@ -43,9 +45,11 @@ class GrailedScraperService
                 $designerCounts[$designerName] += $designer['items_count'] ?? 1;
             }
             
-            // Delay to avoid rate limiting
-            sleep(1);
+            // Delay para evitar rate limiting
+            sleep(2);
         }
+        
+        $this->info("Total unique designers found: " . count($allDesigners));
         
         // Actualizar contadores y guardar en BD
         $created = 0;
@@ -53,16 +57,23 @@ class GrailedScraperService
         
         foreach ($allDesigners as $designerName => $designerData) {
             $designerData['items_count'] = $designerCounts[$designerName];
-            $result = $this->saveDesigner($designerData);
             
-            if ($result['created']) {
-                $created++;
-            } else {
-                $updated++;
+            try {
+                $result = $this->saveDesigner($designerData);
+                
+                if ($result['created']) {
+                    $created++;
+                    $this->info("Created: {$designerName}");
+                } else {
+                    $updated++;
+                    $this->info("Updated: {$designerName}");
+                }
+            } catch (\Exception $e) {
+                $this->info("Error saving {$designerName}: " . $e->getMessage());
             }
         }
         
-        Log::info("Grailed scrape completed: {$created} created, {$updated} updated");
+        $this->info("Grailed scrape completed: {$created} created, {$updated} updated");
         
         return [
             'created' => $created,
@@ -71,58 +82,128 @@ class GrailedScraperService
         ];
     }
     
-    protected function scrapeDesignersByTerm($term)
+    protected function scrapeDesignersByTerm($term, $page = 1)
     {
         try {
-            $response = $this->grailedApi->search($term, 1, 50);
+            $this->info("Making API call for term: {$term}, page: {$page}");
+            $response = $this->grailedApi->search($term, $page, 50);
             
-            if (!$response || !isset($response['hits'])) {
+            // Debug: Log the raw response
+            Log::info("Raw API response for term '{$term}':", [
+                'has_response' => !empty($response),
+                'has_hits' => isset($response['hits']),
+                'hits_count' => isset($response['hits']) ? count($response['hits']) : 0,
+                'response_keys' => is_array($response) ? array_keys($response) : 'not_array'
+            ]);
+            
+            if (!$response || !isset($response['hits']) || empty($response['hits'])) {
+                $this->info("No hits found for term: {$term}");
                 return [];
             }
             
             $designers = [];
             $processedBrands = [];
             
-            foreach ($response['hits'] as $product) {
-                $brand = $product['designer']['name'] ?? null;
+            foreach ($response['hits'] as $index => $product) {
+                // Debug: Log product structure
+                if ($index === 0) {
+                    Log::info("Sample product structure:", [
+                        'product_keys' => is_array($product) ? array_keys($product) : 'not_array',
+                        'has_designer' => isset($product['designer']),
+                        'has_brand' => isset($product['brand']),
+                        'designer_structure' => isset($product['designer']) ? (is_array($product['designer']) ? array_keys($product['designer']) : 'not_array') : 'no_designer'
+                    ]);
+                }
+                
+                // Obtener información del diseñador/marca
+                $designerInfo = $product['designer'] ?? null;
+                $brand = null;
+                
+                if ($designerInfo && is_array($designerInfo)) {
+                    $brand = $designerInfo['name'] ?? null;
+                }
+                
+                if (!$brand) {
+                    $brand = $product['brand'] ?? $product['title'] ?? null;
+                }
                 
                 if (!$brand || isset($processedBrands[$brand])) {
                     continue;
                 }
                 
                 $processedBrands[$brand] = true;
+                $this->info("Processing designer: {$brand}");
                 
                 $designers[] = [
                     'name' => $brand,
                     'slug' => Str::slug($brand),
-                    'image_url' => $this->getDesignerImage($product['designer']),
+                    'image_url' => $this->getDesignerImage($designerInfo, $brand),
                     'description' => $this->generateDescription($brand),
                     'website' => $this->guessWebsite($brand),
                     'is_popular' => $this->isPopularBrand($brand),
-                    'is_featured' => false,
-                    'categories' => $this->extractCategories($product),
+                    'is_featured' => $this->isFeaturedBrand($brand),
+                    'categories' => json_encode($this->extractCategories($product)),
                     'items_count' => 1
                 ];
             }
             
+            $this->info("Processed " . count($designers) . " unique designers from term: {$term}");
             return $designers;
             
         } catch (\Exception $e) {
-            Log::error("Error scraping designers for term '{$term}': " . $e->getMessage());
+            Log::error("Error scraping designers for term '{$term}' page {$page}: " . $e->getMessage());
+            $this->info("Exception occurred: " . $e->getMessage());
             return [];
         }
     }
     
-    protected function getDesignerImage($designer)
+    protected function getDesignerImage($designer, $brandName)
     {
-        // Si Grailed proporciona imagen
-        if (isset($designer['image_url'])) {
+        // Si Grailed proporciona imagen del diseñador
+        if ($designer && isset($designer['image_url'])) {
             return $designer['image_url'];
         }
         
-        // Buscar logo en APIs públicas o usar placeholder
-        $name = $designer['name'] ?? 'Designer';
-        return "https://via.placeholder.com/150x150?text=" . urlencode($name);
+        // Intentar obtener de APIs de logos
+        $logoUrls = [
+            "https://logo.clearbit.com/{$this->guessDomain($brandName)}",
+            "https://via.placeholder.com/150x150?text=" . urlencode($brandName)
+        ];
+        
+        return $logoUrls[0]; // Usar Clearbit como primera opción
+    }
+    
+    protected function guessDomain($brand)
+    {
+        $domains = [
+            'nike' => 'nike.com',
+            'adidas' => 'adidas.com',
+            'supreme' => 'supremenewyork.com',
+            'off-white' => 'off---white.com',
+            'gucci' => 'gucci.com',
+            'louis vuitton' => 'louisvuitton.com',
+            'balenciaga' => 'balenciaga.com',
+            // Añadir más según necesites
+        ];
+        
+        $key = strtolower(str_replace([' ', '-'], '', $brand));
+        return $domains[$key] ?? strtolower(str_replace(' ', '', $brand)) . '.com';
+    }
+    
+    protected function getItemsCount($product, $brand)
+    {
+        // Intentar obtener el número real de items desde Grailed
+        // Por ahora devolvemos un número base
+        return 1;
+    }
+    
+    protected function isFeaturedBrand($brand)
+    {
+        $featuredBrands = [
+            'nike', 'adidas', 'supreme', 'off-white', 'gucci', 'jordan'
+        ];
+        
+        return in_array(strtolower($brand), $featuredBrands);
     }
     
     protected function generateDescription($brand)
@@ -204,9 +285,22 @@ class GrailedScraperService
     protected function saveDesigner($data)
     {
         try {
+            // Asegurar que todos los campos requeridos estén presentes
+            $designerData = [
+                'name' => $data['name'],
+                'slug' => $data['slug'],
+                'image_url' => $data['image_url'] ?? null,
+                'description' => $data['description'] ?? null,
+                'website' => $data['website'] ?? null,
+                'is_popular' => $data['is_popular'] ?? false,
+                'is_featured' => $data['is_featured'] ?? false,
+                'categories' => $data['categories'] ?? '[]',
+                'items_count' => $data['items_count'] ?? 1
+            ];
+            
             $designer = Designer::updateOrCreate(
-                ['name' => $data['name']],
-                $data
+                ['name' => $designerData['name']],
+                $designerData
             );
             
             return [

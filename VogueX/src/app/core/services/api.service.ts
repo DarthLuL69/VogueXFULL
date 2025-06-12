@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -11,8 +11,19 @@ export class ApiService {
   constructor(private http: HttpClient) { }
 
   // Productos
-  getProducts(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/products`);
+  getProducts(filters?: any): Observable<any> {
+    let params = new URLSearchParams();
+    
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
+          params.append(key, filters[key]);
+        }
+      });
+    }
+
+    const url = params.toString() ? `${this.apiUrl}/products?${params.toString()}` : `${this.apiUrl}/products`;
+    return this.http.get(url);
   }
 
   getProduct(id: number): Observable<any> {
@@ -20,6 +31,19 @@ export class ApiService {
   }
 
   createProduct(formData: FormData): Observable<any> {
+    console.log('ApiService: Enviando producto al backend');
+    
+    // Log para debug (sin mostrar las imágenes base64 completas)
+    const debugData: any = {};
+    formData.forEach((value, key) => {
+      if (key.startsWith('images[')) {
+        debugData[key] = 'base64_image_data';
+      } else {
+        debugData[key] = value;
+      }
+    });
+    console.log('Datos a enviar:', debugData);
+
     return this.http.post(`${this.apiUrl}/products`, formData);
   }
 
@@ -31,79 +55,16 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/products/${id}`);
   }
 
-  // Búsqueda de marcas para autocompletado
-  searchBrands(query: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/products/brands`, {
-      params: { q: query }
-    });
+  getBrands(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/products/brands`);
   }
 
-  // Búsqueda de productos con filtros
-  searchProducts(filters: any): Observable<any> {
-    let params = new URLSearchParams();
-    
-    Object.keys(filters).forEach(key => {
-      if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
-        params.append(key, filters[key]);
-      }
-    });
-
-    return this.http.get(`${this.apiUrl}/products/search?${params.toString()}`);
-  }
-
-  // Categorías
-  getCategories(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/categories`);
-  }
-
-  getCategory(id: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/categories/${id}`);
-  }
-
-  createCategory(category: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/categories`, category);
-  }
-
-  updateCategory(id: number, category: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/categories/${id}`, category);
-  }
-
-  deleteCategory(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/categories/${id}`);
-  }
-
-  // Órdenes
-  getOrders(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/orders`);
-  }
-
-  getOrder(id: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/orders/${id}`);
-  }
-
-  createOrder(order: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/orders`, order);
-  }
-
-  updateOrder(id: number, order: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/orders/${id}`, order);
-  }
-
-  deleteOrder(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/orders/${id}`);
-  }
-
-  // Perfil de usuario
+  // Usuario/Perfil
   getUserProfile(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/profile`);
+    return this.http.get(`${this.apiUrl}/user/profile`);
   }
 
-  // Historial de búsqueda
-  getSearchHistory(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/search-history`);
-  }
-
-  createSearchHistory(search: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/search-history`, search);
+  updateUserProfile(profileData: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/user/profile`, profileData);
   }
 }

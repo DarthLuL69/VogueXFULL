@@ -2,81 +2,75 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '../../../core/services';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <div class="container mx-auto px-4 py-8">
-      <div class="max-w-6xl mx-auto">
-        <!-- Sección de perfil -->
-        <div class="bg-white rounded-lg shadow p-6 mb-8">
-          <div class="flex items-center space-x-6">
-            <div class="relative">
-              <div class="w-24 h-24 bg-black rounded-full"></div>
-              <button class="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md">
-                <i class="fas fa-camera"></i>
-              </button>
-            </div>
-            <div class="flex-1">
-              <h1 class="text-2xl font-bold">&#64;alexr_skrr</h1>
-              <p class="text-gray-600">Joined in 2025</p>
-              <p class="text-gray-600">Europe</p>
-            </div>
-            <div class="flex space-x-8">
-              <div class="text-center">
-                <div class="text-xl font-bold">0</div>
-                <div class="text-gray-600">Transactions</div>
+    <div class="max-w-4xl mx-auto p-6">
+      <h1 class="text-3xl font-bold mb-8">Mi Perfil</h1>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Información del usuario -->
+        <div class="md:col-span-2">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Información Personal</h2>
+            
+            <div *ngIf="userProfile" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                <p class="mt-1 text-sm text-gray-900">{{ userProfile.data?.name || 'No disponible' }}</p>
               </div>
-              <div class="text-center">
-                <div class="text-xl font-bold">0</div>
-                <div class="text-gray-600">Followers</div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Email</label>
+                <p class="mt-1 text-sm text-gray-900">{{ userProfile.data?.email || 'No disponible' }}</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Miembro desde</label>
+                <p class="mt-1 text-sm text-gray-900">{{ userProfile.data?.created_at | date:'medium' }}</p>
               </div>
             </div>
-            <a routerLink="/new-listing" class="bg-black text-white px-6 py-2 rounded hover:bg-gray-800">
-              + NEW LISTING
-            </a>
+            
+            <div *ngIf="!userProfile" class="text-center py-4">
+              <p class="text-gray-500">Cargando información del perfil...</p>
+            </div>
           </div>
         </div>
-
-        <!-- Sección de productos en venta -->
-        <div class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-2xl font-bold mb-6">For Sale</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Producto 1 -->
-            <div class="border rounded-lg overflow-hidden">
-              <div class="aspect-square bg-gray-100"></div>
-              <div class="p-4">
-                <div class="text-sm text-gray-500">3 months ago</div>
-                <div class="font-bold">Off-White</div>
-                <div class="text-gray-700">Digit Bacchus Double String</div>
-                <div class="font-bold mt-2">726€</div>
-                <div class="flex justify-between items-center mt-4">
-                  <div class="text-gray-500">8 ♡</div>
-                  <div class="space-x-2">
-                    <button class="text-sm border px-3 py-1 rounded hover:bg-gray-100">PRICE DROP</button>
-                    <button class="text-sm border px-3 py-1 rounded hover:bg-gray-100">SEND OFFER</button>
-                  </div>
-                </div>
+        
+        <!-- Menú lateral -->
+        <div class="space-y-4">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold mb-4">Acciones</h3>
+            <nav class="space-y-2">
+              <a routerLink="/sell" class="block w-full text-left px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors">
+                Vender Producto
+              </a>
+              <a routerLink="/favourites" class="block w-full text-left px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                Mis Favoritos
+              </a>
+              <a routerLink="/shop" class="block w-full text-left px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                Ir a la Tienda
+              </a>
+            </nav>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold mb-4">Estadísticas</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Productos en venta</span>
+                <span class="text-sm font-medium">0</span>
               </div>
-            </div>
-            <!-- Producto 2 -->
-            <div class="border rounded-lg overflow-hidden">
-              <div class="aspect-square bg-gray-100"></div>
-              <div class="p-4">
-                <div class="text-sm text-gray-500">3 months ago</div>
-                <div class="font-bold">Off-White</div>
-                <div class="text-gray-700">Digit Bacchus Double String</div>
-                <div class="font-bold mt-2">726€</div>
-                <div class="flex justify-between items-center mt-4">
-                  <div class="text-gray-500">8 ♡</div>
-                  <div class="space-x-2">
-                    <button class="text-sm border px-3 py-1 rounded hover:bg-gray-100">PRICE DROP</button>
-                    <button class="text-sm border px-3 py-1 rounded hover:bg-gray-100">SEND OFFER</button>
-                  </div>
-                </div>
+              <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Productos vendidos</span>
+                <span class="text-sm font-medium">0</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Favoritos</span>
+                <span class="text-sm font-medium">0</span>
               </div>
             </div>
           </div>
@@ -87,40 +81,23 @@ import { Router } from '@angular/router';
   styles: []
 })
 export class ProfileComponent implements OnInit {
-  user: any;
-  loading = true;
-  error = '';
-  
-  constructor(
-    private apiService: ApiService,
-    private router: Router
-  ) { }
+  userProfile: any = null;
+
+  constructor(private apiService: ApiService) { }
 
   ngOnInit(): void {
     this.loadUserProfile();
   }
 
   loadUserProfile(): void {
-    this.loading = true;
     this.apiService.getUserProfile().subscribe({
-      next: (data) => {
-        this.user = data;
-        this.loading = false;
+      next: (data: any) => {
+        this.userProfile = data;
       },
-      error: (error) => {
-        this.error = 'Error al cargar el perfil';
-        this.loading = false;
-        console.error('Error:', error);
-        if (error.status === 401) {
-          this.router.navigate(['/login']); 
-        }
+      error: (error: any) => {
+        console.error('Error loading user profile:', error);
       }
     });
   }
-
-  // Puedes agregar métodos para cargar listados, favoritos, etc. aquí
-  // loadSellingListings() { ... }
-  // loadFavorites() { ... }
-  // ...
 }
 

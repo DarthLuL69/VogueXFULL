@@ -20,8 +20,7 @@ return [
 
     'allowed_origins' => [
         'http://localhost:4200',  // Angular development server
-        'http://localhost:4201',  // Angular development server (alternate port)
-        'http://localhost'        // XAMPP
+        'http://127.0.0.1:4200'   // Angular development server (IP address)
     ],
 
     'allowed_origins_patterns' => [],
@@ -32,6 +31,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];

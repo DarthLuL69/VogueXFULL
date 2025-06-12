@@ -2,106 +2,135 @@
 
 namespace App\Services;
 
-use GuzzleHttp\Client;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class GrailedApiService
 {
-    protected $client;
-    protected $apiKey;
-    protected $baseUrl = 'https://grailed.p.rapidapi.com';
-    
-    public function __construct()
+    protected $baseUrl = 'https://www.grailed.com/api/listings';
+    protected $headers = [
+        'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept' => 'application/json',
+        'Accept-Language' => 'en-US,en;q=0.9',
+        'Referer' => 'https://www.grailed.com/',
+        'X-Requested-With' => 'XMLHttpRequest'
+    ];
+
+    public function search($query = '', $page = 1, $limit = 50, $sort = 'relevance')
     {
-        $this->apiKey = '06dabf243bmsh6717422b8d94e56p1d6004jsn3110106e45e2';
-        
-        $this->client = new Client([
-            'base_uri' => $this->baseUrl,
-            'timeout' => 30,
-            'headers' => [
-                'X-RapidAPI-Host' => 'grailed.p.rapidapi.com',
-                'X-RapidAPI-Key' => $this->apiKey,
-                'User-Agent' => 'VogueX-App/1.0'
-            ]
-        ]);
-    }
-    
-    public function search($query, $page = 1, $hitsPerPage = 32, $sortBy = 'mostrecent')
-    {
-        $cacheKey = "grailed_search_" . md5($query . $page . $hitsPerPage . $sortBy);
-        
-        return Cache::remember($cacheKey, now()->addHours(1), function () use ($query, $page, $hitsPerPage, $sortBy) {
-            try {
-                $response = $this->client->get('/search', [
-                    'query' => [
-                        'query' => $query,
-                        'page' => $page,
-                        'hitsPerPage' => $hitsPerPage,
-                        'sortBy' => $sortBy
-                    ]
+        try {
+            Log::info("Making Grailed API request", [
+                'query' => $query,
+                'page' => $page,
+                'limit' => $limit
+            ]);
+
+            $params = [
+                'page' => $page,
+                'hits_per_page' => $limit,
+                'sort' => $sort
+            ];
+
+            if (!empty($query)) {
+                $params['query'] = $query;
+            }
+
+            $response = Http::withHeaders($this->headers)
+                ->timeout(30)
+                ->get($this->baseUrl, $params);
+
+            Log::info("Grailed API response status: " . $response->status());
+            
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                Log::info("Grailed API response structure", [
+                    'has_data' => !empty($data),
+                    'data_keys' => is_array($data) ? array_keys($data) : 'not_array',
+                    'hits_count' => isset($data['hits']) ? count($data['hits']) : 0
                 ]);
                 
-                $data = json_decode($response->getBody()->getContents(), true);
                 return $data;
+            } else {
+                Log::error("Grailed API error", [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
                 
-            } catch (\Exception $e) {
-                Log::error('Grailed API search error: ' . $e->getMessage());
-                return null;
+                return $this->getFallbackData($query);
             }
-        });
+
+        } catch (\Exception $e) {
+            Log::error('Grailed API exception: ' . $e->getMessage());
+            return $this->getFallbackData($query);
+        }
     }
-    
-    public function getDesigners()
+
+    protected function getFallbackData($query = '')
     {
-        $cacheKey = 'grailed_designers_list';
+        // Datos de fallback para cuando la API no funcione
+        $fallbackDesigners = [
+            ['name' => 'Nike', 'id' => 1],
+            ['name' => 'Adidas', 'id' => 2],
+            ['name' => 'Supreme', 'id' => 3],
+            ['name' => 'Off-White', 'id' => 4],
+            ['name' => 'Gucci', 'id' => 5],
+            ['name' => 'Louis Vuitton', 'id' => 6],
+            ['name' => 'Balenciaga', 'id' => 7],
+            ['name' => 'Jordan', 'id' => 8],
+            ['name' => 'Yeezy', 'id' => 9],
+            ['name' => 'Stone Island', 'id' => 10],
+            ['name' => 'CP Company', 'id' => 11],
+            ['name' => 'Acne Studios', 'id' => 12],
+            ['name' => 'Rick Owens', 'id' => 13],
+            ['name' => 'Raf Simons', 'id' => 14],
+            ['name' => 'Undercover', 'id' => 15],
+            ['name' => 'Comme des Garçons', 'id' => 16],
+            ['name' => 'Bape', 'id' => 17],
+            ['name' => 'Kenzo', 'id' => 18],
+            ['name' => 'Palm Angels', 'id' => 19],
+            ['name' => 'Fear of God', 'id' => 20]
+        ];
+
+        $hits = [];
         
-        return Cache::remember($cacheKey, now()->addDay(), function () {
-            try {
-                // Grailed no tiene endpoint específico para diseñadores
-                // Tenemos que extraerlos de las búsquedas
-                return $this->extractDesignersFromSearch();
-                
-            } catch (\Exception $e) {
-                Log::error('Grailed API designers error: ' . $e->getMessage());
-                return [];
+        if (empty($query)) {
+            // Sin query, devolver todos
+            foreach ($fallbackDesigners as $designer) {
+                $hits[] = [
+                    'id' => $designer['id'],
+                    'name' => $designer['name'],
+                    'designer' => ['name' => $designer['name']],
+                    'brand' => $designer['name'],
+                    'category' => 'fashion',
+                    'image_url' => "https://via.placeholder.com/300x300?text=" . urlencode($designer['name'])
+                ];
             }
-        });
-    }
-    
-    protected function extractDesignersFromSearch()
-    {
-        $designers = [];
-        
-        // Buscar por términos populares para obtener más diseñadores
-        $searchTerms = ['luxury', 'streetwear', 'vintage', 'designer', 'fashion'];
-        
-        foreach ($searchTerms as $term) {
-            $results = $this->search($term, 1, 50);
-            
-            if ($results && isset($results['hits'])) {
-                foreach ($results['hits'] as $product) {
-                    if (isset($product['designer']['name'])) {
-                        $designerName = $product['designer']['name'];
-                        
-                        if (!isset($designers[$designerName])) {
-                            $designers[$designerName] = [
-                                'name' => $designerName,
-                                'id' => $product['designer']['id'] ?? null,
-                                'image_url' => $product['designer']['image_url'] ?? null,
-                                'items_count' => 1
-                            ];
-                        } else {
-                            $designers[$designerName]['items_count']++;
-                        }
-                    }
+        } else {
+            // Con query, filtrar
+            foreach ($fallbackDesigners as $designer) {
+                if (stripos($designer['name'], $query) !== false) {
+                    $hits[] = [
+                        'id' => $designer['id'],
+                        'name' => $designer['name'],
+                        'designer' => ['name' => $designer['name']],
+                        'brand' => $designer['name'],
+                        'category' => 'fashion',
+                        'image_url' => "https://via.placeholder.com/300x300?text=" . urlencode($designer['name'])
+                    ];
                 }
             }
-            
-            // Rate limiting
-            sleep(1);
         }
-        
-        return array_values($designers);
+
+        return [
+            'hits' => $hits,
+            'total_hits' => count($hits),
+            'fallback' => true
+        ];
+    }
+
+    public function getDesigners($limit = 100)
+    {
+        return $this->search('', 1, $limit);
     }
 }

@@ -100,14 +100,14 @@ import { HttpClientModule } from '@angular/common/http';
             </div>
           </div>
 
-          <!-- Sneakers with dropdown -->
+          <!-- Footwear with dropdown -->
           <div class="relative"
                (mouseenter)="showDropdown('sneakers')"
                (mouseleave)="hideDropdown('sneakers')">
             <a [routerLink]="['/shop']" [queryParams]="{ category: 'sneakers' }" class="hover:underline cursor-pointer">
-              Sneakers
+              Footwear
             </a>
-            <!-- Sneakers Dropdown -->
+            <!-- Footwear Dropdown -->
             <div *ngIf="showSneakersDropdown" 
                  class="absolute top-full left-0 bg-white border border-gray-200 shadow-lg rounded-md mt-1 w-80 z-50">
               <div class="p-4">
@@ -162,9 +162,11 @@ export class HeaderComponent implements OnDestroy {
   ];
 
   sneakersCategories = [
-    { name: 'Style', subcategories: ['Low Top', 'High Top', 'Mid Top', 'Slip-On'] },
-    { name: 'Type', subcategories: ['Running', 'Basketball', 'Lifestyle', 'Skateboarding'] },
-    { name: 'Brand', subcategories: ['Nike', 'Adidas', 'Jordan', 'Converse', 'Vans'] }
+    { name: 'Sneakers', subcategories: ['Low Top Sneakers', 'High Top Sneakers', 'Mid Top Sneakers', 'Slip-On Sneakers', 'Running Shoes', 'Basketball Shoes'] },
+    { name: 'Boots', subcategories: ['Ankle Boots', 'Combat Boots', 'Chelsea Boots', 'Work Boots', 'Hiking Boots', 'Desert Boots'] },
+    { name: 'Casual', subcategories: ['Loafers', 'Moccasins', 'Boat Shoes', 'Espadrilles', 'Canvas Shoes'] },
+    { name: 'Sandals', subcategories: ['Flip Flops', 'Slides', 'Sport Sandals', 'Dress Sandals'] },
+    { name: 'Formal', subcategories: ['Oxford Shoes', 'Derby Shoes', 'Brogues', 'Monk Straps', 'Dress Boots'] }
   ];
 
   constructor(private apiService: GrailedApiService, private router: Router) { // Inyectar GrailedApiService y Router

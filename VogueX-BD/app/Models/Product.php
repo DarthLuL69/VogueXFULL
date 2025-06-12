@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Product extends Model
 {
@@ -11,67 +11,87 @@ class Product extends Model
 
     protected $fillable = [
         'name',
+        'brand',
         'description',
         'price',
-        'category_id',
-        'designer_id',
-        'brand',
-        'size',
-        'condition',
         'original_price',
+        'condition',
+        'size',
+        'main_category',
+        'sub_category',
+        'final_category',
         'image_url',
         'images',
-        'is_active'
+        'category_id',
+        'is_active',
+        'status',
+        'user_id'
     ];
 
     protected $casts = [
         'images' => 'array',
-        'is_active' => 'boolean',
         'price' => 'decimal:2',
-        'original_price' => 'decimal:2'
+        'original_price' => 'decimal:2',
+        'is_active' => 'boolean',
     ];
 
-    protected static function boot()
+    // Scopes para filtrado
+    public function scopeByCategory($query, $category)
     {
-        parent::boot();
+        return $query->where('main_category', $category);
+    }
 
-        // Cuando se crea un producto, actualizar contador del diseñador
-        static::created(function ($product) {
-            if ($product->designer_id) {
-                $product->designer->increment('items_count');
-            }
-        });
+    public function scopeBySubcategory($query, $subcategory)
+    {
+        return $query->where('sub_category', $subcategory);
+    }
 
-        // Cuando se elimina un producto, decrementar contador del diseñador
-        static::deleted(function ($product) {
-            if ($product->designer_id) {
-                $product->designer->decrement('items_count');
-            }
-        });
+    public function scopeByBrand($query, $brand)
+    {
+        return $query->where('brand', 'like', "%{$brand}%");
+    }
 
-        // Cuando se actualiza el designer_id, ajustar contadores
-        static::updated(function ($product) {
-            if ($product->isDirty('designer_id')) {
-                $original = $product->getOriginal('designer_id');
-                $new = $product->designer_id;
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active')->where('is_active', true);
+    }
 
-                if ($original) {
-                    Designer::find($original)->decrement('items_count');
-                }
-                if ($new) {
-                    Designer::find($new)->increment('items_count');
-                }
-            }
+    public function scopeSearch($query, $search)
+    {
+        return $query->where(function($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('brand', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
         });
     }
 
-    public function category()
+    // Accessor para la imagen principal
+    public function getMainImageAttribute()
     {
-        return $this->belongsTo(Category::class);
+        // Priorizar el campo images si existe y tiene contenido
+        if ($this->images && is_array($this->images) && !empty($this->images)) {
+            return $this->images[0];
+        }
+        
+        // Usar image_url como fallback
+        if ($this->image_url) {
+            return $this->image_url;
+        }
+        
+        return null;
     }
 
-    public function designer()
+    // Accessor para obtener todas las imágenes
+    public function getAllImagesAttribute()
     {
-        return $this->belongsTo(Designer::class);
+        if ($this->images && is_array($this->images)) {
+            return $this->images;
+        }
+        
+        if ($this->image_url) {
+            return [$this->image_url];
+        }
+        
+        return [];
     }
 }

@@ -12,6 +12,14 @@ interface FavoriteProduct {
   size?: string;
 }
 
+// Agregar interfaz para diseñadores favoritos
+export interface FavoriteDesigner {
+  id: string; // Asegurar que sea string
+  name: string;
+  imageUrl: string;
+  itemsCount: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -19,8 +27,8 @@ export class FavoriteService {
   private favoritesSubject = new BehaviorSubject<FavoriteProduct[]>([]);
   favorites$: Observable<FavoriteProduct[]> = this.favoritesSubject.asObservable();
 
-  private favoriteDesignersSubject = new BehaviorSubject<string[]>([]); // Lista para diseñadores favoritos
-  favoriteDesigners$: Observable<string[]> = this.favoriteDesignersSubject.asObservable();
+  private favoriteDesignersSubject = new BehaviorSubject<FavoriteDesigner[]>([]);
+  favoriteDesigners$: Observable<FavoriteDesigner[]> = this.favoriteDesignersSubject.asObservable();
 
   constructor() { }
 
@@ -44,23 +52,42 @@ export class FavoriteService {
     return this.favoritesSubject.value.some(fav => fav.id === productId);
   }
 
-  // Métodos para diseñadores favoritos
-  addFavoriteDesigner(designerName: string): void {
-     const currentFavorites = this.favoriteDesignersSubject.value;
-     if (!currentFavorites.includes(designerName)) {
-       this.favoriteDesignersSubject.next([...currentFavorites, designerName]);
-       console.log('Diseñador añadido a favoritos:', designerName);
-     }
+  // Designers methods
+  addFavoriteDesigner(designer: FavoriteDesigner): void {
+    const favorites = this.getFavoriteDesigners();
+    if (!favorites.find(d => d.id === designer.id)) {
+      favorites.push(designer);
+      this.saveFavoriteDesigners(favorites);
+      this.favoriteDesignersSubject.next(favorites);
+    }
   }
 
-  removeFavoriteDesigner(designerName: string): void {
-     const currentFavorites = this.favoriteDesignersSubject.value;
-     const updatedFavorites = currentFavorites.filter(name => name !== designerName);
-     this.favoriteDesignersSubject.next(updatedFavorites);
-     console.log('Diseñador eliminado de favoritos:', designerName);
+  removeFavoriteDesigner(designerId: string): void {
+    const favorites = this.getFavoriteDesigners();
+    const updated = favorites.filter(d => d.id !== designerId);
+    this.saveFavoriteDesigners(updated);
+    this.favoriteDesignersSubject.next(updated);
   }
 
-  isFavoriteDesigner(designerName: string): boolean {
-    return this.favoriteDesignersSubject.value.includes(designerName);
+  isFavoriteDesigner(designerId: string): boolean {
+    const favorites = this.getFavoriteDesigners();
+    return favorites.some(d => d.id === designerId);
+  }
+
+  toggleFavoriteDesigner(designer: FavoriteDesigner): void {
+    if (this.isFavoriteDesigner(designer.id)) {
+      this.removeFavoriteDesigner(designer.id);
+    } else {
+      this.addFavoriteDesigner(designer);
+    }
+  }
+
+  // Métodos de almacenamiento (pueden ser implementados según las necesidades)
+  private getFavoriteDesigners(): FavoriteDesigner[] {
+    return this.favoriteDesignersSubject.value;
+  }
+
+  private saveFavoriteDesigners(designers: FavoriteDesigner[]): void {
+    // Implementar lógica de almacenamiento, si es necesario
   }
 }

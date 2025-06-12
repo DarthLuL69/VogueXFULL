@@ -62,21 +62,29 @@
               type="text" 
               id="product-brand" 
               formControlName="brand" 
-              placeholder="Ej: Nike, Adidas, Gucci..." 
+              placeholder="Buscar marca o diseñador..." 
               (input)="onBrandInput($event)"
+              (focus)="onBrandFocus()"
+              (blur)="onBrandBlur()"
               class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-black"
               autocomplete="off">
             
-            <!-- Dropdown de sugerencias -->
+            <!-- Dropdown de sugerencias de diseñadores -->
             <div 
-              *ngIf="brandSuggestions.length > 0" 
+              *ngIf="showDesignerSuggestions" 
               class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
               <div 
-                *ngFor="let brand of brandSuggestions"
-                (click)="selectBrand(brand)"
-                class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center">
-                <span class="font-medium">{{ brand.name }}</span>
-                <span class="text-sm text-gray-500">{{ brand.items_count }} items</span>
+                *ngFor="let designer of designerSuggestions"
+                (click)="selectDesigner(designer)"
+                class="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-2">
+                <img [src]="designer.imageUrl" 
+                     [alt]="designer.name"
+                     class="w-6 h-6 rounded object-cover"
+                     onerror="this.src='https://via.placeholder.com/24x24?text=' + this.alt.charAt(0)">
+                <div>
+                  <span class="font-medium">{{ designer.name }}</span>
+                  <span class="text-sm text-gray-500 ml-2">({{ designer.itemsCount }} items)</span>
+                </div>
               </div>
             </div>
           </div>
@@ -244,7 +252,7 @@
           <select 
             id="final-category" 
             formControlName="finalCategory"
-            (change)="onFinalCategoryChange($any($event.target).value)"
+            (change)="onFinalCategoryChange($event)"
             [class.border-red-500]="productForm.get('finalCategory')?.invalid && productForm.get('finalCategory')?.touched"
             class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-black transition-colors duration-200">
             <option value="">Selecciona el tipo de producto</option>
@@ -260,9 +268,32 @@
       </div>
     </div>
 
-    <div class="form-actions">
-      <button type="button" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors duration-200" (click)="onCancel()">Cancelar</button>
-      <button type="submit" class="bg-black text-white py-2 px-4 rounded-md hover:bg-gray-800 transition-colors duration-200" [disabled]="!productForm.valid">Crear Anuncio</button>
+    <div class="form-actions flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+      <button 
+        type="button" 
+        class="bg-gray-300 text-gray-800 py-3 px-6 rounded-md hover:bg-gray-400 transition-colors duration-200 font-medium" 
+        (click)="onCancel()">
+        Cancelar
+      </button>
+      
+      <div class="flex flex-col items-end">
+        <button 
+          type="button"
+          class="bg-black text-white py-3 px-6 rounded-md hover:bg-gray-800 transition-colors duration-200 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed" 
+          [disabled]="!isFormValid()"
+          (click)="onSubmit()">
+          Crear Anuncio
+        </button>
+        
+        <!-- Información de validación (mantenida pero simplificada) -->
+        <div *ngIf="!isFormValid()" class="text-xs text-red-500 mt-1 max-w-xs text-right space-y-1">
+          <div *ngIf="imagePreviews.length === 0">• Falta al menos una imagen</div>
+          <div *ngIf="!productForm.valid">• Faltan campos obligatorios</div>
+          <div *ngIf="!selectedMainCategory">• Selecciona categoría principal</div>
+          <div *ngIf="!selectedSubCategory">• Selecciona subcategoría</div>
+          <div *ngIf="!selectedFinalCategory">• Selecciona tipo de producto</div>
+        </div>
+      </div>
     </div>
   </form>
 </div>
