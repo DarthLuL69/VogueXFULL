@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\SearchHistoryController;
 use App\Http\Controllers\Api\StockXController;
 use App\Http\Controllers\Api\DesignerController;
+use App\Http\Controllers\Api\NewsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,4 +74,9 @@ Route::prefix('stockx')->group(function () {
     Route::get('/price', [StockXController::class, 'getProductPrice']);
     Route::get('/market-data', [StockXController::class, 'getMarketData']);
     Route::get('/brands', [StockXController::class, 'getBrands']);
+});
+
+// News routes (públicas)
+Route::prefix('news')->group(function () {
+    Route::get('/latest', [NewsController::class, 'latest']);
 });
