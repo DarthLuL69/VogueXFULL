@@ -10,26 +10,53 @@ import { FormsModule } from '@angular/forms';
   styles: []
 })
 export class ContactComponent {
-  name = '';
-  email = '';
-  message = '';
+  name: string = '';
+  email: string = '';
+  phone: string = '';
+  foundUs: string = '';
+  services = { web: false, mobile: false, design: false };
+  urgency: string = '';
+  newsletter: boolean = false;
+  message: string = '';
   submitted = false;
   errorMessage = '';
+  loading = false;
 
   submitForm() {
-    if (this.name && this.email && this.message) {
-      this.submitted = true;
-      this.errorMessage = '';
-
-      // Simula envío con un pequeño delay
-      setTimeout(() => {
-        this.name = '';
-        this.email = '';
-        this.message = '';
-        this.submitted = false;
-      }, 3000);
-    } else {
-      this.errorMessage = 'Por favor, completa todos los campos.';
+    if (!this.name || !this.email || !this.message || !this.foundUs) {
+      this.errorMessage = 'Please fill in the required fields.';
+      return;
     }
+
+    this.loading = true;
+    this.errorMessage = '';
+
+    // Simular envío de formulario
+    setTimeout(() => {
+      this.submitted = true;
+      this.loading = false;
+      console.log({
+        name: this.name,
+        email: this.email,
+        phone: this.phone,
+        foundUs: this.foundUs,
+        services: this.services,
+        urgency: this.urgency,
+        newsletter: this.newsletter,
+        message: this.message
+      });
+      this.clearForm();
+    }, 2000);
+  }
+
+  clearForm() {
+    this.name = '';
+    this.email = '';
+    this.phone = '';
+    this.foundUs = '';
+    this.services = { web: false, mobile: false, design: false };
+    this.urgency = '';
+    this.newsletter = false;
+    this.message = '';
   }
 }

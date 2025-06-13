@@ -1,47 +1,155 @@
-<div class="max-w-xl mx-auto p-6 bg-gray-900 rounded-2xl shadow-lg">
-  <h2 class="text-3xl font-bold text-white mb-6 text-center">Contact Us</h2>
+<div class="max-w-xl mx-auto p-6 bg-white rounded-none shadow-lg">
+  <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">Contact Us</h2>
 
-  <form (ngSubmit)="submitForm()" #contactForm="ngForm" class="space-y-4">
-    <input
-      type="text"
-      [(ngModel)]="name"
-      name="name"
-      required
-      placeholder="Your Name"
-      class="w-full p-3 border border-gray-700 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-400"
-    />
+  <form (ngSubmit)="submitForm()" #contactForm="ngForm" class="space-y-5">
+    <!-- Nombre -->
+    <div>
+      <input
+        type="text"
+        [(ngModel)]="name"
+        name="name"
+        #nameRef="ngModel"
+        required
+        placeholder="Your Name"
+        class="w-full p-3 border border-gray-300 bg-white text-gray-900 rounded-none focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-500"
+      />
+      <div *ngIf="nameRef.invalid && nameRef.touched" class="text-red-600 text-sm mt-1">
+        Name is required.
+      </div>
+    </div>
 
-    <input
-      type="email"
-      [(ngModel)]="email"
-      name="email"
-      required
-      placeholder="Your Email"
-      class="w-full p-3 border border-gray-700 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-400"
-    />
+    <!-- Email -->
+    <div>
+      <input
+        type="email"
+        [(ngModel)]="email"
+        name="email"
+        #emailRef="ngModel"
+        required
+        email
+        placeholder="Your Email"
+        class="w-full p-3 border border-gray-300 bg-white text-gray-900 rounded-none focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-500"
+      />
+      <div *ngIf="emailRef.invalid && emailRef.touched" class="text-red-600 text-sm mt-1">
+        A valid email is required.
+      </div>
+    </div>
 
-    <textarea
-      [(ngModel)]="message"
-      name="message"
-      required
-      placeholder="Your Message"
-      rows="5"
-      class="w-full p-3 border border-gray-700 bg-gray-800 text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none placeholder-gray-400"
-    ></textarea>
+    <!-- Teléfono -->
+    <div>
+      <input
+        type="tel"
+        [(ngModel)]="phone"
+        name="phone"
+        #phoneRef="ngModel"
+        pattern="^[0-9]{7,15}$"
+        placeholder="Your Phone (optional)"
+        class="w-full p-3 border border-gray-300 bg-white text-gray-900 rounded-none focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder-gray-500"
+      />
+      <div *ngIf="phoneRef.invalid && phoneRef.touched" class="text-red-600 text-sm mt-1">
+        Phone must be 7-15 digits.
+      </div>
+    </div>
 
+    <!-- ¿Cómo nos encontraste? -->
+    <div>
+      <select
+        [(ngModel)]="foundUs"
+        name="foundUs"
+        #foundUsRef="ngModel"
+        required
+        class="w-full p-3 border border-gray-300 bg-white text-gray-900 rounded-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
+      >
+        <option value="" disabled selected>How did you find us?</option>
+        <option value="Google">Google</option>
+        <option value="Social Media">Social Media</option>
+        <option value="Friend">Friend</option>
+        <option value="Other">Other</option>
+      </select>
+      <div *ngIf="foundUsRef.invalid && foundUsRef.touched" class="text-red-600 text-sm mt-1">
+        Please select an option.
+      </div>
+    </div>
+
+    <!-- ¿Qué servicio te interesa? -->
+    <div>
+      <label class="block text-gray-900 mb-1">Services you're interested in:</label>
+      <div class="flex flex-wrap gap-3">
+        <label class="flex items-center space-x-2 text-gray-900">
+          <input type="checkbox" [(ngModel)]="services.web" name="web" class="rounded-none" />
+          <span>Web Development</span>
+        </label>
+        <label class="flex items-center space-x-2 text-gray-900">
+          <input type="checkbox" [(ngModel)]="services.mobile" name="mobile" class="rounded-none" />
+          <span>Mobile Apps</span>
+        </label>
+        <label class="flex items-center space-x-2 text-gray-900">
+          <input type="checkbox" [(ngModel)]="services.design" name="design" class="rounded-none" />
+          <span>Graphic Design</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Urgencia -->
+    <div>
+      <label class="block text-gray-900 mb-1">Urgency:</label>
+      <div class="flex space-x-4 text-gray-900">
+        <label class="flex items-center space-x-2">
+          <input type="radio" [(ngModel)]="urgency" name="urgency" value="Low" class="rounded-none" />
+          <span>Low</span>
+        </label>
+        <label class="flex items-center space-x-2">
+          <input type="radio" [(ngModel)]="urgency" name="urgency" value="Medium" class="rounded-none" />
+          <span>Medium</span>
+        </label>
+        <label class="flex items-center space-x-2">
+          <input type="radio" [(ngModel)]="urgency" name="urgency" value="High" class="rounded-none" />
+          <span>High</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- ¿Deseas recibir novedades? -->
+    <div class="flex items-center space-x-2 text-gray-900">
+      <input type="checkbox" [(ngModel)]="newsletter" name="newsletter" class="rounded-none" />
+      <span>I want to receive news and offers by email</span>
+    </div>
+
+    <!-- Mensaje -->
+    <div>
+      <textarea
+        [(ngModel)]="message"
+        name="message"
+        #messageRef="ngModel"
+        required
+        placeholder="Your Message"
+        rows="5"
+        class="w-full p-3 border border-gray-300 bg-white text-gray-900 rounded-none focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none placeholder-gray-500"
+      ></textarea>
+      <div *ngIf="messageRef.invalid && messageRef.touched" class="text-red-600 text-sm mt-1">
+        Message is required.
+      </div>
+    </div>
+
+    <!-- Botón de envío -->
     <button
       type="submit"
-      [disabled]="!name || !email || !message"
-      class="w-full p-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:bg-gray-600 disabled:cursor-not-allowed"
+      [disabled]="contactForm.invalid || loading"
+      class="w-full p-3 bg-blue-600 text-white font-semibold rounded-none hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
     >
-      Send Message
+      <span *ngIf="!loading">Send Message</span>
+      <svg *ngIf="loading" class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
     </button>
 
-    <div *ngIf="errorMessage" class="mt-4 p-3 bg-red-600 text-white rounded-lg">
+    <!-- Mensajes de estado -->
+    <div *ngIf="errorMessage" class="mt-4 p-3 bg-red-600 text-white rounded-none">
       ❌ {{ errorMessage }}
     </div>
 
-    <div *ngIf="submitted" class="mt-4 p-3 bg-green-600 text-white rounded-lg">
+    <div *ngIf="submitted" class="mt-4 p-3 bg-green-600 text-white rounded-none">
       ✅ Message sent successfully!
     </div>
   </form>
