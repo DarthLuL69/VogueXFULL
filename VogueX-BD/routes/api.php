@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\DesignerController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -282,4 +283,38 @@ Route::get('/test/designers-count', function () {
             'error' => $e->getMessage()
         ], 500);
     }
+});
+
+// Rutas de autenticación
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // Rutas para usuarios autenticados (cualquier rol)
+    // Aquí puedes añadir más rutas que requieran autenticación
+
+    // Rutas para administradores
+    Route::middleware('admin')->prefix('admin')->group(function () {
+        Route::get('/dashboard', function () {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bienvenido al panel de administración',
+                'data' => [
+                    'stats' => [
+                        'total_users' => \App\Models\User::count(),
+                        'total_products' => \App\Models\Product::count(),
+                        'total_designers' => \App\Models\Designer::count(),
+                    ]
+                ]
+            ]);
+        });
+        
+        // Aquí puedes añadir más rutas administrativas
+        // Por ejemplo: 
+        // Route::resource('/users', AdminUserController::class);
+        // Route::resource('/products', AdminProductController::class);
+    });
 });

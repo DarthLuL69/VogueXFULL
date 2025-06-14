@@ -16,11 +16,11 @@ class User extends Authenticatable
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
-     */
-    protected $fillable = [
+     */    protected $fillable = [
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -37,8 +37,17 @@ class User extends Authenticatable
      * The attributes that should be cast.
      *
      * @var array<string, string>
-     */
-    protected $casts = [
+     */    protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Verifica si el usuario es administrador
+     * 
+     * @return bool
+     */
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
 }

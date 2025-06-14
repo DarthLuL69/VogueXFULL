@@ -2,9 +2,10 @@ import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Subscription, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
+import { Observable, Subscription, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 import { GrailedApiService } from '../../services/grailed-api.service';
 import { HttpClientModule } from '@angular/common/http';
+import { AuthService, User } from '../../services/auth.service';
 
 @Component({
   selector: 'app-header',
@@ -33,14 +34,29 @@ import { HttpClientModule } from '@angular/common/http';
            <div *ngIf="searchControl.value && searchResults && searchResults.length === 0" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded shadow-lg p-2 text-gray-500">
               No se encontraron resultados para "{{ searchControl.value }}".
             </div>
-        </div>
-        <!-- Botones -->
+        </div>        <!-- Botones -->
         <div class="flex items-center gap-4">
-          <a routerLink="/sell" class="border px-4 py-2 rounded hover:bg-gray-100">SELL</a>
           <a routerLink="/shop" class="hover:underline">SHOP</a>
           <a routerLink="/contact" class="hover:underline">CONTACT</a>
-          <a routerLink="/favourites" class="text-2xl">♡</a>
-          <a routerLink="/profile" class="w-8 h-8 bg-black rounded-full cursor-pointer"></a>
+          
+          <!-- Botones cuando no está autenticado -->
+          <ng-container *ngIf="!(isAuthenticated$ | async)">
+            <a routerLink="/login" class="border px-4 py-2 rounded hover:bg-gray-100">LOGIN</a>
+            <a routerLink="/register" class="border px-4 py-2 rounded hover:bg-gray-100">REGISTER</a>
+          </ng-container>
+            <!-- Botones cuando está autenticado -->
+          <ng-container *ngIf="isAuthenticated$ | async">
+            <a routerLink="/sell" class="border px-4 py-2 rounded hover:bg-gray-100">SELL</a>
+            <a routerLink="/favourites" class="text-2xl">♡</a>
+            
+            <!-- Enlace al panel de administración solo para administradores -->
+            <a *ngIf="isAdmin$ | async" routerLink="/admin" class="border border-red-500 text-red-500 px-4 py-2 rounded hover:bg-red-50">ADMIN</a>
+            
+            <a routerLink="/profile" class="w-8 h-8 bg-black rounded-full cursor-pointer flex items-center justify-center text-white">
+              {{ (currentUser$ | async)?.name?.charAt(0) ?? 'U' }}
+            </a>
+            <button (click)="logout()" class="text-gray-600 hover:text-black">Logout</button>
+          </ng-container>
         </div>
       </div>
       <!-- Menú horizontal con dropdowns -->
@@ -136,9 +152,12 @@ import { HttpClientModule } from '@angular/common/http';
   styles: []
 })
 export class HeaderComponent implements OnDestroy {
+  isAuthenticated$: Observable<boolean>;
+  currentUser$: Observable<User | null>;
+  isAdmin$: Observable<boolean>;
   searchControl = new FormControl();
   searchResults: any[] | undefined;
-  private searchSubscription: Subscription | undefined;
+  private readonly searchSubscription: Subscription | undefined;
 
   // Dropdown states
   showMenswearDropdown = false;
@@ -167,9 +186,15 @@ export class HeaderComponent implements OnDestroy {
     { name: 'Casual', subcategories: ['Loafers', 'Moccasins', 'Boat Shoes', 'Espadrilles', 'Canvas Shoes'] },
     { name: 'Sandals', subcategories: ['Flip Flops', 'Slides', 'Sport Sandals', 'Dress Sandals'] },
     { name: 'Formal', subcategories: ['Oxford Shoes', 'Derby Shoes', 'Brogues', 'Monk Straps', 'Dress Boots'] }
-  ];
-
-  constructor(private apiService: GrailedApiService, private router: Router) { // Inyectar GrailedApiService y Router
+  ];  constructor(
+    private readonly apiService: GrailedApiService, 
+    private readonly router: Router,
+    private readonly authService: AuthService
+  ) {    // Inicializar las propiedades de autenticación
+    this.isAuthenticated$ = this.authService.isAuthenticated$;
+    this.currentUser$ = this.authService.currentUser$;
+    this.isAdmin$ = this.authService.isAdmin$;
+    
     this.searchSubscription = this.searchControl.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -215,7 +240,11 @@ export class HeaderComponent implements OnDestroy {
     this.searchResults = undefined; // Ocultar los resultados después de seleccionar
      this.searchControl.setValue('', { emitEvent: false }); // Limpiar el input sin activar otra búsqueda
   }
-
+  // Método para cerrar sesión
+  logout(): void {
+    this.authService.logout();
+  }
+  
   // Dropdown control methods
   showDropdown(category: string): void {
     this.hideAllDropdowns();
