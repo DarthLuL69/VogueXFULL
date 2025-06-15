@@ -1,0 +1,234 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex justify-center items-center min-h-screen">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="container mx-auto px-4 py-8">
+    <div class="text-center">
+      <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ error }}</h2>
+      <button 
+        (click)="goToShop()" 
+        class="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors">
+        Volver a la tienda
+      </button>
+    </div>
+  </div>
+
+  <!-- Product Detail -->
+  <div *ngIf="product && !loading" class="container mx-auto px-4 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-8 text-sm">
+      <a routerLink="/shop" class="text-gray-500 hover:text-gray-700">Tienda</a>
+      <span class="mx-2 text-gray-400">/</span>      <button 
+        (click)="goToShop(product.main_category)" 
+        class="text-gray-500 hover:text-gray-700 capitalize">
+        {{ product.main_category }}
+      </button>
+      <span class="mx-2 text-gray-400">/</span>
+      <span class="text-gray-900 capitalize">{{ product.sub_category }}</span>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <!-- Product Images -->
+      <div class="space-y-4">
+        <!-- Main Image -->
+        <div class="aspect-square bg-white rounded-lg overflow-hidden shadow-lg">          <img 
+            *ngIf="product.images.length > 0"
+            [src]="product.images[selectedImageIndex]" 
+            [alt]="product.name"
+            (error)="onImageError($event)"
+            class="w-full h-full object-cover">
+          <div 
+            *ngIf="product.images.length === 0"
+            class="w-full h-full flex items-center justify-center bg-gray-100">
+            <span class="text-gray-400">Sin imagen</span>
+          </div>
+        </div>
+
+        <!-- Image Thumbnails -->
+        <div *ngIf="product.images.length > 1" class="flex space-x-2 overflow-x-auto">
+          <button
+            *ngFor="let image of product.images; let i = index"
+            (click)="selectImage(i)"
+            [class.ring-2]="selectedImageIndex === i"
+            [class.ring-black]="selectedImageIndex === i"
+            class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-white shadow">            <img 
+              [src]="image" 
+              [alt]="'Foto ' + (i + 1)"
+              (error)="onImageError($event)"
+              class="w-full h-full object-cover">
+          </button>
+        </div>
+      </div>
+
+      <!-- Product Info -->
+      <div class="space-y-6">        <!-- Designer -->
+        <div class="text-sm text-gray-600 uppercase tracking-wide">
+          {{ product.brand }}
+        </div>
+
+        <!-- Title -->
+        <h1 class="text-3xl font-bold text-gray-900">
+          {{ product.name }}
+        </h1>
+
+        <!-- Price -->
+        <div class="text-2xl font-bold text-gray-900">
+          {{ formatPrice(product.price) }}
+        </div>
+
+        <!-- Product Details -->
+        <div class="space-y-4 py-6 border-t border-b border-gray-200">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Talla:</span>
+            <span class="font-medium">{{ product.size }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Estado:</span>
+            <span [class]="getConditionColor(product.condition)" class="font-medium">
+              {{ product.condition }}
+            </span>
+          </div>          <div class="flex justify-between">
+            <span class="text-gray-600">Categoría:</span>
+            <span class="font-medium capitalize">{{ product.sub_category }}</span>
+          </div>
+        </div>        <!-- Action Buttons -->
+        <div class="space-y-4">
+          <!-- Contact Seller -->
+          <button 
+            (click)="contactSeller()"
+            [disabled]="contacting"
+            class="w-full bg-black text-white py-4 px-6 rounded-lg hover:bg-gray-800 transition-colors font-medium disabled:opacity-50">
+            {{ contacting ? 'Creando chat...' : 'Contactar Vendedor' }}
+          </button>
+
+          <!-- Make Offer -->
+          <button 
+            (click)="showOfferModal = true"
+            class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+            Hacer Oferta
+          </button>
+
+          <!-- Add to Favorites -->
+          <button 
+            (click)="toggleFavorite()"
+            [class.bg-red-50]="product.is_favorite"
+            [class.text-red-600]="product.is_favorite"
+            [class.border-red-200]="product.is_favorite"
+            class="w-full border-2 border-gray-200 text-gray-700 py-4 px-6 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+            </svg>
+            <span>{{ product.is_favorite ? 'Quitar de Favoritos' : 'Añadir a Favoritos' }}</span>
+          </button>
+        </div>
+
+        <!-- Seller Info -->
+        <div class="bg-white p-6 rounded-lg shadow border">
+          <h3 class="font-semibold text-gray-900 mb-4">Vendedor</h3>
+          <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <div class="font-medium text-gray-900">{{ product.user.name }}</div>
+              <div class="text-sm text-gray-500">Publicado el {{ formatDate(product.created_at) }}</div>
+            </div>
+            <button 
+              (click)="goToUserProfile()"
+              class="text-sm text-blue-600 hover:text-blue-800">
+              Ver perfil
+            </button>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div *ngIf="product.description" class="bg-white p-6 rounded-lg shadow border">
+          <h3 class="font-semibold text-gray-900 mb-4">Descripción</h3>
+          <p class="text-gray-700 leading-relaxed">{{ product.description }}</p>
+        </div>
+      </div>
+    </div>    <!-- Related Products -->
+    <div *ngIf="relatedProducts.length > 0" class="mt-16">
+      <h2 class="text-2xl font-bold text-gray-900 mb-8">Productos similares</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <a 
+          *ngFor="let relatedProduct of relatedProducts" 
+          [routerLink]="['/product', relatedProduct.id]"
+          class="group cursor-pointer block">
+          <div class="aspect-square bg-white rounded-lg overflow-hidden shadow group-hover:shadow-lg transition-shadow">            <img 
+              *ngIf="relatedProduct.image"
+              [src]="relatedProduct.image" 
+              [alt]="relatedProduct.name"
+              (error)="onImageError($event)"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+            <div 
+              *ngIf="!relatedProduct.image"
+              class="w-full h-full flex items-center justify-center bg-gray-100">
+              <span class="text-gray-400">Sin imagen</span>
+            </div>
+          </div>
+          <div class="mt-3 space-y-1">
+            <div class="text-xs text-gray-500 uppercase tracking-wide">
+              {{ relatedProduct.brand }}
+            </div>
+            <h3 class="font-medium text-gray-900 line-clamp-2">
+              {{ relatedProduct.name }}
+            </h3>
+            <div class="font-bold text-gray-900">
+              {{ formatPrice(relatedProduct.price) }}
+            </div>
+          </div>
+        </a>      </div>
+    </div>
+  </div>
+
+  <!-- Offer Modal -->
+  <div *ngIf="showOfferModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <h3 class="text-xl font-bold mb-4">Hacer una Oferta</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Precio Original</label>
+          <div class="text-lg font-bold text-gray-900">{{ formatPrice(product?.price || 0) }}</div>
+        </div>
+        <div>
+          <label for="offerAmount" class="block text-sm font-medium text-gray-700 mb-2">Tu Oferta</label>          <input
+            id="offerAmount"
+            type="number"
+            [(ngModel)]="offerAmount"
+            [min]="1"
+            [max]="product?.price || 999999"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Introduce tu oferta">
+        </div>
+        <div>
+          <label for="offerMessage" class="block text-sm font-medium text-gray-700 mb-2">Mensaje (opcional)</label>
+          <textarea
+            id="offerMessage"
+            [(ngModel)]="offerMessage"
+            rows="3"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Escribe un mensaje para acompañar tu oferta..."></textarea>
+        </div>
+        <div class="flex space-x-3">
+          <button
+            (click)="showOfferModal = false"
+            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+            Cancelar
+          </button>
+          <button
+            (click)="sendOffer()"
+            [disabled]="!offerAmount || offerAmount <= 0 || sendingOffer"
+            class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+            {{ sendingOffer ? 'Enviando...' : 'Enviar Oferta' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

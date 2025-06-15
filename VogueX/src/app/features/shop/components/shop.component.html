@@ -245,75 +245,124 @@
     </aside>
 
     <!-- Lista de productos -->
-    <div class="flex-1">
-      <div *ngIf="products.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <!-- Productos -->
-        <div *ngFor="let product of products" class="group relative bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-          <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden">
-            <img 
-              [src]="getProductImage(product)" 
-              [alt]="product.name" 
-              class="h-64 w-full object-cover object-center group-hover:opacity-75 transition-opacity"
-              (error)="onImageError($event)">
-          </div>
-          
-          <!-- Badge de origen -->
-          <div class="absolute top-2 left-2">
-            <span *ngIf="product.source === 'local'" class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-              Local
-            </span>
-            <span *ngIf="product.source === 'grailed'" class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-              Grailed
-            </span>
-          </div>
-
-          <div class="p-4">
-            <!-- Información del producto -->
-            <div class="mb-3">
-              <p class="text-xs text-gray-500 mb-1">{{ product.timeAgo || '' }}</p>
-              <h3 class="text-sm font-semibold text-gray-900 mb-1 line-clamp-2">{{ product.name }}</h3>
-              <p class="text-sm text-gray-600 mb-2">{{ product.brand || 'Sin marca' }}</p>
+    <div class="flex-1">      <div *ngIf="products.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">        
+        <!-- Productos con estilo de Grailed -->        
+        <div *ngFor="let product of products" class="group relative bg-white border border-gray-200 overflow-hidden hover:shadow-sm transition-all">
+          <!-- Envolver todo el contenido en un enlace al detalle -->
+          <a [routerLink]="['/product', product.id]" class="block">
+            <!-- Imagen principal con hover para ver imagen secundaria -->
+            <div class="relative overflow-hidden" style="aspect-ratio: 3/4;">
+              <!-- Imagen principal -->
+              <img 
+                [src]="getProductImage(product)" 
+                [alt]="product.name" 
+                class="w-full h-full object-cover object-center transition-opacity duration-300"
+                [class.group-hover:opacity-0]="hasMultipleImages(product)"
+                (error)="onImageError($event)">
               
-              <!-- Mostrar talla si está disponible -->
-              <p *ngIf="product.size" class="text-xs text-gray-500 mb-2">Talla: {{ product.size }}</p>
+              <!-- Imagen secundaria (visible en hover) -->
+              <img *ngIf="hasMultipleImages(product)"
+                [src]="getProductSecondaryImage(product)" 
+                [alt]="'Vista secundaria de ' + product.name" 
+                class="absolute inset-0 w-full h-full object-cover object-center opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                (error)="onImageError($event)">
               
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-lg font-bold text-gray-900">
-                    €{{ product.price }}
-                  </p>
-                  <span *ngIf="product.originalPrice" class="text-sm text-gray-500 line-through">
-                    €{{ product.originalPrice }}
-                  </span>
-                </div>
-                <button (click)="toggleFavorite(product)" class="text-gray-400 hover:text-red-500 focus:outline-none">
-                  <svg [class.text-red-500]="isFavorite(product.id)" class="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
-                  </svg>
-                </button>
+              <!-- Indicador de múltiples imágenes -->
+              <div *ngIf="hasMultipleImages(product)" class="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-sm">
+                <span>+{{ product.images.length - 1 }} fotos</span>
+              </div>
+              
+              <!-- Badge posicionado en la imagen -->
+              <div class="absolute top-2 left-2 z-10">
+                <span *ngIf="product.source === 'local'" class="bg-white text-black text-xs px-2 py-1 rounded-sm font-medium shadow-sm">
+                  Local
+                </span>
+                <span *ngIf="product.source === 'grailed'" class="bg-white text-black text-xs px-2 py-1 rounded-sm font-medium shadow-sm">
+                  Grailed
+                </span>
               </div>
             </div>
+            
+            <!-- Información del producto con estilo minimalista -->
+            <div class="p-3">
+              <!-- Miniaturas de imágenes adicionales -->
+              <div class="flex gap-1 mb-2 overflow-x-auto pb-1 hide-scrollbar" *ngIf="hasMultipleImages(product) && product.images.length > 2">
+                <div *ngFor="let image of product.images.slice(0, 4)" class="w-10 h-10 flex-shrink-0 rounded-sm overflow-hidden border border-gray-200">
+                  <img 
+                    [src]="'http://localhost:8000/storage/' + image" 
+                    [alt]="'Vista miniatura de ' + product.name" 
+                    class="w-full h-full object-cover">
+                </div>
+                <div *ngIf="product.images.length > 4" class="w-10 h-10 flex-shrink-0 rounded-sm overflow-hidden bg-gray-100 flex items-center justify-center text-xs text-gray-500">
+                  +{{ product.images.length - 4 }}
+                </div>
+              </div>
+              
+              <!-- Información del usuario que subió el producto -->
+              <div class="flex items-center gap-2 mb-2" *ngIf="product.source === 'local' && product.user">
+                <div class="bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center text-gray-600 text-xs font-bold">
+                  {{ product.userName.charAt(0).toUpperCase() }}
+                </div>
+                <span class="text-xs text-gray-600">{{ product.userName }}</span>
+              </div>
+              
+              <!-- Marca en mayúsculas, como en Grailed -->
+              <p class="text-sm font-bold uppercase tracking-wide mb-1">{{ product.brand || 'Sin marca' }}</p>
+              
+              <!-- Nombre del producto -->
+              <h3 class="text-sm text-gray-800 mb-2 line-clamp-2 font-normal">{{ product.name }}</h3>
+              
+              <!-- Precio y talla en la misma línea -->
+              <div class="flex justify-between items-center mb-1">
+                <p class="text-sm font-bold">€{{ product.price }}</p>
+                <span *ngIf="product.size" class="text-xs text-gray-500">{{ product.size }}</span>
+              </div>
+              
+              <!-- Precio original tachado si existe, en otra línea -->
+              <div *ngIf="product.originalPrice" class="flex items-center gap-2">
+                <span class="text-xs text-gray-400 line-through">€{{ product.originalPrice }}</span>
+                <span class="text-xs font-medium text-green-600">
+                  {{ ((1 - (product.price / product.originalPrice)) * 100).toFixed(0) }}% off
+                </span>
+              </div>
+                
+              <!-- Tiempo de publicación -->
+              <p class="text-xs text-gray-400 mt-1">{{ product.timeAgo || '' }}</p>
+            </div>
+          </a>
+          
+          <!-- Botón de favorito separado del enlace -->
+          <button 
+            (click)="toggleFavorite(product); $event.stopPropagation()" 
+            class="absolute top-2 right-2 bg-white rounded-full p-1 shadow-sm text-gray-400 hover:text-red-500 focus:outline-none z-20">
+            <svg [class.text-red-500]="isFavorite(product.id)" class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+            </svg>
+          </button>
 
-            <!-- Botones de acción -->
+          <!-- Botones de acción en la parte inferior -->
+          <div class="p-3 pt-0">
             <div class="space-y-2">
               <!-- Botón para productos locales -->
               <button 
                 *ngIf="product.source === 'local'"
-                (click)="sendOffer(product)"
-                class="w-full bg-black text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">
-                Enviar Oferta
+                (click)="sendOffer(product); $event.stopPropagation()"
+                class="w-full bg-black text-white py-2 px-4 text-xs font-medium hover:bg-gray-800 transition-colors">
+                Hacer Oferta
               </button>
               
               <!-- Botón para productos de Grailed -->
-              <button 
-                *ngIf="product.source === 'grailed'"
-                (click)="viewOnGrailed(product)"
-                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
+              <a 
+                *ngIf="product.source === 'grailed' && product.url"
+                [href]="product.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                (click)="$event.stopPropagation()"
+                class="block w-full bg-gray-800 text-white py-2 px-4 text-xs font-medium text-center hover:bg-gray-700 transition-colors">
                 Ver en Grailed
-              </button>
+              </a>
             </div>
-          </div>
-        </div>
+          </div>        </div>
       </div>
       
       <div *ngIf="products.length === 0" class="text-center py-12">
@@ -325,8 +374,287 @@
           <p class="text-sm mt-2">
             <a routerLink="/sell" class="text-blue-500 hover:underline">¿Quieres vender algo?</a>
           </p>
-        </div>
-      </div>
+        </div>      </div>
     </div>
   </div>
 </div>
+
+<!-- Offer Modal -->
+<div class="offer-modal-overlay" *ngIf="showOfferModal" (click)="closeOfferModal()">
+  <div class="offer-modal" (click)="$event.stopPropagation()">
+    <div class="offer-modal-header">
+      <h3>Enviar Oferta</h3>
+      <button class="close-btn" (click)="closeOfferModal()">×</button>
+    </div>
+    <div class="offer-modal-body">
+      <div class="product-info" *ngIf="selectedProduct">
+        <img [src]="getProductImage(selectedProduct)" 
+             [alt]="selectedProduct.name" 
+             class="product-image"
+             (error)="onImageError($event)">
+        <div class="product-details">
+          <h4>{{selectedProduct.name}}</h4>
+          <p class="product-brand">{{selectedProduct.brand}}</p>
+          <p class="original-price">Precio original: €{{selectedProduct.price}}</p>
+        </div>
+      </div>
+      <div class="offer-form">
+        <label>Tu oferta:</label>
+        <div class="price-input">
+          <input 
+            type="number" 
+            [(ngModel)]="offerAmount" 
+            placeholder="0.00"
+            min="1"
+            step="0.01"
+            class="offer-price">
+          <span class="currency">€</span>
+        </div>
+        <label>Mensaje (opcional):</label>
+        <textarea 
+          [(ngModel)]="offerMessage" 
+          placeholder="Agrega un mensaje a tu oferta..."
+          class="offer-message"></textarea>
+      </div>
+    </div>
+    <div class="offer-modal-footer">
+      <button class="cancel-btn" (click)="closeOfferModal()">Cancelar</button>
+      <button class="send-offer-btn" (click)="submitOffer()" [disabled]="!offerAmount || isSubmittingOffer">
+        {{isSubmittingOffer ? 'Enviando...' : 'Enviar Oferta'}}
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Offer Modal Styles */
+.offer-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.offer-modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.offer-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.offer-modal-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.close-btn:hover {
+  background: #f0f0f0;
+}
+
+.offer-modal-body {
+  padding: 20px;
+}
+
+.product-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.product-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 15px;
+}
+
+.product-details h4 {
+  margin: 0 0 5px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.product-brand {
+  margin: 0 0 5px 0;
+  color: #666;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.original-price {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.offer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.offer-form label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.price-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.offer-price {
+  flex: 1;
+  padding: 12px 16px;
+  padding-right: 35px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.offer-price:focus {
+  border-color: #007bff;
+}
+
+.currency {
+  position: absolute;
+  right: 12px;
+  color: #666;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.offer-message {
+  padding: 12px 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+  min-height: 80px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+.offer-message:focus {
+  border-color: #007bff;
+}
+
+.offer-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px;
+  border-top: 1px solid #eee;
+}
+
+.cancel-btn {
+  padding: 12px 24px;
+  border: 2px solid #ddd;
+  background: white;
+  color: #666;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background: #f8f9fa;
+  border-color: #999;
+}
+
+.send-offer-btn {
+  padding: 12px 24px;
+  border: none;
+  background: #28a745;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.send-offer-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.send-offer-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .offer-modal {
+    width: 95%;
+    margin: 10px;
+  }
+  
+  .product-info {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .product-image {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  .offer-modal-footer {
+    flex-direction: column;
+  }
+  
+  .offer-modal-footer button {
+    width: 100%;
+  }
+}
+</style>

@@ -8,6 +8,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { ProductSearchComponent } from './components/product-search/product-search.component';
 import { ContactComponent } from './components/contact/contact.component';
+// Removed unused import
 
 @NgModule({
   declarations: [
@@ -21,8 +22,9 @@ import { ContactComponent } from './components/contact/contact.component';
     FormsModule,
     RouterModule,
     ContactComponent
+  ],  providers: [
+    // No HTTP interceptors, they're now provided in app.config.ts
   ],
-  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule { } 

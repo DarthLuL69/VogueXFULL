@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\User;
 
 class Product extends Model
 {
@@ -79,9 +80,7 @@ class Product extends Model
         }
         
         return null;
-    }
-
-    // Accessor para obtener todas las imágenes
+    }    // Accessor para obtener todas las imágenes
     public function getAllImagesAttribute()
     {
         if ($this->images && is_array($this->images)) {
@@ -93,5 +92,11 @@ class Product extends Model
         }
         
         return [];
+    }
+    
+    // Relación con el usuario que subió el producto
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

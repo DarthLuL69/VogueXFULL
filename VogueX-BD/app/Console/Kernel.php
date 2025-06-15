@@ -11,12 +11,12 @@ class Kernel extends ConsoleKernel
      * The Artisan commands provided by your application.
      *
      * @var array
-     */
-    protected $commands = [
+     */    protected $commands = [
         Commands\ShowTableStructure::class,
         Commands\ScrapeGrailedDesigners::class,
         Commands\SeedDesigners::class,
         Commands\ScrapeGrailedDesignerPage::class,
+        Commands\ImportGrailedDesigners::class,
     ];
 
     /**

@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { FavoriteService } from '../../../shared/services';
 import { GrailedApiService } from '../../../shared/services';
 import { ApiService } from '../../../core/services';
@@ -12,9 +13,17 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 @Component({
   selector: 'app-shop',
   standalone: true,
-  imports: [CommonModule, RouterModule, HttpClientModule, ReactiveFormsModule],
+  imports: [CommonModule, RouterModule, HttpClientModule, ReactiveFormsModule, FormsModule],
   templateUrl: './shop.component.html',
-  styles: []
+  styles: [`
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none; /* Para Chrome, Safari y Opera */
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;  /* Para IE and Edge */
+      scrollbar-width: none;  /* Para Firefox */
+    }
+  `]
 })
 export class ShopComponent implements OnInit, OnDestroy {
   selectedCategory: string | null = null;
@@ -27,8 +36,14 @@ export class ShopComponent implements OnInit, OnDestroy {
     designers: true,
     price: true
   };
-
   products: any[] = [];
+
+  // Offer functionality
+  showOfferModal: boolean = false;
+  selectedProduct: any = null;
+  offerAmount: number | null = null;
+  offerMessage: string = '';
+  isSubmittingOffer: boolean = false;
 
   // Hacer Object disponible en el template
   Object = Object;
@@ -130,14 +145,14 @@ export class ShopComponent implements OnInit, OnDestroy {
   selectedDesigners: string[] = [];
   showDesignerSuggestions = false;
   private destroy$ = new Subject<void>();
-
   constructor(
     private route: ActivatedRoute, 
+    private router: Router,
     private favoriteService: FavoriteService, 
     private grailedApiService: GrailedApiService,
     private apiService: ApiService,
     private designersService: DesignersService
-  ) { 
+  ) {
     // Setup designer search autocomplete
     this.designerSearchControl.valueChanges.pipe(
       takeUntil(this.destroy$),
@@ -224,18 +239,20 @@ export class ShopComponent implements OnInit, OnDestroy {
     this.apiService.getProducts(filters).subscribe({
       next: (response: any) => {
         console.log('Local products response:', response);
-        if (response && response.success && response.data) {
-          this.products = response.data.map((product: any) => ({
+        if (response && response.success && response.data) {          this.products = response.data.map((product: any) => ({            
             id: product.id,
             name: product.name,
             brand: product.brand || 'Sin marca',
             imageUrl: this.getProductImageUrl(product),
+            images: product.images || [],
             price: product.price,
             timeAgo: product.created_at ? this.getTimeAgo(new Date(product.created_at)) : 'Recién subido',
             originalPrice: product.original_price || undefined,
             size: product.size || undefined,
             condition: product.condition,
-            source: 'local'
+            source: 'local',
+            user: product.user || null,
+            userName: product.user ? product.user.name : 'Usuario anónimo'
           }));
           console.log('Productos locales procesados:', this.products);
         } else {
@@ -248,42 +265,75 @@ export class ShopComponent implements OnInit, OnDestroy {
       }
     });
   }
-
   private getProductImageUrl(product: any): string {
     // Si tiene imágenes en array, usar la primera
     if (product.images && Array.isArray(product.images) && product.images.length > 0) {
-      return `http://localhost:8000/storage/${product.images[0]}`;
+      let imagePath = product.images[0];
+      // Verificar si la imagen ya tiene la URL completa
+      if (imagePath.startsWith('http')) {
+        return imagePath;
+      }
+      return `http://localhost:8000/storage/${imagePath}`;
     }
     
     // Si tiene image_url, usarla
     if (product.image_url) {
-      return `http://localhost:8000/storage/${product.image_url}`;
+      let imagePath = product.image_url;
+      // Verificar si la imagen ya tiene la URL completa
+      if (imagePath.startsWith('http')) {
+        return imagePath;
+      }
+      return `http://localhost:8000/storage/${imagePath}`;
     }
     
     // Imagen por defecto
-    return 'https://via.placeholder.com/300x300?text=No+Image';
+    return '/assets/images/no-image-available.png';
   }
-
+  
   getProductImage(product: any): string {
     if (product.source === 'local') {
       return product.imageUrl;
     } else if (product.source === 'grailed' && product.imageUrl) {
       return product.imageUrl;
     }
-    return 'https://via.placeholder.com/300x300?text=No+Image';
+    return '/assets/images/no-image-available.png';
   }
-
-  onImageError(event: Event): void {
+  
+  getProductSecondaryImage(product: any): string {
+    // Para productos locales, intentar obtener la segunda imagen del array de imágenes
+    if (product.source === 'local' && product.images && Array.isArray(product.images) && product.images.length > 1) {
+      let imagePath = product.images[1];
+      // Verificar si la imagen ya tiene la URL completa
+      if (imagePath.startsWith('http')) {
+        return imagePath;
+      }
+      return `http://localhost:8000/storage/${imagePath}`;
+    }
+    
+    // Para productos de Grailed, podemos usar la misma imagen principal ya que no tenemos secundarias
+    return this.getProductImage(product);
+  }
+  
+  hasMultipleImages(product: any): boolean {
+    return product.source === 'local' && product.images && Array.isArray(product.images) && product.images.length > 1;
+  }  onImageError(event: Event): void {
+    console.log('Error al cargar imagen');
     const target = event.target as HTMLImageElement;
     if (target) {
-      target.src = 'https://via.placeholder.com/300x300?text=No+Image';
+      // Verificar si la imagen ya es la imagen de error para evitar bucles
+      if (target.src.includes('no-image-available.png')) {
+        console.warn('Ya se está mostrando la imagen de error');
+        return;
+      }
+      
+      // Cambiar a la imagen local de "sin imagen"
+      target.src = '/assets/images/no-image-available.png';
+      
+      // Asegurarse de que la imagen de respaldo se cargue correctamente
+      target.onerror = () => {
+        console.error('Error también al cargar la imagen de respaldo');        target.style.display = 'none'; // Ocultar la imagen si falla también la imagen de respaldo
+      };
     }
-  }
-
-  sendOffer(product: any): void {
-    // Placeholder para funcionalidad de ofertas
-    alert(`Función de ofertas no disponible aún para: ${product.name}\nMarca: ${product.brand}\nPrecio: €${product.price}`);
-    console.log('Enviar oferta para producto:', product);
   }
 
   viewOnGrailed(product: any): void {
@@ -529,7 +579,6 @@ export class ShopComponent implements OnInit, OnDestroy {
   isDesignerSelected(designerName: string): boolean {
     return this.selectedDesigners.includes(designerName);
   }
-
   // Handle designer checkbox change
   onDesignerCheckboxChange(designerName: string, event: any): void {
     if (event.target.checked) {
@@ -540,5 +589,109 @@ export class ShopComponent implements OnInit, OnDestroy {
     } else {
       this.removeSelectedDesigner(designerName);
     }
+  }
+
+  // Offer functionality methods
+  sendOffer(product: any): void {
+    this.selectedProduct = product;
+    this.showOfferModal = true;
+    this.offerAmount = null;
+    this.offerMessage = '';
+  }
+
+  closeOfferModal(): void {
+    this.showOfferModal = false;
+    this.selectedProduct = null;
+    this.offerAmount = null;
+    this.offerMessage = '';
+  }
+  submitOffer(): void {
+    if (!this.selectedProduct || !this.offerAmount) {
+      return;
+    }
+
+    this.isSubmittingOffer = true;
+    
+    console.log('Selected product:', this.selectedProduct);
+    console.log('Offer amount:', this.offerAmount);
+    console.log('Offer message:', this.offerMessage);
+
+    // Determinar seller_id según la estructura del producto
+    let sellerId = null;
+    if (this.selectedProduct.user && this.selectedProduct.user.id) {
+      sellerId = this.selectedProduct.user.id;
+    } else if (this.selectedProduct.user_id) {
+      sellerId = this.selectedProduct.user_id;
+    } else {
+      console.error('No se pudo determinar seller_id del producto');
+      this.isSubmittingOffer = false;
+      alert('Error: No se pudo identificar al vendedor del producto');
+      return;
+    }
+
+    console.log('Seller ID:', sellerId);
+
+    // First, create or find existing chat
+    this.apiService.createChat({
+      product_id: this.selectedProduct.id,
+      seller_id: sellerId
+    }).pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (chatResponse: any) => {
+        console.log('Chat response:', chatResponse);
+        if (chatResponse.success) {
+          // Create the offer
+          const offerData = {
+            chat_id: chatResponse.data.id,
+            amount: this.offerAmount,
+            message: this.offerMessage || `Oferta de ${this.offerAmount}€ para ${this.selectedProduct.name}`
+          };
+          
+          console.log('Creating offer with data:', offerData);
+          
+          this.apiService.createOffer(offerData).pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (offerResponse: any) => {
+              console.log('Offer response:', offerResponse);
+              if (offerResponse.success) {                // Send a message to the chat about the offer
+                const offerMessageText = `💰 Oferta: ${this.offerAmount}€ para ${this.selectedProduct.name}${this.offerMessage ? '\n' + this.offerMessage : ''}`;
+                
+                this.apiService.sendMessage(chatResponse.data.id, {
+                  content: offerMessageText,
+                  type: 'offer'
+                }).pipe(takeUntil(this.destroy$))
+                .subscribe({
+                  next: (messageResponse: any) => {
+                    console.log('Message sent:', messageResponse);
+                    this.closeOfferModal();
+                    this.isSubmittingOffer = false;
+                    
+                    // Navigate to the chat
+                    this.router.navigate(['/chats', chatResponse.data.id]);
+                  },
+                  error: (error: any) => {
+                    console.error('Error sending message:', error);
+                    // Still navigate even if message fails
+                    this.closeOfferModal();
+                    this.isSubmittingOffer = false;
+                    this.router.navigate(['/chats', chatResponse.data.id]);
+                  }
+                });
+              }
+            },
+            error: (error: any) => {
+              console.error('Error creating offer:', error);
+              this.isSubmittingOffer = false;
+              alert('Error al crear la oferta. Por favor intenta de nuevo.');
+            }
+          });
+        }
+      },
+      error: (error: any) => {
+        console.error('Error creating chat:', error);
+        this.isSubmittingOffer = false;
+        alert('Error al crear el chat. Por favor intenta de nuevo.');
+      }
+    });
   }
 }

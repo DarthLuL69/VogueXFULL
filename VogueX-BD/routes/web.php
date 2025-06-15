@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Ruta para acceder a la interfaz de importación de diseñadores
+Route::get('/designer-importer', function () {
+    return file_get_contents(public_path('designer-importer.php'));
+});

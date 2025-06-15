@@ -13,15 +13,19 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
-            $table->rememberToken();
-            $table->timestamps();
-        });
+        // No hacemos nada porque la tabla users ya existe
+        // Esta migración se mantiene para compatibilidad con el sistema
+        if (!Schema::hasTable('users')) {
+            Schema::create('users', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('email')->unique();
+                $table->timestamp('email_verified_at')->nullable();
+                $table->string('password');
+                $table->rememberToken();
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -31,6 +35,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        // No hacemos nada para no borrar datos importantes
     }
 };

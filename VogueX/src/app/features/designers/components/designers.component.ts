@@ -67,9 +67,18 @@ export class DesignersComponent implements OnInit, OnDestroy {
       }
     });
   }
-
   ngOnInit(): void {
-    this.loadPopularDesigners();
+    // Verificar si es necesario actualizar los diseñadores
+    this.designersService.checkAndUpdateDesigners().subscribe({
+      next: () => {
+        // Independientemente del resultado, cargamos los diseñadores
+        this.loadPopularDesigners();
+      },
+      error: () => {
+        // Si hay error, igual cargamos los diseñadores que existan
+        this.loadPopularDesigners();
+      }
+    });
     // No cargar todos los diseñadores al inicio para mejorar performance
   }
 

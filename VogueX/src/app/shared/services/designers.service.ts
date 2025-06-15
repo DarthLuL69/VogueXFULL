@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, tap } from 'rxjs/operators';
 
 export interface Designer {
   id: string; // Cambiar de number a string para consistencia
@@ -105,6 +105,23 @@ export class DesignersService {
       catchError(error => {
         console.error('Error fetching featured designers:', error);
         return of([]);
+      })
+    );
+  }
+
+  /**
+   * Verifica y actualiza automáticamente la base de datos de diseñadores si es necesario
+   * Este método debe llamarse cuando el usuario accede a la página de diseñadores
+   */
+  checkAndUpdateDesigners(): Observable<any> {
+    console.log('Checking if designers need to be updated...');
+    return this.http.get<any>(`${this.apiUrl}/designers/check-update`).pipe(
+      tap(response => {
+        console.log('Designer auto-update check result:', response);
+      }),
+      catchError(error => {
+        console.error('Error checking designer updates:', error);
+        return of({ success: false, message: 'Error checking designers' });
       })
     );
   }

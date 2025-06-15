@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [  {
     path: '',
-    redirectTo: 'login',
+    redirectTo: 'home',
     pathMatch: 'full'
   },
   {
@@ -20,11 +20,14 @@ export const routes: Routes = [  {
   },  {
     path: 'home',
     loadComponent: () => import('./features/home/components/home.component').then(m => m.HomeComponent)
-  },
-  {
+  },  {
     path: 'shop',
     loadComponent: () => import('./features/shop/components/shop.component').then(m => m.ShopComponent)
-  },  {
+  },
+  {
+    path: 'product/:id',
+    loadComponent: () => import('./features/product-detail/components/product-detail.component').then(m => m.ProductDetailComponent)
+  },{
     path: 'sell',
     loadComponent: () => import('./features/sell/components/sell.component').then(m => m.SellComponent),
     canActivate: [() => import('./shared/guards/auth.guard').then(m => m.authGuard)]
@@ -60,9 +63,13 @@ export const routes: Routes = [  {
   {
     path: 'trust',
     loadComponent: () => import('./features/trust/components/trust.component').then(m => m.TrustComponent)
-  },
-  {
+  },  {
     path: 'designers',
     loadComponent: () => import('./features/designers/components/designers.component').then(m => m.DesignersComponent)
+  },
+  {
+    path: 'chats',
+    loadChildren: () => import('./features/chat/chat.module').then(m => m.ChatModule),
+    canActivate: [() => import('./shared/guards/auth.guard').then(m => m.authGuard)]
   }
 ];

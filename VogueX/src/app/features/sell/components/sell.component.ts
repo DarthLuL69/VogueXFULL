@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { ApiService } from '../../../core/services';
 import { DesignersService, Designer } from '../../../shared/services';
+import { AuthService } from '../../../shared/services/auth.service';
 import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
 interface Category {
@@ -27,9 +28,9 @@ interface ProductCondition {
   styles: []
 })
 export class SellComponent implements OnInit {
-  productForm: FormGroup;
-  imagePreviews: string[] = [];
-  maxImages = 6;
+  productForm: FormGroup;  imagePreviews: string[] = [];
+  maxImages = 10;
+  minRequiredImages = 4;
   isDragging = false;
   isDropdownOpen = false;
   hoveredCondition: ProductCondition | null = null;
@@ -304,12 +305,12 @@ export class SellComponent implements OnInit {
   designerSuggestions: Designer[] = [];
   showDesignerSuggestions = false;
   brandSearchSubject = new Subject<string>();
-
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private apiService: ApiService,
-    private designersService: DesignersService
+    private designersService: DesignersService,
+    private authService: AuthService
   ) {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(3)]],
@@ -325,6 +326,14 @@ export class SellComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Verificar si el usuario está autenticado
+    this.authService.isAuthenticated$.subscribe(isAuthenticated => {
+      if (!isAuthenticated) {
+        alert('Debes iniciar sesión para publicar productos');
+        this.router.navigate(['/']);
+        return;
+      }
+    });
     this.brandSearchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -389,9 +398,15 @@ export class SellComponent implements OnInit {
       }
     });
   }
-
   removeImage(index: number): void {
     this.imagePreviews.splice(index, 1);
+  }
+  
+  triggerImageUpload(): void {
+    const imageInput = document.getElementById('imageUpload') as HTMLInputElement;
+    if (imageInput) {
+      imageInput.click();
+    }
   }
 
   // Category methods
@@ -527,14 +542,13 @@ export class SellComponent implements OnInit {
     const condition = this.productConditions.find(c => c.id === conditionId);
     return condition?.name || '';
   }
-
   // Form validation methods
   isFormValid(): boolean {
     const formValid = this.productForm.valid;
-    const hasImages = this.imagePreviews.length > 0;
+    const hasEnoughImages = this.imagePreviews.length >= this.minRequiredImages;
     const hasAllCategories = !!(this.selectedMainCategory && this.selectedSubCategory && this.selectedFinalCategory);
     
-    return formValid && hasImages && hasAllCategories;
+    return formValid && hasEnoughImages && hasAllCategories;
   }
 
   getFormErrors(): any {
@@ -580,10 +594,9 @@ export class SellComponent implements OnInit {
       }
     });
   }
-
   private showFormErrors(): void {
-    if (this.imagePreviews.length === 0) {
-      alert('Debes subir al menos una imagen');
+    if (this.imagePreviews.length < this.minRequiredImages) {
+      alert(`Debes subir al menos ${this.minRequiredImages} imágenes (frontal, trasera, etiquetas y material)`);
       return;
     }
 

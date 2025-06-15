@@ -13,10 +13,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('search_history', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('search_history')) {
+            Schema::create('search_history', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+                $table->string('query');
+                $table->string('type')->default('product'); // product, designer, category, etc.
+                $table->integer('results_count')->default(0);
+                $table->timestamps();
+                
+                // Índice para búsquedas rápidas
+                $table->index(['user_id', 'created_at']);
+                $table->index('query');
+            });
+        }
     }
 
     /**
@@ -26,6 +36,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('search_history');
+        // No hacemos nada para prevenir pérdida de datos
     }
 };

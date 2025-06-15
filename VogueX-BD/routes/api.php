@@ -167,6 +167,7 @@ Route::prefix('designers')->group(function () {
     Route::get('/', [DesignerController::class, 'index']);
     Route::get('/popular', [DesignerController::class, 'popular']);
     Route::get('/featured', [DesignerController::class, 'featured']);
+    Route::get('/check-update', [DesignerController::class, 'checkAndUpdate']);
     Route::get('/{designer}', [DesignerController::class, 'show']);
 });
 
@@ -174,6 +175,7 @@ Route::prefix('designers')->group(function () {
 Route::prefix('user')->group(function () {
     Route::get('/profile', [UserController::class, 'getProfile']);
     Route::put('/profile', [UserController::class, 'updateProfile']);
+    Route::post('/profile/avatar', [UserController::class, 'uploadAvatar']);
 });
 
 // Ruta de debug para designers
@@ -294,7 +296,27 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     
     // Rutas para usuarios autenticados (cualquier rol)
-    // Aquí puedes añadir más rutas que requieran autenticación
+    // Chat routes
+    Route::get('/chats', [\App\Http\Controllers\Api\ChatController::class, 'index']);
+    Route::post('/chats', [\App\Http\Controllers\Api\ChatController::class, 'store']);
+    Route::get('/chats/{id}', [\App\Http\Controllers\Api\ChatController::class, 'show']);
+    Route::patch('/chats/{id}/read', [\App\Http\Controllers\Api\ChatController::class, 'markAsRead']);
+    Route::get('/chats/unread/count', [\App\Http\Controllers\Api\ChatController::class, 'unreadCount']);
+    
+    // Message routes
+    Route::get('/chats/{chatId}/messages', [\App\Http\Controllers\Api\MessageController::class, 'index']);
+    Route::post('/messages', [\App\Http\Controllers\Api\MessageController::class, 'store']);
+    
+    // Offer routes
+    Route::get('/chats/{chatId}/offers', [\App\Http\Controllers\Api\OfferController::class, 'index']);
+    Route::post('/offers', [\App\Http\Controllers\Api\OfferController::class, 'store']);
+    Route::get('/offers/{id}', [\App\Http\Controllers\Api\OfferController::class, 'show']);
+    Route::patch('/offers/{id}', [\App\Http\Controllers\Api\OfferController::class, 'update']);
+    
+    // Payment routes
+    Route::post('/payments/initialize', [\App\Http\Controllers\Api\PaymentController::class, 'initializePayment']);
+    Route::get('/payments/{id}', [\App\Http\Controllers\Api\PaymentController::class, 'show']);
+    Route::get('/payments', [\App\Http\Controllers\Api\PaymentController::class, 'index']);
 
     // Rutas para administradores
     Route::middleware('admin')->prefix('admin')->group(function () {
@@ -318,3 +340,23 @@ Route::middleware('auth:sanctum')->group(function () {
         // Route::resource('/products', AdminProductController::class);
     });
 });
+
+// Rutas para importar diseñadores desde Grailed
+Route::post('/designers/import', [\App\Http\Controllers\Api\DesignerImportController::class, 'importFromGrailed']);
+// También permitimos GET para facilitar pruebas e importaciones manuales
+Route::get('/designers/import', [\App\Http\Controllers\Api\DesignerImportController::class, 'importFromGrailed']);
+
+// Ruta para obtener estadísticas de diseñadores
+Route::get('/designers/statistics', [\App\Http\Controllers\Api\DesignerImportController::class, 'getStatistics']);
+
+// Ruta para importar diseñadores desde archivo
+Route::get('/designers/import-from-file', [\App\Http\Controllers\Api\DesignerImportController::class, 'importFromFile']);
+
+// Ruta para obtener todas las letras disponibles
+Route::get('/designers/letters', [\App\Http\Controllers\Api\DesignerController::class, 'letters']);
+
+// Rutas para noticias
+Route::get('/news/latest', [\App\Http\Controllers\Api\NewsController::class, 'latest']);
+
+// Public route for payment processing (in a real app, this would be handled by webhooks)
+Route::get('/payments/process/{id}', [\App\Http\Controllers\Api\PaymentController::class, 'processPayment']);

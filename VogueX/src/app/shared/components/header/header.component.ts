@@ -13,9 +13,8 @@ import { AuthService, User } from '../../services/auth.service';
   imports: [CommonModule, RouterLink, ReactiveFormsModule, HttpClientModule],
   template: `
     <div class="bg-white border-b">
-      <div class="container mx-auto flex items-center justify-between py-4 px-4">
-        <!-- Logo -->
-        <a routerLink="/" class="cursor-pointer">
+      <div class="container mx-auto flex items-center justify-between py-4 px-4">        <!-- Logo -->
+        <a routerLink="/home" class="cursor-pointer">
           <img src="assets/images/Logo.png" alt="Logo de VogueX" class="w-32 h-10 object-contain">
         </a>
         <!-- Buscador -->

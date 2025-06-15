@@ -1,31 +1,38 @@
-<div class="min-h-screen flex items-center justify-center bg-white">
-  <div class="w-full max-w-sm p-8 rounded-lg shadow-lg border">
-    <h2 class="text-2xl font-bold mb-6 text-center text-black">Registro</h2>
+<div class="fixed inset-0 flex items-center justify-center z-50">
+  <!-- Overlay difuminado que cubre toda la pantalla -->
+  <div class="fixed inset-0 bg-black bg-opacity-70 backdrop-filter backdrop-blur-md"></div>
+  
+  <!-- Formulario -->
+  <div class="w-full max-w-sm p-8 rounded-lg shadow-2xl border bg-white relative z-10">
+    <div class="text-center mb-6">
+      <img src="assets/images/Logo.png" alt="VogueX Logo" class="h-12 mx-auto mb-2">
+      <h2 class="text-2xl font-bold text-black">Crear cuenta</h2>
+      <p class="text-gray-600 text-sm mt-1">Regístrate para disfrutar de todas las ventajas</p>
+    </div>
     
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-black mb-1">Nombre</label>
-        <input formControlName="name" type="text" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-black" />
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">      <div>
+        <label for="name" class="block text-sm font-medium text-black mb-1">Nombre</label>
+        <input id="name" formControlName="name" type="text" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-black" />
         <small *ngIf="registerForm.get('name')?.invalid && registerForm.get('name')?.touched" class="text-red-500">Campo requerido</small>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-black mb-1">Email</label>
-        <input formControlName="email" type="email" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-black" />
+        <label for="email" class="block text-sm font-medium text-black mb-1">Email</label>
+        <input id="email" formControlName="email" type="email" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-black" />
         <small *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="text-red-500">Email inválido</small>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-black mb-1">Contraseña</label>
-        <input formControlName="password" type="password" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-black" />
+        <label for="password" class="block text-sm font-medium text-black mb-1">Contraseña</label>
+        <input id="password" formControlName="password" type="password" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-black" />
         <small *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="text-red-500">Campo requerido</small>
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-black mb-1">Confirmar Contraseña</label>
-        <input formControlName="confirmPassword" type="password" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-black" />
+        <label for="confirmPassword" class="block text-sm font-medium text-black mb-1">Confirmar Contraseña</label>
+        <input id="confirmPassword" formControlName="confirmPassword" type="password" class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-black" />
         <small *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched" class="text-red-500">Campo requerido</small>
-      </div>      <!-- Mensaje de error general -->
+      </div><!-- Mensaje de error general -->
       <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4">
         {{ errorMessage }}
       </div>

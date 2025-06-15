@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { GrailedApiService } from '../../../shared/services';
 import { NewsService, NewsItem } from '../../../shared/services/news.service';
 
@@ -18,28 +18,28 @@ export class HomeComponent implements OnInit, OnDestroy {
   newsItems: NewsItem[] = [];
   currentSlide = 0;
   private slideInterval: any;
-
   menswear = [
-    { name: 'Blazer', img: 'https://i.imgur.com/1.png' },
-    { name: 'Sneakers', img: 'https://i.imgur.com/2.png' },
-    { name: 'Camiseta Gucci', img: 'https://i.imgur.com/3.png' },
-    { name: 'Bomber', img: 'https://i.imgur.com/4.png' },
-    { name: 'Gafas', img: 'https://i.imgur.com/5.png' },
-    { name: 'Jeans', img: 'https://i.imgur.com/6.png' },
+    { name: 'Blazer', img: 'https://i.imgur.com/1.png', category: 'blazers' },
+    { name: 'Sneakers', img: 'https://i.imgur.com/2.png', category: 'low-top-sneakers' },
+    { name: 'Camiseta Gucci', img: 'https://i.imgur.com/3.png', category: 't-shirts' },
+    { name: 'Bomber', img: 'https://i.imgur.com/4.png', category: 'jackets' },
+    { name: 'Gafas', img: 'https://i.imgur.com/5.png', category: 'watches' }, // Usando watches como equivalente a accesorios
+    { name: 'Jeans', img: 'https://i.imgur.com/6.png', category: 'jeans' },
   ];
   
   womenswear = [
-    { name: 'Top', img: 'https://i.imgur.com/7.png' },
-    { name: 'Bolso', img: 'https://i.imgur.com/8.png' },
-    { name: 'Falda', img: 'https://i.imgur.com/9.png' },
-    { name: 'Gafas', img: 'https://i.imgur.com/10.png' },
-    { name: 'Bomber', img: 'https://i.imgur.com/11.png' },
-    { name: 'Bufanda', img: 'https://i.imgur.com/12.png' },
+    { name: 'Top', img: 'https://i.imgur.com/7.png', category: 'blouses' },
+    { name: 'Bolso', img: 'https://i.imgur.com/8.png', category: 'bags' },
+    { name: 'Falda', img: 'https://i.imgur.com/9.png', category: 'skirts' },
+    { name: 'Gafas', img: 'https://i.imgur.com/10.png', category: 'jewelry' }, // Usando jewelry como equivalente a accesorios
+    { name: 'Bomber', img: 'https://i.imgur.com/11.png', category: 'jackets' },
+    { name: 'Bufanda', img: 'https://i.imgur.com/12.png', category: 'scarves' },
   ];
 
   constructor(
     private apiService: GrailedApiService,
-    private newsService: NewsService
+    private newsService: NewsService,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -115,6 +115,24 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.loadFallbackNews();
       }
     });
+  }
+
+  // Función para navegar al shop con filtros
+  navigateToShop(department: string, subcategory: string): void {
+    console.log(`Navigating to shop with department: ${department}, subcategory: ${subcategory}`);
+    
+    // Construir los parámetros de consulta para la navegación
+    const queryParams: any = { 
+      category: department
+    };
+    
+    // Añadir subcategoría si está presente
+    if (subcategory) {
+      queryParams.subcategory = subcategory;
+    }
+    
+    // Navegar al shop con los parámetros
+    this.router.navigate(['/shop'], { queryParams });
   }
 
   private loadFallbackNews(): void {

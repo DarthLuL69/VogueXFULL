@@ -4,33 +4,150 @@
     <p class="text-gray-600 text-sm">Completa todos los campos requeridos para crear tu anuncio</p>
   </div>
 
-  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="listing-form">
-    <!-- Sección de imágenes -->
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="listing-form">    <!-- Sección de imágenes -->
     <div class="mb-8 p-6 bg-gray-50 rounded-md">
       <h3 class="text-lg font-semibold mb-1">Fotos del producto *</h3>
-      <p class="text-gray-600 text-sm mb-4">Se requieren al menos 6 fotos, incluyendo una vista frontal, trasera, etiquetas y detalles.</p>
+      <p class="text-gray-600 text-sm mb-4">
+        <b>Se requieren al menos 4 fotos obligatorias</b> (máximo 10). Las primeras 4 deben ser: vista frontal, etiquetas interiores, vista trasera y detalle del material.
+      </p>
       
-      <div class="mt-4">
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
-          <div class="relative aspect-square overflow-hidden rounded-md border border-gray-300" *ngFor="let preview of imagePreviews; let i = index">
-            <img [src]="preview" class="w-full h-full object-cover">
-            <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" (click)="removeImage(i)">
-              <i class="bi bi-x"></i>
-            </button>
+      <!-- Guía de fotos requeridas -->
+      <div class="bg-white p-3 rounded-md border border-gray-200 mb-4">
+        <h4 class="font-medium text-sm mb-2 text-gray-700">Guía para tus fotos</h4>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <!-- Foto frontal -->
+          <div class="flex flex-col items-center text-center">
+            <div class="bg-gray-50 border border-gray-200 rounded-md p-2 w-full aspect-square flex items-center justify-center mb-1">
+              <img src="https://i.imgur.com/tDTeZBL.png" alt="Vista frontal" class="h-16 w-auto">
+            </div>
+            <span class="text-xs font-medium text-gray-700">1. Vista frontal</span>
           </div>
           
+          <!-- Foto etiquetas -->
+          <div class="flex flex-col items-center text-center">
+            <div class="bg-gray-50 border border-gray-200 rounded-md p-2 w-full aspect-square flex items-center justify-center mb-1">
+              <img src="https://i.imgur.com/I8peJFu.png" alt="Etiquetas interiores" class="h-16 w-auto">
+            </div>
+            <span class="text-xs font-medium text-gray-700">2. Etiquetas interiores</span>
+          </div>
+          
+          <!-- Foto trasera -->
+          <div class="flex flex-col items-center text-center">
+            <div class="bg-gray-50 border border-gray-200 rounded-md p-2 w-full aspect-square flex items-center justify-center mb-1">
+              <img src="https://i.imgur.com/KVamaJZ.png" alt="Vista trasera" class="h-16 w-auto">
+            </div>
+            <span class="text-xs font-medium text-gray-700">3. Vista trasera</span>
+          </div>
+          
+          <!-- Foto material -->
+          <div class="flex flex-col items-center text-center">
+            <div class="bg-gray-50 border border-gray-200 rounded-md p-2 w-full aspect-square flex items-center justify-center mb-1">
+              <img src="https://i.imgur.com/fGrsBmU.png" alt="Detalle del material" class="h-16 w-auto">
+            </div>
+            <span class="text-xs font-medium text-gray-700">4. Detalle del material</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-4">
+        <!-- Contador de imágenes -->
+        <div class="flex justify-between items-center mb-3">
+          <p class="text-sm font-medium" [ngClass]="{'text-red-500': imagePreviews.length < minRequiredImages, 'text-green-600': imagePreviews.length >= minRequiredImages}">
+            Imágenes: {{ imagePreviews.length }}/{{ maxImages }} 
+            <span *ngIf="imagePreviews.length < minRequiredImages">(mínimo {{ minRequiredImages }})</span>
+          </p>
+          <p class="text-xs text-gray-500">Las primeras 4 fotos son obligatorias</p>
+        </div>
+        
+        <!-- Cuadrícula de imágenes -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <!-- Primera imagen (frontal) -->
+          <div class="relative" [ngClass]="{'opacity-50': imagePreviews.length < 1}">
+            <div *ngIf="imagePreviews.length >= 1" class="relative aspect-square overflow-hidden rounded-md border border-gray-300">
+              <img [src]="imagePreviews[0]" alt="Vista frontal del producto" class="w-full h-full object-cover">
+              <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" (click)="removeImage(0)">
+                <i class="bi bi-x">×</i>
+              </button>
+              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Vista frontal</div>
+            </div>            <div *ngIf="imagePreviews.length < 1" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
+                 (click)="triggerImageUpload()" (keydown.enter)="triggerImageUpload()" tabindex="0" role="button" aria-label="Añadir foto frontal">
+              <i class="bi bi-plus-lg text-gray-400 text-2xl">+</i>
+              <span class="text-gray-500 text-xs mt-1">Vista frontal</span>
+              <span class="text-red-500 text-xs mt-1">Obligatorio</span>
+            </div>
+          </div>
+          
+          <!-- Segunda imagen (etiquetas) -->
+          <div class="relative" [ngClass]="{'opacity-50': imagePreviews.length < 2}">
+            <div *ngIf="imagePreviews.length >= 2" class="relative aspect-square overflow-hidden rounded-md border border-gray-300">
+              <img [src]="imagePreviews[1]" alt="Etiquetas interiores del producto" class="w-full h-full object-cover">
+              <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" (click)="removeImage(1)">
+                <i class="bi bi-x">×</i>
+              </button>
+              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Etiquetas</div>
+            </div>            <div *ngIf="imagePreviews.length < 2" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
+                 (click)="triggerImageUpload()" (keydown.enter)="triggerImageUpload()" tabindex="0" role="button" aria-label="Añadir foto de etiquetas">
+              <i class="bi bi-plus-lg text-gray-400 text-2xl">+</i>
+              <span class="text-gray-500 text-xs mt-1">Etiquetas</span>
+              <span class="text-red-500 text-xs mt-1">Obligatorio</span>
+            </div>
+          </div>
+          
+          <!-- Tercera imagen (trasera) -->
+          <div class="relative" [ngClass]="{'opacity-50': imagePreviews.length < 3}">
+            <div *ngIf="imagePreviews.length >= 3" class="relative aspect-square overflow-hidden rounded-md border border-gray-300">
+              <img [src]="imagePreviews[2]" alt="Vista trasera del producto" class="w-full h-full object-cover">
+              <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" (click)="removeImage(2)">
+                <i class="bi bi-x">×</i>
+              </button>
+              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Vista trasera</div>
+            </div>            <div *ngIf="imagePreviews.length < 3" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
+                 (click)="triggerImageUpload()" (keydown.enter)="triggerImageUpload()" tabindex="0" role="button" aria-label="Añadir foto trasera">
+              <i class="bi bi-plus-lg text-gray-400 text-2xl">+</i>
+              <span class="text-gray-500 text-xs mt-1">Vista trasera</span>
+              <span class="text-red-500 text-xs mt-1">Obligatorio</span>
+            </div>
+          </div>
+          
+          <!-- Cuarta imagen (material) -->
+          <div class="relative" [ngClass]="{'opacity-50': imagePreviews.length < 4}">
+            <div *ngIf="imagePreviews.length >= 4" class="relative aspect-square overflow-hidden rounded-md border border-gray-300">
+              <img [src]="imagePreviews[3]" alt="Detalle del material del producto" class="w-full h-full object-cover">
+              <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" (click)="removeImage(3)">
+                <i class="bi bi-x">×</i>
+              </button>
+              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Material</div>
+            </div>            <div *ngIf="imagePreviews.length < 4" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
+                 (click)="triggerImageUpload()" (keydown.enter)="triggerImageUpload()" tabindex="0" role="button" aria-label="Añadir foto de material">
+              <i class="bi bi-plus-lg text-gray-400 text-2xl">+</i>
+              <span class="text-gray-500 text-xs mt-1">Material</span>
+              <span class="text-red-500 text-xs mt-1">Obligatorio</span>
+            </div>
+          </div>
+          
+          <!-- Imágenes adicionales -->
+          <ng-container *ngFor="let preview of imagePreviews.slice(4); let i = index">
+            <div class="relative aspect-square overflow-hidden rounded-md border border-gray-300">
+              <img [src]="preview" alt="Vista adicional del producto" class="w-full h-full object-cover">
+              <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" (click)="removeImage(i + 4)">
+                <i class="bi bi-x">×</i>
+              </button>
+              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Extra {{ i + 1 }}</div>
+            </div>
+          </ng-container>
+          
+          <!-- Botón para añadir más imágenes -->
           <div class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center transition-all duration-200"
-               *ngIf="imagePreviews.length < 6"
+               *ngIf="imagePreviews.length < maxImages"
                (dragover)="onDragOver($event)"
                (dragleave)="onDragLeave($event)"
                (drop)="onDrop($event)"
                [class.border-blue-500]="isDragging"
                [class.bg-blue-50]="isDragging">
             <label for="imageUpload" class="flex flex-col items-center justify-center cursor-pointer p-4 text-center">
-              <i class="bi bi-plus-lg text-gray-400 text-2xl"></i>
-              <span class="text-gray-500 text-sm mt-2">Arrastra y suelta imágenes aquí</span>
-              <span class="text-gray-400 text-xs mt-1">o</span>
-              <span class="text-blue-500 text-sm font-medium mt-1">Selecciona archivos</span>
+              <i class="bi bi-plus-lg text-gray-400 text-2xl">+</i>
+              <span class="text-gray-500 text-xs mt-2">Añadir más fotos</span>
+              <span class="text-gray-400 text-xs mt-1">o arrastra y suelta</span>
             </label>
             <input 
               type="file" 

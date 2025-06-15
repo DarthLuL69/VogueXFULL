@@ -8,10 +8,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
-    public function index(Request $request)
+    public function __construct()
+    {
+        // Requerir autenticación para crear productos
+        $this->middleware('auth:sanctum')->only(['store', 'update', 'destroy']);
+    }    public function index(Request $request)
     {
         $query = Product::active();
 
@@ -37,6 +42,9 @@ class ProductController extends Controller
         $sortBy = $request->get('sort', 'created_at');
         $sortOrder = $request->get('order', 'desc');
         $query->orderBy($sortBy, $sortOrder);
+
+        // Incluir la información del usuario
+        $query->with('user:id,name,email');
 
         // Paginación
         $perPage = $request->get('per_page', 20);
@@ -118,12 +126,11 @@ class ProductController extends Controller
                 'main_category' => $validated['mainCategory'],
                 'sub_category' => $validated['subCategory'],
                 'final_category' => $validated['finalCategory'],
-                'images' => $imageUrls,
-                'image_url' => $imageUrls[0],
+                'images' => $imageUrls,                'image_url' => $imageUrls[0],
                 'category_id' => $categoryId,
                 'is_active' => true,
                 'status' => 'active',
-                'user_id' => null,
+                'user_id' => auth()->id(), // Asignar el ID del usuario autenticado
             ]);
 
             Log::info('Product created successfully with ID: ' . $product->id);
@@ -151,9 +158,7 @@ class ProductController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
-    }
-
-    private function getOrCreateCategoryId($mainCategory)
+    }    private function getOrCreateCategoryId($mainCategory)
     {
         // Mapeo de categorías principales a IDs
         $categoryMap = [
@@ -166,13 +171,13 @@ class ProductController extends Controller
         $categoryId = $categoryMap[$mainCategory] ?? 1;
 
         // Verificar si existe, si no, crear
-        $category = \DB::table('categories')->where('id', $categoryId)->first();
+        $category = DB::table('categories')->where('id', $categoryId)->first();
         
         if (!$category) {
             $categoryName = ucfirst($mainCategory);
-            $slug = \Str::slug($categoryName);
+            $slug = Str::slug($categoryName);
             
-            \DB::table('categories')->insert([
+            DB::table('categories')->insert([
                 'id' => $categoryId,
                 'name' => $categoryName,
                 'slug' => $slug,
@@ -231,10 +236,11 @@ class ProductController extends Controller
             Log::error('Exception in saveBase64Image: ' . $e->getMessage());
             return null;
         }
-    }
-
-    public function show(Product $product)
+    }    public function show(Product $product)
     {
+        // Cargar la información del usuario
+        $product->load('user:id,name,email');
+        
         return response()->json([
             'success' => true,
             'data' => $product
