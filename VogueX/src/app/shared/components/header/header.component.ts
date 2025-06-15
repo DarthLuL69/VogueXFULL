@@ -2,15 +2,13 @@ import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Observable, Subscription, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
-import { GrailedApiService } from '../../services/grailed-api.service';
-import { HttpClientModule } from '@angular/common/http';
+import { Observable, Subscription } from 'rxjs';
 import { AuthService, User } from '../../services/auth.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, HttpClientModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule],
   template: `
     <div class="bg-white border-b">
       <div class="container mx-auto flex items-center justify-between py-4 px-4">        <!-- Logo -->
@@ -184,62 +182,29 @@ export class HeaderComponent implements OnDestroy {
     { name: 'Boots', subcategories: ['Ankle Boots', 'Combat Boots', 'Chelsea Boots', 'Work Boots', 'Hiking Boots', 'Desert Boots'] },
     { name: 'Casual', subcategories: ['Loafers', 'Moccasins', 'Boat Shoes', 'Espadrilles', 'Canvas Shoes'] },
     { name: 'Sandals', subcategories: ['Flip Flops', 'Slides', 'Sport Sandals', 'Dress Sandals'] },
-    { name: 'Formal', subcategories: ['Oxford Shoes', 'Derby Shoes', 'Brogues', 'Monk Straps', 'Dress Boots'] }
-  ];  constructor(
-    private readonly apiService: GrailedApiService, 
+    { name: 'Formal', subcategories: ['Oxford Shoes', 'Derby Shoes', 'Brogues', 'Monk Straps', 'Dress Boots'] }  ];
+
+  constructor(
     private readonly router: Router,
     private readonly authService: AuthService
-  ) {    // Inicializar las propiedades de autenticación
+  ) {
     this.isAuthenticated$ = this.authService.isAuthenticated$;
     this.currentUser$ = this.authService.currentUser$;
     this.isAdmin$ = this.authService.isAdmin$;
-    
-    this.searchSubscription = this.searchControl.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(query => {
-        if (query) {
-          return this.apiService.search(query);
-        } else {
-          // Limpiar resultados si el query está vacío
-          this.searchResults = undefined; // Limpiar resultados
-          return [];
-        }
-      })
-    ).subscribe(results => {
-      // Asignar los resultados (ajustar según la estructura real de la API)
-      // Suponemos que los resultados relevantes están en results.hits
-       if (results && results.hits) {
-         this.searchResults = results.hits; // Esto es una suposición; verificar la estructura real
-       } else {
-         this.searchResults = [];
-       }
-      console.log('Search Results:', this.searchResults);
-    });
   }
 
   ngOnDestroy(): void {
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
-    }
-  }
+    }  }
 
   selectSearchResult(result: any): void {
-    // Lógica al seleccionar un resultado
-    console.log('Selected search result:', result);
-    // Navegar a la página de la tienda con la consulta o detalles del producto si es posible
-    // Dependiendo de la estructura de la API, podrías navegar a una página de detalles
-    // si el resultado es un producto específico, o a la página de la tienda con un filtro
-    // si es un diseñador o marca.
-
-    // Por ahora, navegamos a la página de la tienda con el término de búsqueda.
-    // Podrías refinar esto si la API indica el tipo de resultado (producto, diseñador, etc.)
-    const searchTerm = result.name || result.title || this.searchControl.value;
+    const searchTerm = result.name ?? result.title ?? this.searchControl.value;
     this.router.navigate(['/shop'], { queryParams: { search: searchTerm } });
-    this.searchResults = undefined; // Ocultar los resultados después de seleccionar
-     this.searchControl.setValue('', { emitEvent: false }); // Limpiar el input sin activar otra búsqueda
+    this.searchResults = undefined;
+    this.searchControl.setValue('', { emitEvent: false });
   }
-  // Método para cerrar sesión
+
   logout(): void {
     this.authService.logout();
   }

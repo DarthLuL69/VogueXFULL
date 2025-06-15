@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { GrailedApiService } from '../../../shared/services';
 import { NewsService, NewsItem } from '../../../shared/services/news.service';
 
 @Component({
@@ -35,11 +34,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     { name: 'Bomber', img: 'https://i.imgur.com/11.png', category: 'jackets' },
     { name: 'Bufanda', img: 'https://i.imgur.com/12.png', category: 'scarves' },
   ];
-
   constructor(
-    private apiService: GrailedApiService,
-    private newsService: NewsService,
-    private router: Router
+    private readonly newsService: NewsService,
+    private readonly router: Router
   ) { }
 
   ngOnInit(): void {
@@ -70,32 +67,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   goToSlide(index: number): void {
     this.currentSlide = index;
   }
-
   openNewsLink(url: string): void {
     window.open(url, '_blank');
   }
 
-  loadDesigners(): void {
-    // Reutilizamos la lógica de extracción de diseñadores de ShopComponent
-     this.apiService.search('', 1, 100, 'mostrecent').subscribe(results => { // Aumentamos hitsPerPage
-       console.log('API Search Results for Designers (Home):', results);
-        if (results && results.hits && results.hits.length > 0) {
-           const extractedDesigners = results.hits
-             .map((hit: any) => hit.designer || hit.brand) // Asumir propiedad 'designer' o 'brand'
-             .filter((designer: any) => designer) // Filtrar resultados nulos o vacíos
-             .reduce((unique: string[], item: string) => unique.includes(item) ? unique : [...unique, item], []); // Obtener nombres únicos
-
-           // Ordenar alfabéticamente
-           this.designers = extractedDesigners.sort();
-        }
-     });
-  }
-
   toggleDesigners(): void {
-     this.showDesigners = !this.showDesigners;
-     if (this.showDesigners && this.designers.length === 0) {
-       this.loadDesigners(); // Cargar diseñadores solo si se muestra la sección y aún no se han cargado
-     }
+    this.showDesigners = !this.showDesigners;
   }
 
   loadLatestNews(): void {

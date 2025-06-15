@@ -940,11 +940,9 @@ export class ChatListComponent implements OnInit, OnDestroy {
     // Load offers
     this.offerService.getOffers(chat.id)
       .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
+      .subscribe({        next: (response) => {
           if (response.success) {
             this.offers = response.data;
-            console.log('Offers loaded:', this.offers);
           }
         },
         error: (error) => {          console.error('Error loading offers:', error);
@@ -1122,12 +1120,9 @@ export class ChatListComponent implements OnInit, OnDestroy {
   acceptOffer(offerId: number): void {
     this.offerService.updateOfferStatus(offerId, 'accepted')
       .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
+      .subscribe({        next: (response) => {
           if (response.success) {
-            // Reload offers to reflect the change
             this.loadOffers();
-            console.log('Offer accepted successfully');
           }
         },
         error: (error) => {
@@ -1139,12 +1134,9 @@ export class ChatListComponent implements OnInit, OnDestroy {
   rejectOffer(offerId: number): void {
     this.offerService.updateOfferStatus(offerId, 'rejected')
       .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
+      .subscribe({        next: (response) => {
           if (response.success) {
-            // Reload offers to reflect the change
             this.loadOffers();
-            console.log('Offer rejected successfully');
           }
         },
         error: (error) => {

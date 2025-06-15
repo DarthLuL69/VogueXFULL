@@ -10,6 +10,11 @@ export class ApiService {
 
   constructor(private http: HttpClient) { }
 
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('auth_token');
+    return token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
+  }
+
   // Productos
   getProducts(filters?: any): Observable<any> {
     let params = new URLSearchParams();
@@ -28,26 +33,8 @@ export class ApiService {
 
   getProduct(id: number): Observable<any> {
     return this.http.get(`${this.apiUrl}/products/${id}`);
-  }
-  createProduct(formData: FormData): Observable<any> {
-    console.log('ApiService: Enviando producto al backend');
-    
-    // Log para debug (sin mostrar las imágenes base64 completas)
-    const debugData: any = {};
-    formData.forEach((value, key) => {
-      if (key.startsWith('images[')) {
-        debugData[key] = 'base64_image_data';
-      } else {
-        debugData[key] = value;
-      }
-    });
-    console.log('Datos a enviar:', debugData);
-    
-    // Obtener token de autenticación
-    const token = localStorage.getItem('auth_token');
-    const headers = token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
-
-    return this.http.post(`${this.apiUrl}/products`, formData, { headers });
+  }  createProduct(formData: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}/products`, formData, { headers: this.getAuthHeaders() });
   }
 
   updateProduct(id: number, formData: FormData): Observable<any> {
@@ -57,73 +44,50 @@ export class ApiService {
   deleteProduct(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/products/${id}`);
   }
+
   getBrands(): Observable<any> {
     return this.http.get(`${this.apiUrl}/products/brands`);
   }
 
-  // Usuario/Perfil
   getUserProfile(): Observable<any> {
     return this.http.get(`${this.apiUrl}/user/profile`);
   }
 
   updateUserProfile(profileData: any): Observable<any> {
-    const token = localStorage.getItem('auth_token');
-    const headers = token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
-    return this.http.put(`${this.apiUrl}/user/profile`, profileData, { headers });
+    return this.http.put(`${this.apiUrl}/user/profile`, profileData, { headers: this.getAuthHeaders() });
   }
 
   uploadProfileImage(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('avatar', file);
-    
-    const token = localStorage.getItem('auth_token');
-    const headers = token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
-    
-    return this.http.post(`${this.apiUrl}/user/profile/avatar`, formData, { headers });
+    return this.http.post(`${this.apiUrl}/user/profile/avatar`, formData, { headers: this.getAuthHeaders() });
   }
 
-  // Chat methods
   createChat(data: any): Observable<any> {
-    const token = localStorage.getItem('auth_token');
-    const headers = token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
-    return this.http.post(`${this.apiUrl}/chats`, data, { headers });
+    return this.http.post(`${this.apiUrl}/chats`, data, { headers: this.getAuthHeaders() });
   }
 
   getChats(): Observable<any> {
-    const token = localStorage.getItem('auth_token');
-    const headers = token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
-    return this.http.get(`${this.apiUrl}/chats`, { headers });
+    return this.http.get(`${this.apiUrl}/chats`, { headers: this.getAuthHeaders() });
   }
 
   getChat(id: number): Observable<any> {
-    const token = localStorage.getItem('auth_token');
-    const headers = token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
-    return this.http.get(`${this.apiUrl}/chats/${id}`, { headers });
+    return this.http.get(`${this.apiUrl}/chats/${id}`, { headers: this.getAuthHeaders() });
   }
 
-  // Offer methods
   createOffer(data: any): Observable<any> {
-    const token = localStorage.getItem('auth_token');
-    const headers = token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
-    return this.http.post(`${this.apiUrl}/offers`, data, { headers });
+    return this.http.post(`${this.apiUrl}/offers`, data, { headers: this.getAuthHeaders() });
   }
 
   getOffers(chatId: number): Observable<any> {
-    const token = localStorage.getItem('auth_token');
-    const headers = token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
-    return this.http.get(`${this.apiUrl}/chats/${chatId}/offers`, { headers });
+    return this.http.get(`${this.apiUrl}/chats/${chatId}/offers`, { headers: this.getAuthHeaders() });
   }
 
-  // Message methods
   sendMessage(chatId: number, data: any): Observable<any> {
-    const token = localStorage.getItem('auth_token');
-    const headers = token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
-    return this.http.post(`${this.apiUrl}/chats/${chatId}/messages`, data, { headers });
+    return this.http.post(`${this.apiUrl}/chats/${chatId}/messages`, data, { headers: this.getAuthHeaders() });
   }
 
   getMessages(chatId: number): Observable<any> {
-    const token = localStorage.getItem('auth_token');
-    const headers = token ? new HttpHeaders().set('Authorization', `Bearer ${token}`) : new HttpHeaders();
-    return this.http.get(`${this.apiUrl}/chats/${chatId}/messages`, { headers });
+    return this.http.get(`${this.apiUrl}/chats/${chatId}/messages`, { headers: this.getAuthHeaders() });
   }
 }

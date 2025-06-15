@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { FooterComponent } from './shared/components/footer/footer.component';
 import { HeaderComponent } from './shared/components/header/header.component';
-import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from './shared/services/auth.service';
 import { TokenStorageService } from './core/services/token-storage.service';
 
@@ -12,7 +11,7 @@ import { TokenStorageService } from './core/services/token-storage.service';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, FooterComponent, HeaderComponent, HttpClientModule]
+  imports: [CommonModule, RouterOutlet, FooterComponent, HeaderComponent]
 })
 export class AppComponent implements OnInit {
   title = 'VogueX';

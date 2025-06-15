@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FavoriteService } from '../../../shared/services';
-import { GrailedApiService } from '../../../shared/services';
 import { ApiService } from '../../../core/services';
 import { DesignersService, Designer } from '../../../shared/services';
 import { HttpClientModule } from '@angular/common/http';
@@ -144,14 +143,12 @@ export class ShopComponent implements OnInit, OnDestroy {
   designerSuggestions: Designer[] = [];
   selectedDesigners: string[] = [];
   showDesignerSuggestions = false;
-  private destroy$ = new Subject<void>();
-  constructor(
-    private route: ActivatedRoute, 
-    private router: Router,
-    private favoriteService: FavoriteService, 
-    private grailedApiService: GrailedApiService,
-    private apiService: ApiService,
-    private designersService: DesignersService
+  private destroy$ = new Subject<void>();  constructor(
+    private readonly route: ActivatedRoute, 
+    private readonly router: Router,
+    private readonly favoriteService: FavoriteService, 
+    private readonly apiService: ApiService,
+    private readonly designersService: DesignersService
   ) {
     // Setup designer search autocomplete
     this.designerSearchControl.valueChanges.pipe(
@@ -194,43 +191,9 @@ export class ShopComponent implements OnInit, OnDestroy {
 
       // Cargar productos de nuestra API local primero
       this.loadLocalProducts({ 
-        category: this.selectedCategory, 
-        subcategory: this.selectedSubcategory, 
+        category: this.selectedCategory,        subcategory: this.selectedSubcategory, 
         search: searchTerm,
         designer: designerFilter 
-      });
-
-      // También buscar en Grailed API si hay término de búsqueda
-      if (searchTerm) {
-        this.grailedApiService.search(searchTerm).subscribe(results => {
-          if (results && results.hits) {
-            const grailedProducts = results.hits.map((hit: any) => ({
-              id: `grailed_${hit.id}`,
-              name: hit.name || hit.title,
-              imageUrl: hit.image_url || hit.photo_url,
-              price: hit.price,
-              timeAgo: hit.listed_at ? this.getTimeAgo(new Date(hit.listed_at * 1000)) : '',
-              originalPrice: hit.original_price || undefined,
-              size: hit.size || undefined,
-              source: 'grailed'
-            }));
-            
-            // Combinar productos locales con Grailed
-            this.products = [...this.products, ...grailedProducts];
-          }
-          console.log('Combined products:', this.products);
-        });
-      }
-
-      this.grailedApiService.search('', 1, 50, 'mostrecent').subscribe(results => {
-        console.log('API Search Results for Designers (initial load):', results);
-         if (results && results.hits && results.hits.length > 0) {
-            const extractedDesigners = results.hits
-              .map((hit: any) => hit.designer || hit.brand)
-              .filter((designer: any) => designer)
-              .reduce((unique: string[], item: string) => unique.includes(item) ? unique : [...unique, item], []);
-            this.designers = extractedDesigners;
-         }
       });
     });
   }
@@ -543,39 +506,15 @@ export class ShopComponent implements OnInit, OnDestroy {
   private applyDesignerFilter(): void {
     // Aquí puedes implementar la lógica para filtrar productos por diseñadores seleccionados
     console.log('Filtering by designers:', this.selectedDesigners);
-    
-    // Si quieres hacer una nueva búsqueda con los diseñadores seleccionados
-    if (this.selectedDesigners.length > 0) {
-      const designerQuery = this.selectedDesigners.join(' OR ');
-      this.searchProductsByDesigners(designerQuery);
+      if (this.selectedDesigners.length > 0) {
+      this.loadLocalProducts({
+        category: this.selectedCategory,
+        subcategory: this.selectedSubcategory,
+        designer: this.selectedDesigners.join(',')
+      });
     }
   }
 
-  private searchProductsByDesigners(designerQuery: string): void {
-    this.grailedApiService.search(designerQuery).subscribe(results => {
-      if (results && results.hits) {
-        // Filtrar productos que coincidan con los diseñadores seleccionados
-        const filteredProducts = results.hits.filter((hit: any) => {
-          const productDesigner = hit.designer?.name || hit.brand;
-          return productDesigner && this.selectedDesigners.some(selectedDesigner => 
-            productDesigner.toLowerCase().includes(selectedDesigner.toLowerCase())
-          );
-        });
-
-        this.products = filteredProducts.map((hit: any) => ({
-          id: hit.id,
-          name: hit.name || hit.title,
-          imageUrl: hit.image_url || hit.photo_url,
-          price: hit.price,
-          timeAgo: hit.listed_at ? this.getTimeAgo(new Date(hit.listed_at * 1000)) : '',
-          originalPrice: hit.original_price || undefined,
-          size: hit.size || undefined,
-        }));
-      }
-    });
-  }
-
-  // Check if designer is selected
   isDesignerSelected(designerName: string): boolean {
     return this.selectedDesigners.includes(designerName);
   }

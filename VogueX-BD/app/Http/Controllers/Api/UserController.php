@@ -6,11 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
-{
-    public function getProfile()
+{    public function getProfile()
     {
-        // Por ahora devolvemos datos simulados
-        // Cuando implementes autenticación, usarías auth()->user()
         return response()->json([
             'success' => true,
             'data' => [
@@ -21,7 +18,9 @@ class UserController extends Controller
                 'created_at' => now(),
             ]
         ]);
-    }    public function updateProfile(Request $request)
+    }
+
+    public function updateProfile(Request $request)
     {
         $validated = $request->validate([
             'name' => 'string|max:255',
@@ -31,8 +30,6 @@ class UserController extends Controller
             'bio' => 'nullable|string|max:1000',
         ]);
 
-        // Aquí actualizarías el perfil del usuario
-        // Por ahora devolvemos los datos validados
         return response()->json([
             'success' => true,
             'message' => 'Perfil actualizado exitosamente',
@@ -43,11 +40,9 @@ class UserController extends Controller
     public function uploadAvatar(Request $request)
     {
         $request->validate([
-            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120',
         ]);
 
-        // Aquí procesarías la subida de la imagen
-        // Por ahora devolvemos una respuesta simulada
         return response()->json([
             'success' => true,
             'message' => 'Imagen de perfil actualizada exitosamente',
