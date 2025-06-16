@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UserService, User } from '../../../shared/services/user.service';
+import { OrderService } from '../../../shared/services/order.service';
+import { Order } from '../../../shared/models/order.model';
 
 @Component({
   selector: 'app-profile',
@@ -19,16 +21,23 @@ export class ProfileComponent implements OnInit {
   errorMessage = '';
   recentChats: any[] = [];
   
-  // Form data
+
+  orders: Order[] = [];
+  showOrders = false;
+  selectedOrder: Order | null = null;
+  showOrderDetails = false;
+  ordersLoading = false;
+  
+
   formData = {
     name: '',
     email: '',
     phone: '',
     bio: ''
   };
-
   constructor(
     private readonly userService: UserService,
+    private readonly orderService: OrderService,
     private readonly router: Router
   ) {}
 
@@ -63,10 +72,9 @@ export class ProfileComponent implements OnInit {
       }
     });
   }
-
   toggleEditMode(): void {
     this.isEditing = !this.isEditing;
-    if (!this.isEditing && this.user) {      // Reset form data if canceling
+    if (!this.isEditing && this.user) {
       this.formData = {
         name: this.user.name,
         email: this.user.email,
@@ -109,7 +117,7 @@ export class ProfileComponent implements OnInit {
     this.userService.uploadAvatar(file).subscribe({
       next: (response) => {
         if (response.success) {
-          this.loadUserProfile(); // Reload to get updated avatar
+          this.loadUserProfile(); 
           this.message = 'Avatar actualizado correctamente';
         }
         this.loading = false;
@@ -121,10 +129,9 @@ export class ProfileComponent implements OnInit {
       }
     });
   }
-
   getAvatarUrl(): string {
-    return this.user?.avatar ? this.userService.getAvatarUrl(this.user.avatar) : '';
-  }  getInitials(name?: string): string {
+    return this.user ? this.userService.getAvatarUrl(this.user) : '';
+  }getInitials(name?: string): string {
     const nameToUse = name ?? this.user?.name ?? '';
     if (!nameToUse) return '';
     return nameToUse.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -153,12 +160,86 @@ export class ProfileComponent implements OnInit {
   goToFavorites(): void {
     this.router.navigate(['/favourites']);
   }  goToOrders(): void {
-    this.router.navigate(['/orders']);
+    this.showOrders = true;
+    this.loadOrders();
+  }
+
+  loadOrders(): void {
+    this.ordersLoading = true;
+    this.orderService.getOrders().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.orders = response.data;
+        }
+        this.ordersLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading orders:', error);
+        this.errorMessage = 'Error al cargar los pedidos';
+        this.ordersLoading = false;
+      }
+    });
+  }
+
+  viewOrderDetails(order: Order): void {
+    this.selectedOrder = order;
+    this.showOrderDetails = true;
+  }
+
+  closeOrderDetails(): void {
+    this.selectedOrder = null;
+    this.showOrderDetails = false;
+  }
+
+  closeOrders(): void {
+    this.showOrders = false;
+    this.showOrderDetails = false;
+    this.selectedOrder = null;
+  }
+
+  getOrderStatusText(status: string): string {
+    switch (status) {
+      case 'pending': return 'Pendiente';
+      case 'processing': return 'Procesando';
+      case 'shipped': return 'Enviado';
+      case 'delivered': return 'Entregado';
+      case 'cancelled': return 'Cancelado';
+      default: return 'Desconocido';
+    }
+  }
+
+  getOrderStatusColor(status: string): string {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'processing': return 'bg-blue-100 text-blue-800';
+      case 'shipped': return 'bg-purple-100 text-purple-800';
+      case 'delivered': return 'bg-green-100 text-green-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  getPaymentStatusText(status: string): string {
+    switch (status) {
+      case 'pending': return 'Pendiente';
+      case 'completed': return 'Completado';
+      case 'failed': return 'Fallido';
+      case 'refunded': return 'Reembolsado';
+      default: return 'Desconocido';
+    }
+  }
+
+  getPaymentStatusColor(status: string): string {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      case 'refunded': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   }
 
   loadRecentChats(): void {
-    // For now, just initialize as empty array
-    // In a real app, this would call an API service
     this.recentChats = [];
   }
 

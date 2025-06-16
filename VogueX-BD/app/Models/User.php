@@ -17,7 +17,8 @@ class User extends Authenticatable
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
-     */    protected $fillable = [
+     */
+    protected $fillable = [
         'name',
         'email',
         'password',
@@ -31,8 +32,7 @@ class User extends Authenticatable
      * The attributes that should be hidden for serialization.
      *
      * @var array<int, string>
-     */
-    protected $hidden = [
+     */    protected $hidden = [
         'password',
         'remember_token',
     ];
@@ -47,11 +47,24 @@ class User extends Authenticatable
 
     /**
      * Verifica si el usuario es administrador
-     * 
+     *
      * @return bool
      */    public function isAdmin()
     {
         return $this->role === 'admin';
+    }
+    
+    /**
+     * Obtiene la URL completa del avatar
+     *
+     * @return string|null
+     */
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+        return null;
     }
     
     /**

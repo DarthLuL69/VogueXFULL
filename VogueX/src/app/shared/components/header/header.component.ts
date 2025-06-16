@@ -10,9 +10,9 @@ import { UserService } from '../../services/user.service';
   selector: 'app-header',
   standalone: true,
   imports: [CommonModule, RouterLink, ReactiveFormsModule],
-  template: `
-    <div class="bg-white border-b">
-      <div class="container mx-auto flex items-center justify-between py-4 px-4">        <!-- Logo -->
+  template: `    <div class="bg-white border-b">
+      <div class="container mx-auto flex items-center justify-between py-4 px-4">
+        <!-- Logo -->
         <a routerLink="/home" class="cursor-pointer">
           <img src="assets/images/Logo.png" alt="Logo de VogueX" class="w-32 h-10 object-contain">
         </a>
@@ -27,20 +27,19 @@ import { UserService } from '../../services/user.service';
           <div *ngIf="searchResults && searchResults.length > 0" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded shadow-lg max-h-60 overflow-y-auto">
             <div *ngFor="let result of searchResults" class="p-2 hover:bg-gray-100 cursor-pointer" (click)="selectSearchResult(result)">
               {{ result.name || result.title || 'Unknown Result' }}
-            </div>
-          </div>
+            </div>            </div>
            <div *ngIf="searchControl.value && searchResults && searchResults.length === 0" class="absolute z-10 w-full bg-white border border-gray-300 mt-1 rounded shadow-lg p-2 text-gray-500">
               No se encontraron resultados para "{{ searchControl.value }}".
             </div>
-        </div>        <!-- Botones -->
+        </div>
+        <!-- Botones -->
         <div class="flex items-center gap-4">
           <a routerLink="/shop" class="hover:underline">SHOP</a>
           <a routerLink="/contact" class="hover:underline">CONTACT</a>
           
           <!-- Botones cuando no está autenticado -->
           <ng-container *ngIf="!(isAuthenticated$ | async)">
-            <a routerLink="/login" class="border px-4 py-2 rounded hover:bg-gray-100">LOGIN</a>
-            <a routerLink="/register" class="border px-4 py-2 rounded hover:bg-gray-100">REGISTER</a>
+            <a routerLink="/login" class="border px-4 py-2 rounded hover:bg-gray-100">LOGIN</a>            <a routerLink="/register" class="border px-4 py-2 rounded hover:bg-gray-100">REGISTER</a>
           </ng-container>
             <!-- Botones cuando está autenticado -->
           <ng-container *ngIf="isAuthenticated$ | async">
@@ -49,14 +48,13 @@ import { UserService } from '../../services/user.service';
             
             <!-- Enlace al panel de administración solo para administradores -->
             <a *ngIf="isAdmin$ | async" routerLink="/admin" class="border border-red-500 text-red-500 px-4 py-2 rounded hover:bg-red-50">ADMIN</a>            
-            <a routerLink="/profile" class="w-8 h-8 bg-black rounded-full cursor-pointer flex items-center justify-center text-white overflow-hidden">
-              <img 
-                *ngIf="(currentUser$ | async)?.avatar" 
-                [src]="getAvatarUrl((currentUser$ | async)?.avatar)"
+            <a routerLink="/profile" class="w-8 h-8 bg-black rounded-full cursor-pointer flex items-center justify-center text-white overflow-hidden">              <img 
+                *ngIf="(currentUser$ | async)?.avatar || (currentUser$ | async)?.avatar_url" 
+                [src]="getAvatarUrl(currentUser$ | async)"
                 [alt]="(currentUser$ | async)?.name"
                 class="w-full h-full object-cover"
               />
-              <span *ngIf="!(currentUser$ | async)?.avatar">
+              <span *ngIf="!(currentUser$ | async)?.avatar && !(currentUser$ | async)?.avatar_url">
                 {{ (currentUser$ | async)?.name?.charAt(0) ?? 'U' }}
               </span>
             </a>
@@ -287,8 +285,7 @@ export class HeaderComponent implements OnDestroy {
     this.router.navigate(['/shop'], { queryParams });
     this.hideAllDropdowns();
   }
-
-  getAvatarUrl(avatar?: string): string {
-    return this.userService.getAvatarUrl(avatar);
+  getAvatarUrl(user?: any): string {
+    return this.userService.getAvatarUrl(user);
   }
 }

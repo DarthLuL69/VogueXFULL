@@ -1,0 +1,8 @@
+<svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="80" height="80" fill="#f3f4f6"/>
+  <rect x="20" y="15" width="40" height="50" fill="#e5e7eb" stroke="#9ca3af" stroke-width="2"/>
+  <!-- Shirt shape -->
+  <path d="M25 25 L35 20 L45 20 L55 25 L55 35 L50 35 L50 55 L30 55 L30 35 L25 35 Z" fill="#d1d5db" stroke="#6b7280" stroke-width="1"/>
+  <!-- Text -->
+  <text x="40" y="68" text-anchor="middle" fill="#6b7280" font-family="Arial, sans-serif" font-size="8">Vista Frontal</text>
+</svg>

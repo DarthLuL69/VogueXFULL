@@ -79,7 +79,7 @@ export class OrdersComponent implements OnInit {
       this.orderService.cancelOrder(orderId, reason.trim()).subscribe({
         next: (response: any) => {
           if (response.success) {
-            this.loadOrders(); // Reload orders
+            this.loadOrders(); 
             alert('Pedido cancelado exitosamente');
           } else {
             alert('Error al cancelar el pedido');
@@ -94,7 +94,6 @@ export class OrdersComponent implements OnInit {
   }
 
   trackOrder(trackingNumber: string): void {
-    // Open tracking in new window/tab
     const trackingUrl = `https://www.correos.es/ss/Satellite/site/pagina-localizador_busqueda/busqueda?buscar.x=0&buscar.y=0&numero=${trackingNumber}`;
     window.open(trackingUrl, '_blank');
   }

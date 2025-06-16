@@ -1,0 +1,2 @@
+# This file keeps the views directory in version control
+# Views directory is required by Laravel even for API-only applications

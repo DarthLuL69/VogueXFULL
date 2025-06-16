@@ -1,11 +1,7 @@
-<div class="max-w-7xl mx-auto px-4 py-8">
-  <!-- Header -->
-  <div class="text-center mb-8">
+<div class="max-w-7xl mx-auto px-4 py-8">  <div class="text-center mb-8">
     <h1 class="text-3xl font-bold mb-2">Designers</h1>
-    <p class="text-gray-600">Browse by your favorite designers and brands</p>
+    <p class="text-gray-600">Browse your favorite designers and brands</p>
   </div>
-
-  <!-- Search Bar -->
   <div class="max-w-md mx-auto mb-8">
     <div class="relative">
       <input 
@@ -18,24 +14,19 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
       </svg>
     </div>
-  </div>
-
-  <!-- Filter Tabs -->
-  <div class="flex justify-center mb-8">
+  </div>  <div class="flex justify-center mb-8">
     <nav class="flex space-x-8">
-      <button 
-        *ngFor="let tab of ['FEATURED', 'POPULAR', 'ALL']"
-        (click)="onFilterTabSelect(tab)"
-        [class]="selectedFilterTab === tab ? 'border-b-2 border-black font-semibold' : 'text-gray-600 hover:text-black'"
-        class="py-2 text-sm uppercase tracking-wide transition-colors">
+      <button
+      *ngFor="let tab of ['FEATURED', 'POPULAR', 'ALL']"
+      (click)="onFilterTabSelect(tab)"
+      [class]="selectedFilterTab === tab ? 'border-b-2 border-black font-semibold' : 'text-gray-600 hover:text-black'"
+      class="py-2 text-sm uppercase tracking-wide transition-colors">
         {{ tab }}
       </button>
     </nav>
   </div>
 
-  <!-- Alphabet Filter (only for ALL tab) -->
-  <div *ngIf="selectedFilterTab === 'ALL'" class="flex flex-wrap justify-center gap-2 mb-8">
-    <button 
+  <div *ngIf="selectedFilterTab === 'ALL'" class="flex flex-wrap justify-center gap-2 mb-8">    <button 
       (click)="resetLetterFilter()"
       [class]="!selectedLetter ? 'bg-black text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
       class="px-3 py-1 text-sm font-medium rounded transition-colors">
@@ -50,20 +41,17 @@
     </button>
   </div>
 
-  <!-- Loading State -->
   <div *ngIf="loading" class="text-center py-12">
     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
     <p class="mt-2 text-gray-600">Loading designers...</p>
   </div>
 
-  <!-- Error State -->
   <div *ngIf="error && !loading" class="text-center py-12">
     <p class="text-red-600">{{ error }}</p>
   </div>
 
-  <!-- Designers Grid -->
   <div *ngIf="!loading && !error">
-    <!-- Popular/Featured Grid -->
+
     <div *ngIf="selectedFilterTab !== 'ALL'" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
       <div 
         *ngFor="let designer of filteredDesigners" 
@@ -95,12 +83,11 @@
 
     <!-- ALL tab content -->
     <div *ngIf="selectedFilterTab === 'ALL'">
-      <!-- Show limited results when no letter selected -->
+
       <div *ngIf="!selectedLetter" class="mb-4 text-center text-gray-600">
         <p>Showing first 20 designers. Select a letter to see more specific results.</p>
       </div>
       
-      <!-- Grid view for limited results (no letter selected) -->
       <div *ngIf="!selectedLetter" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
         <div 
           *ngFor="let designer of filteredDesigners | slice:0:20" 
@@ -130,7 +117,6 @@
         </div>
       </div>
 
-      <!-- Alphabetical Grouped List (for letter selection) -->
       <div *ngIf="selectedLetter" class="space-y-8">
         <div *ngFor="let letter of Object.keys(groupedFilteredDesigners).sort()" class="border-b border-gray-200 pb-6">
           <h2 class="text-2xl font-bold mb-4 text-gray-900">{{ letter }}</h2>
@@ -163,12 +149,8 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Empty State -->
-    <div *ngIf="filteredDesigners.length === 0 && !loading" class="text-center py-12">
+    </div>    <div *ngIf="filteredDesigners.length === 0 && !loading" class="text-center py-12">
       <p class="text-gray-500">No designers found.</p>
     </div>
   </div>
 </div>
-

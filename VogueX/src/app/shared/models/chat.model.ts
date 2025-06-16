@@ -78,6 +78,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  avatar_url?: string;
 }
 
 // Product model interface (simplified for chat purposes)

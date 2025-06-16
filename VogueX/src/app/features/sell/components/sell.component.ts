@@ -326,7 +326,7 @@ export class SellComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Verificar si el usuario está autenticado
+    // Check if user is authenticated
     this.authService.isAuthenticated$.subscribe(isAuthenticated => {
       if (!isAuthenticated) {
         alert('Debes iniciar sesión para publicar productos');

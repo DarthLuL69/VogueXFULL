@@ -4,7 +4,8 @@
     <p class="text-gray-600 text-sm">Completa todos los campos requeridos para crear tu anuncio</p>
   </div>
 
-  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="listing-form">    <!-- Sección de imágenes -->
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="listing-form">
+    <!-- Sección de imágenes -->
     <div class="mb-8 p-6 bg-gray-50 rounded-md">
       <h3 class="text-lg font-semibold mb-1">Fotos del producto *</h3>
       <p class="text-gray-600 text-sm mb-4">
@@ -18,7 +19,7 @@
           <!-- Foto frontal -->
           <div class="flex flex-col items-center text-center">
             <div class="bg-gray-50 border border-gray-200 rounded-md p-2 w-full aspect-square flex items-center justify-center mb-1">
-              <img src="https://i.imgur.com/tDTeZBL.png" alt="Vista frontal" class="h-16 w-auto">
+              <img src="assets/images/guide/front-view.svg" alt="Vista frontal" class="h-16 w-auto">
             </div>
             <span class="text-xs font-medium text-gray-700">1. Vista frontal</span>
           </div>
@@ -26,7 +27,7 @@
           <!-- Foto etiquetas -->
           <div class="flex flex-col items-center text-center">
             <div class="bg-gray-50 border border-gray-200 rounded-md p-2 w-full aspect-square flex items-center justify-center mb-1">
-              <img src="https://i.imgur.com/I8peJFu.png" alt="Etiquetas interiores" class="h-16 w-auto">
+              <img src="assets/images/guide/labels.svg" alt="Etiquetas interiores" class="h-16 w-auto">
             </div>
             <span class="text-xs font-medium text-gray-700">2. Etiquetas interiores</span>
           </div>
@@ -34,7 +35,7 @@
           <!-- Foto trasera -->
           <div class="flex flex-col items-center text-center">
             <div class="bg-gray-50 border border-gray-200 rounded-md p-2 w-full aspect-square flex items-center justify-center mb-1">
-              <img src="https://i.imgur.com/KVamaJZ.png" alt="Vista trasera" class="h-16 w-auto">
+              <img src="assets/images/guide/back-view.svg" alt="Vista trasera" class="h-16 w-auto">
             </div>
             <span class="text-xs font-medium text-gray-700">3. Vista trasera</span>
           </div>
@@ -42,7 +43,7 @@
           <!-- Foto material -->
           <div class="flex flex-col items-center text-center">
             <div class="bg-gray-50 border border-gray-200 rounded-md p-2 w-full aspect-square flex items-center justify-center mb-1">
-              <img src="https://i.imgur.com/fGrsBmU.png" alt="Detalle del material" class="h-16 w-auto">
+              <img src="assets/images/guide/material.svg" alt="Detalle del material" class="h-16 w-auto">
             </div>
             <span class="text-xs font-medium text-gray-700">4. Detalle del material</span>
           </div>
@@ -67,9 +68,9 @@
               <img [src]="imagePreviews[0]" alt="Vista frontal del producto" class="w-full h-full object-cover">
               <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" (click)="removeImage(0)">
                 <i class="bi bi-x">×</i>
-              </button>
-              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Vista frontal</div>
-            </div>            <div *ngIf="imagePreviews.length < 1" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
+              </button>              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Vista frontal</div>
+            </div>
+            <div *ngIf="imagePreviews.length < 1" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
                  (click)="triggerImageUpload()" (keydown.enter)="triggerImageUpload()" tabindex="0" role="button" aria-label="Añadir foto frontal">
               <i class="bi bi-plus-lg text-gray-400 text-2xl">+</i>
               <span class="text-gray-500 text-xs mt-1">Vista frontal</span>
@@ -83,9 +84,9 @@
               <img [src]="imagePreviews[1]" alt="Etiquetas interiores del producto" class="w-full h-full object-cover">
               <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" (click)="removeImage(1)">
                 <i class="bi bi-x">×</i>
-              </button>
-              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Etiquetas</div>
-            </div>            <div *ngIf="imagePreviews.length < 2" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
+              </button>              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Etiquetas</div>
+            </div>
+            <div *ngIf="imagePreviews.length < 2" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
                  (click)="triggerImageUpload()" (keydown.enter)="triggerImageUpload()" tabindex="0" role="button" aria-label="Añadir foto de etiquetas">
               <i class="bi bi-plus-lg text-gray-400 text-2xl">+</i>
               <span class="text-gray-500 text-xs mt-1">Etiquetas</span>
@@ -99,9 +100,9 @@
               <img [src]="imagePreviews[2]" alt="Vista trasera del producto" class="w-full h-full object-cover">
               <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" (click)="removeImage(2)">
                 <i class="bi bi-x">×</i>
-              </button>
-              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Vista trasera</div>
-            </div>            <div *ngIf="imagePreviews.length < 3" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
+              </button>              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Vista trasera</div>
+            </div>
+            <div *ngIf="imagePreviews.length < 3" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
                  (click)="triggerImageUpload()" (keydown.enter)="triggerImageUpload()" tabindex="0" role="button" aria-label="Añadir foto trasera">
               <i class="bi bi-plus-lg text-gray-400 text-2xl">+</i>
               <span class="text-gray-500 text-xs mt-1">Vista trasera</span>
@@ -115,9 +116,9 @@
               <img [src]="imagePreviews[3]" alt="Detalle del material del producto" class="w-full h-full object-cover">
               <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs" (click)="removeImage(3)">
                 <i class="bi bi-x">×</i>
-              </button>
-              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Material</div>
-            </div>            <div *ngIf="imagePreviews.length < 4" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
+              </button>              <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 px-2">Material</div>
+            </div>
+            <div *ngIf="imagePreviews.length < 4" class="aspect-square border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer"
                  (click)="triggerImageUpload()" (keydown.enter)="triggerImageUpload()" tabindex="0" role="button" aria-label="Añadir foto de material">
               <i class="bi bi-plus-lg text-gray-400 text-2xl">+</i>
               <span class="text-gray-500 text-xs mt-1">Material</span>

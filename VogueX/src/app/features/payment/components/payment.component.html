@@ -1,8 +1,8 @@
-<!-- Payment Page with Tailwind CSS -->
+
 <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
     
-    <!-- Loading State -->
+    
     <div *ngIf="isLoading" class="flex items-center justify-center min-h-[60vh]">
       <div class="text-center">
         <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
@@ -10,7 +10,7 @@
       </div>
     </div>
 
-    <!-- Error State -->
+    
     <div *ngIf="error" class="flex items-center justify-center min-h-[60vh]">
       <div class="bg-white rounded-2xl shadow-xl p-8 text-center max-w-md mx-auto">
         <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -28,15 +28,13 @@
       </div>
     </div>
 
-    <!-- Payment Content -->
+    
     <div *ngIf="offer && !isLoading && !error" class="space-y-8">
       
-      <!-- Header -->
       <div class="text-center">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Finalizar compra</h1>
         <p class="text-gray-600 text-lg">Completa tu compra de forma segura</p>
         
-        <!-- Progress Bar -->
         <div class="mt-6 max-w-md mx-auto">
           <div class="flex items-center justify-between mb-2">
             <span class="text-sm font-medium text-blue-600">Paso 1 de 3</span>
@@ -50,10 +48,8 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        <!-- Left Column - Forms -->
         <div class="lg:col-span-2 space-y-6">
           
-          <!-- Offer Summary -->
           <div class="bg-white rounded-2xl shadow-lg p-6" *ngIf="offer">
             <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <span class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
@@ -90,7 +86,6 @@
 
           <form [formGroup]="paymentForm" (ngSubmit)="processPayment()" class="space-y-6">
             
-            <!-- Payment Method Selection -->
             <div class="bg-white rounded-2xl shadow-lg p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <span class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
@@ -138,10 +133,8 @@
               </div>
             </div>
 
-            <!-- Payment Details -->
             <div class="bg-white rounded-2xl shadow-lg p-6" *ngIf="paymentForm.get('paymentMethod')?.value">
               
-              <!-- Card Payment -->
               <div *ngIf="isCardPayment()">
                 <h4 class="text-lg font-semibold text-gray-900 mb-4">Información de la tarjeta</h4>
                 
@@ -240,7 +233,7 @@
               </div>
             </div>
 
-            <!-- Shipping Address -->
+            <!--Address -->
             <div class="bg-white rounded-2xl shadow-lg p-6">
               <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <span class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">

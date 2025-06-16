@@ -17,8 +17,7 @@ class UserController extends Controller
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Usuario no autenticado'
-            ], 401);
+                'message' => 'Usuario no autenticado'            ], 401);
         }
 
         return response()->json([
@@ -28,6 +27,7 @@ class UserController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'avatar' => $user->avatar,
+                'avatar_url' => $user->avatar_url,
                 'phone' => $user->phone,
                 'bio' => $user->bio,
                 'role' => $user->role,
@@ -79,6 +79,7 @@ class UserController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'avatar' => $user->avatar,
+                    'avatar_url' => $user->avatar_url,
                     'phone' => $user->phone,
                     'bio' => $user->bio,
                     'role' => $user->role,
@@ -124,7 +125,8 @@ class UserController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Avatar actualizado exitosamente',
-                'avatar_url' => $avatarPath
+                'avatar_path' => $avatarPath,
+                'avatar_url' => asset('storage/' . $avatarPath)
             ]);
 
         } catch (\Exception $e) {

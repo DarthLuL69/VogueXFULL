@@ -11,7 +11,6 @@ export class OrderService {
   private readonly apiUrl = environment.apiUrl;
   
   constructor(private readonly http: HttpClient) { }
-
   /**
    * Get user's orders (both as buyer and seller)
    */
@@ -22,14 +21,13 @@ export class OrderService {
     return this.http.get<{ 
       success: boolean, 
       data: Order[]
-    }>(`${this.apiUrl}/orders`);
+    }>(`${this.apiUrl}/user/orders`);
   }
-
   /**
    * Get specific order details
    */
   getOrder(id: number): Observable<{ success: boolean, data: Order }> {
-    return this.http.get<{ success: boolean, data: Order }>(`${this.apiUrl}/orders/${id}`);
+    return this.http.get<{ success: boolean, data: Order }>(`${this.apiUrl}/user/orders/${id}`);
   }
 
   /**

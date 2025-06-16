@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\DesignerController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserOrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactMessageController;
@@ -64,12 +65,15 @@ Route::post('/contact', [ContactMessageController::class, 'store']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    
-    // Rutas de usuario
+      // Rutas de usuario
     Route::prefix('user')->group(function () {
         Route::get('/profile', [UserController::class, 'getProfile']);
         Route::put('/profile', [UserController::class, 'updateProfile']);
         Route::post('/avatar', [UserController::class, 'uploadAvatar']);
+        
+        // User orders
+        Route::get('/orders', [\App\Http\Controllers\Api\UserOrderController::class, 'index']);
+        Route::get('/orders/{id}', [\App\Http\Controllers\Api\UserOrderController::class, 'show']);
     });
     
     // Chat routes

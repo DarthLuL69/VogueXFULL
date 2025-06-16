@@ -15,15 +15,16 @@ import { takeUntil } from 'rxjs/operators';
 @Component({
   selector: 'app-chat-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],  template: `    <div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-4">
+  imports: [CommonModule, FormsModule],
+  template: `    <div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-4">
       <div class="max-w-7xl mx-auto">
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
           <div class="flex h-[calc(100vh-8rem)]">
             
             <!-- Chat List Sidebar -->
-            <div class="w-80 bg-gradient-to-b from-slate-50 to-gray-100 border-r border-gray-200 flex flex-col">              <!-- Header -->
-              <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900">
-                <h2 class="text-xl font-bold text-white mb-2">💬 Conversaciones</h2>
+            <div class="w-80 bg-gradient-to-b from-slate-50 to-gray-100 border-r border-gray-200 flex flex-col">
+              <!-- Header -->
+              <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900">                <h2 class="text-xl font-bold text-white mb-2">💬 Conversaciones</h2>
                 <p class="text-slate-300 text-sm">Gestiona tus chats activos</p>
               </div>
                 <!-- Search -->
@@ -633,7 +634,7 @@ export class ChatListComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           if (response.success) {
-            // Filtrar chats donde el usuario no se está chateando consigo mismo
+            // Filter chats where the user is not chatting with themselves
             this.chats = response.data.filter(chat => 
               chat.buyer_id !== this.userId || chat.seller_id !== this.userId
             );
@@ -964,10 +965,13 @@ export class ChatListComponent implements OnInit, OnDestroy {
     if (!chat) return null;
     
     const otherUser = this.userId === chat.buyer_id ? chat.seller : chat.buyer;
-    if (!otherUser?.avatar) return null;
+    if (!otherUser?.avatar && !otherUser?.avatar_url) return null;
     
-    // Use UserService to get full avatar URL
-    return this.userService.getAvatarUrl(otherUser.avatar);
+    if (otherUser.avatar_url) {
+      return otherUser.avatar_url;
+    }
+    
+    return this.userService.getAvatarUrl(null, otherUser.avatar);
   }
 
   getOtherUser(chat: Chat): any {

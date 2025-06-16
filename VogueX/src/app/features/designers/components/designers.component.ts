@@ -27,13 +27,8 @@ export class DesignersComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
-  // Make Object available in template
   Object = Object;
-  
-  // Make encodeURIComponent available in template
   encodeURIComponent = encodeURIComponent;
-
-  // Alphabet for filtering
   alphabet = ['#', ...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')];
 
   constructor(
@@ -47,8 +42,7 @@ export class DesignersComponent implements OnInit, OnDestroy {
       distinctUntilChanged(),
       switchMap(query => {
         if (query) {
-          return this.designersService.searchDesigners(query);
-        } else if (this.selectedLetter) {
+          return this.designersService.searchDesigners(query);        } else if (this.selectedLetter) {
           return this.designersService.getDesignersByLetter(this.selectedLetter);
         } else {
           return this.designersService.getAllDesigners();
@@ -56,30 +50,25 @@ export class DesignersComponent implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: (designers) => {
-        this.allDesigners = designers; // Actualizar allDesigners para el filtro principal
+        this.allDesigners = designers;
         this.applyFilter();
         this.loading = false;
-      },
-      error: (error) => {
-        this.error = 'Error al cargar los diseñadores';
+      },      error: (error) => {
+        this.error = 'Error loading designers';
         this.loading = false;
-        console.error('Error:', error);
       }
     });
   }
+
   ngOnInit(): void {
-    // Verificar si es necesario actualizar los diseñadores
     this.designersService.checkAndUpdateDesigners().subscribe({
       next: () => {
-        // Independientemente del resultado, cargamos los diseñadores
         this.loadPopularDesigners();
       },
       error: () => {
-        // Si hay error, igual cargamos los diseñadores que existan
         this.loadPopularDesigners();
       }
     });
-    // No cargar todos los diseñadores al inicio para mejorar performance
   }
 
   ngOnDestroy(): void {
@@ -90,20 +79,16 @@ export class DesignersComponent implements OnInit, OnDestroy {
   loadPopularDesigners(): void {
     this.loading = true;
     this.designersService.getPopularDesigners()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
+      .pipe(takeUntil(this.destroy$))      .subscribe({
         next: (designers) => {
-          console.log('Popular designers received:', designers);
           this.popularDesigners = designers;
           if (this.selectedFilterTab === 'POPULAR') {
             this.filteredDesigners = this.popularDesigners;
             this.groupDesigners();
           }
           this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error loading popular designers:', error);
-          this.error = 'Unable to load popular designers.';
+        },        error: (error) => {
+          this.error = 'Failed to load popular designers.';
           this.loading = false;
         }
       });
@@ -111,23 +96,18 @@ export class DesignersComponent implements OnInit, OnDestroy {
 
   loadAllDesigners(): void {
     this.loading = true;
-    // Remover el parámetro (20) de esta llamada
     this.designersService.getAllDesigners()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (designers) => {
-          this.allDesigners = designers;
-          if (this.selectedFilterTab === 'ALL' && !this.searchQuery && !this.selectedLetter) {
+          this.allDesigners = designers;          if (this.selectedFilterTab === 'ALL' && !this.searchQuery && !this.selectedLetter) {
             this.applyFilter();
           }
           this.loading = false;
           this.error = null;
-          console.log('Limited designers loaded:', designers.length);
-        },
-        error: (error) => {
-          this.error = 'Unable to load designers. Please try again later.';
+        },        error: (error) => {
+          this.error = 'Failed to load designers. Please try again later.';
           this.loading = false;
-          console.error('Error loading all designers:', error);
         }
       });
   }
@@ -135,15 +115,13 @@ export class DesignersComponent implements OnInit, OnDestroy {
   loadDesigners(): void {
     this.loading = true;
     
-    this.designersService.getAllDesigners() // Remover el parámetro (20)
+    this.designersService.getAllDesigners()
       .subscribe({
         next: (designers) => {
           this.allDesigners = designers;
-          this.applyFilter(); // Cambiar de applyFilters a applyFilter si es necesario
+          this.applyFilter();
           this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error loading designers:', error);
+        },        error: (error) => {
           this.loading = false;
         }
       });
@@ -155,7 +133,6 @@ export class DesignersComponent implements OnInit, OnDestroy {
     this.selectedFilterTab = 'ALL';
     this.searchSubject.next(query);
   }
-
   onSearchInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     if (target) {
@@ -166,7 +143,6 @@ export class DesignersComponent implements OnInit, OnDestroy {
   onImageError(event: Event, designerName: string): void {
     const target = event.target as HTMLImageElement;
     if (target) {
-      // Generar avatar con iniciales como fallback
       const initials = this.getInitials(designerName);
       const backgroundColor = this.getColorFromName(designerName);
       target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${initials}&backgroundColor=${backgroundColor}&radius=10&fontSize=40`;
@@ -199,67 +175,53 @@ export class DesignersComponent implements OnInit, OnDestroy {
     
     return colors[Math.abs(hash) % colors.length];
   }
-
   onLetterSelect(letter: string): void {
     this.selectedLetter = letter;
     this.searchQuery = '';
     this.selectedFilterTab = 'ALL';
     this.loading = true;
 
-    // Cargar diseñadores específicos por letra
     this.designersService.getDesignersByLetter(letter)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
+      .pipe(takeUntil(this.destroy$))      .subscribe({
         next: (designers) => {
           this.filteredDesigners = designers;
           this.groupDesigners();
           this.loading = false;
-          console.log(`Designers for letter ${letter}:`, designers.length);
-        },
-        error: (error) => {
-          console.error('Error loading designers by letter:', error);
+        },        error: (error) => {
           this.loading = false;
-          this.error = 'Unable to load designers for this letter.';
+          this.error = 'Failed to load designers for this letter.';
         }
       });
   }
-
   onFilterTabSelect(tab: string): void {
     this.selectedFilterTab = tab;
     this.searchQuery = '';
     this.selectedLetter = null;
     
     if (tab === 'ALL' && this.allDesigners.length === 0) {
-      // Solo cargar cuando se necesite
       this.loadAllDesigners();
     } else {
       this.applyFilter();
     }
   }
-
   onDesignerClick(designer: Designer): void {
     this.router.navigate(['/shop'], {
       queryParams: { designer: designer.name }
     });
   }
-
   private applyFilter(): void {
     if (this.selectedFilterTab === 'POPULAR') {
-      console.log('Applying POPULAR filter with:', this.popularDesigners.length, 'designers');
       this.filteredDesigners = this.popularDesigners;
     } else if (this.selectedFilterTab === 'FEATURED') {
-      this.filteredDesigners = this.popularDesigners.slice(0, 6); // Show 6 featured
-    } else { // ALL
-      if (this.selectedLetter) {
-        return;
-      } else {
-        this.filteredDesigners = this.allDesigners.slice(0, 20);
-      }
+      this.filteredDesigners = this.popularDesigners.slice(0, 6);
+    } else if (this.selectedLetter) {
+      return;
+    } else {
+      this.filteredDesigners = this.allDesigners.slice(0, 20);
     }
     this.groupDesigners();
   }
 
-  // Add public method for template access
   public resetLetterFilter(): void {
     this.selectedLetter = null;
     this.applyFilter();
@@ -274,15 +236,11 @@ export class DesignersComponent implements OnInit, OnDestroy {
       }
       groups[groupKey].push(designer);
       return groups;
-    }, {} as { [key: string]: Designer[] });
-
-    // Ordenar por clave (letra) y luego por nombre dentro de cada grupo
-    Object.keys(this.groupedFilteredDesigners).forEach(key => {
+    }, {} as { [key: string]: Designer[] });    Object.keys(this.groupedFilteredDesigners).forEach(key => {
       this.groupedFilteredDesigners[key].sort((a, b) => a.name.localeCompare(b.name));
     });
   }
 
-  // Método corregido para manejar favoritos
   toggleFavoriteDesigner(designer: Designer, event?: Event): void {
     if (event) {
       event.preventDefault();
@@ -299,7 +257,6 @@ export class DesignersComponent implements OnInit, OnDestroy {
     this.favoriteService.toggleFavoriteDesigner(favoriteDesigner);
   }
 
-  // Método simplificado para añadir a favoritos (mantener por compatibilidad)
   addToFavorites(designer: Designer): void {
     this.toggleFavoriteDesigner(designer);
   }

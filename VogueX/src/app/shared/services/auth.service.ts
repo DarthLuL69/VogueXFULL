@@ -9,6 +9,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  avatar_url?: string;
   phone?: string;
   bio?: string;
   role: string;
@@ -29,51 +30,43 @@ export interface AuthResponse {
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService {  private readonly baseUrl = 'http://localhost:8000/api';
+export class AuthService {
+  private readonly baseUrl = 'http://localhost:8000/api';
   private readonly currentUserSubject = new BehaviorSubject<User | null>(null);
   private readonly isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
 
   public currentUser$ = this.currentUserSubject.asObservable();
-  public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();  constructor(
+  public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
+
+  constructor(
     private readonly http: HttpClient,
-    private readonly router: Router,
-    private readonly tokenStorage: TokenStorageService
+    private readonly router: Router,    private readonly tokenStorage: TokenStorageService
   ) {
-    // Initialize authentication state based on stored token
     this.initializeAuthState();
   }
-
   private initializeAuthState(): void {
     const token = this.getToken();
     if (token) {
-      console.log('Token encontrado en localStorage');
-      // Set initial authenticated state based on token presence
-      // User data will be loaded on-demand when needed
       this.isAuthenticatedSubject.next(true);
       
-      // Try to extract user data from JWT token if possible
-      try {
-        const tokenParts = token.split('.');
+      try {        const tokenParts = token.split('.');
         if (tokenParts.length === 3) {
           const tokenData = JSON.parse(atob(tokenParts[1]));
-          console.log('Información extraída del token:', tokenData);
           
-          // Set user data from token if available
-          if (tokenData.sub && tokenData.name) {            const user: User = {
+          if (tokenData.sub && tokenData.name) {
+            const user: User = {
               id: tokenData.sub,
               name: tokenData.name,
               email: tokenData.email ?? '',
               role: tokenData.role ?? 'user',
               created_at: tokenData.iat ? new Date(tokenData.iat * 1000).toISOString() : ''
             };
-            this.currentUserSubject.next(user);
-          }
+            this.currentUserSubject.next(user);          }
         }
-      } catch (e) {
-        console.log('El token no es un JWT válido o no se pudo decodificar', e);
+      } catch (error) {
+        console.error('Token decode error:', error);
       }
     } else {
-      console.log('No se encontró token en localStorage');
       this.isAuthenticatedSubject.next(false);
       this.currentUserSubject.next(null);
     }
@@ -89,12 +82,9 @@ export class AuthService {  private readonly baseUrl = 'http://localhost:8000/ap
         observer.next({ success: false });
         observer.complete();
       });
-    }
-
-    return this.getCurrentUser().pipe(
+    }    return this.getCurrentUser().pipe(
       tap(response => {
         if (response.success && response.data) {
-          console.log('Sesión validada exitosamente');
           this.currentUserSubject.next(response.data);
           this.isAuthenticatedSubject.next(true);
         } else {

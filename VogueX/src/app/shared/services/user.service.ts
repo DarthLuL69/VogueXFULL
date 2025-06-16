@@ -9,6 +9,7 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  avatar_url?: string;
   phone?: string;
   bio?: string;
   role: string;
@@ -57,11 +58,9 @@ export class UserService {
   uploadAvatar(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('avatar', file);
-    
-    return this.http.post<any>(`${this.apiUrl}/user/avatar`, formData).pipe(
+      return this.http.post<any>(`${this.apiUrl}/user/avatar`, formData).pipe(
       tap(response => {
         if (response.success) {
-          // Actualizar el usuario actual con el nuovo avatar
           const currentUser = this.currentUserSubject.value;
           if (currentUser) {
             currentUser.avatar = response.avatar_url;
@@ -72,12 +71,16 @@ export class UserService {
     );
   }
 
-  // Obtener URL completa del avatar
-  getAvatarUrl(avatar?: string): string {
-    if (!avatar) {
+  getAvatarUrl(user?: User | null, avatar?: string): string {
+    if (user?.avatar_url) {
+      return user.avatar_url;
+    }
+    
+    const avatarPath = avatar ?? user?.avatar;
+    if (!avatarPath) {
       return '';
     }
-    return `${environment.apiUrl}/storage/${avatar}`;
+    return `${environment.apiUrl}/storage/${avatarPath}`;
   }
 
   // Obtener usuario actual

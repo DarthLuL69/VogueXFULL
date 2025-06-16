@@ -11,7 +11,7 @@ import { Offer } from '../../../shared/models/chat.model';
   selector: 'app-payment',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  template: `<!-- Template moved to external file -->`,
+  template: ``,
   templateUrl: './payment.component.html'
 })
 export class PaymentComponent implements OnInit {

@@ -233,12 +233,12 @@ export class ShopComponent implements OnInit, OnDestroy {
             condition: product.condition,
             source: 'local',
             user: product.user || null,
-            userName: product.user ? product.user.name : 'Usuario anónimo'
+            userName: product.user ? product.user.name : 'Anonymous user'
           }));
           
-          // Aplicar todos los filtros
+          // Apply all filters
           this.applyAllFilters();
-          console.log('Productos locales procesados:', this.allProducts);
+          console.log('Local products processed:', this.allProducts);
         } else {
           this.allProducts = [];
           this.products = [];
@@ -250,29 +250,27 @@ export class ShopComponent implements OnInit, OnDestroy {
         this.products = [];
       }
     });
-  }
-  private getProductImageUrl(product: any): string {
-    // Si tiene imágenes en array, usar la primera
+  }  private getProductImageUrl(product: any): string {
+    // If it has images in array, use the first one
     if (product.images && Array.isArray(product.images) && product.images.length > 0) {
       let imagePath = product.images[0];
-      // Verificar si la imagen ya tiene la URL completa
+      // Check if the image already has the full URL
       if (imagePath.startsWith('http')) {
         return imagePath;
       }
       return `http://localhost:8000/storage/${imagePath}`;
-    }
-    
-    // Si tiene image_url, usarla
+    }    
+    // If it has image_url, use it
     if (product.image_url) {
       let imagePath = product.image_url;
-      // Verificar si la imagen ya tiene la URL completa
+      // Check if the image already has the full URL
       if (imagePath.startsWith('http')) {
         return imagePath;
       }
       return `http://localhost:8000/storage/${imagePath}`;
     }
     
-    // Imagen por defecto
+    // Default image
     return '/assets/images/no-image-available.png';
   }
   
@@ -284,50 +282,48 @@ export class ShopComponent implements OnInit, OnDestroy {
     }
     return '/assets/images/no-image-available.png';
   }
-  
-  getProductSecondaryImage(product: any): string {
-    // Para productos locales, intentar obtener la segunda imagen del array de imágenes
+    getProductSecondaryImage(product: any): string {
+    // For local products, try to get the second image from the images array
     if (product.source === 'local' && product.images && Array.isArray(product.images) && product.images.length > 1) {
       let imagePath = product.images[1];
-      // Verificar si la imagen ya tiene la URL completa
+      // Check if the image already has the full URL
       if (imagePath.startsWith('http')) {
         return imagePath;
       }
       return `http://localhost:8000/storage/${imagePath}`;
     }
     
-    // Para productos de Grailed, podemos usar la misma imagen principal ya que no tenemos secundarias
+    // For Grailed products, we can use the same main image since we don't have secondary ones
     return this.getProductImage(product);
   }
   
   hasMultipleImages(product: any): boolean {
     return product.source === 'local' && product.images && Array.isArray(product.images) && product.images.length > 1;
   }  onImageError(event: Event): void {
-    console.log('Error al cargar imagen');
+    console.log('Error loading image');
     const target = event.target as HTMLImageElement;
     if (target) {
-      // Verificar si la imagen ya es la imagen de error para evitar bucles
+      // Check if the image is already the error image to avoid loops
       if (target.src.includes('no-image-available.png')) {
-        console.warn('Ya se está mostrando la imagen de error');
+        console.warn('Already showing error image');
         return;
-      }
-      
-      // Cambiar a la imagen local de "sin imagen"
+      }      
+      // Change to local "no image" image
       target.src = '/assets/images/no-image-available.png';
       
-      // Asegurarse de que la imagen de respaldo se cargue correctamente
+      // Make sure the fallback image loads correctly
       target.onerror = () => {
-        console.error('Error también al cargar la imagen de respaldo');        target.style.display = 'none'; // Ocultar la imagen si falla también la imagen de respaldo
+        console.error('Error also loading fallback image');
+        target.style.display = 'none'; // Hide image if fallback image also fails
       };
     }
   }
-
   viewOnGrailed(product: any): void {
-    // Abrir producto en Grailed
+    // Open product on Grailed
     if (product.grailedUrl) {
       window.open(product.grailedUrl, '_blank');
     } else {
-      alert('URL de Grailed no disponible');
+      alert('Grailed URL not available');
     }
   }
 
@@ -335,13 +331,12 @@ export class ShopComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
-
-  // Método para añadir/eliminar de favoritos
+  // Method to add/remove from favorites
   toggleFavorite(product: any): void {
     if (this.favoriteService.isFavorite(product.id)) {
       this.favoriteService.removeFavorite(product.id);
     } else {
-      // Asegúrate de que el objeto product tenga las propiedades necesarias para el servicio de favoritos
+      // Make sure the product object has the necessary properties for the favorites service
       this.favoriteService.addFavorite({
         id: product.id,
         name: product.name,
@@ -353,31 +348,28 @@ export class ShopComponent implements OnInit, OnDestroy {
       });
     }
   }
-
-  // Método para verificar si es favorito
+  // Method to check if it's a favorite
   isFavorite(productId: number): boolean {
     return this.favoriteService.isFavorite(productId);
   }
-
-  // Método para añadir un diseñador a favoritos (necesita lógica en FavoriteService)
+  // Method to add a designer to favorites (needs logic in FavoriteService)
   addFavoriteDesigner(designerName: string): void {
-     // TODO: Implementar lógica para añadir diseñador a favoritos en FavoriteService
-     console.log('Añadir diseñador a favoritos:', designerName);
-     // Podrías tener un método addFavoriteDesigner en FavoriteService
+     // TODO: Implement logic to add designer to favorites in FavoriteService
+     console.log('Add designer to favorites:', designerName);
+     // You could have an addFavoriteDesigner method in FavoriteService
      // this.favoriteService.addFavoriteDesigner(designerName);
   }
-
-  // Método para alternar la expansión de un filtro
+  // Method to toggle filter expansion
   toggleFilter(filterName: string): void {
     this.filterStates[filterName] = !this.filterStates[filterName];
   }
 
-  // Método para verificar si un filtro está expandido
+  // Method to check if a filter is expanded
   isFilterExpanded(filterName: string): boolean {
     return !!this.filterStates[filterName];
   }
 
-   // Función helper para calcular "hace cuánto tiempo"
+   // Helper function to calculate "time ago"
    getTimeAgo(date: Date): string {
      const now = new Date();
      const seconds = Math.round(Math.abs((now.getTime() - date.getTime()) / 1000));
@@ -427,9 +419,7 @@ export class ShopComponent implements OnInit, OnDestroy {
     // Helper method to check if subcategory is selected
     isSubcategorySelected(subcategory: string): boolean {
       return this.selectedSubcategory === this.formatSubcategoryForUrl(subcategory);
-    }
-
-    // Métodos helper para obtener las subcategorías disponibles
+    }    // Helper methods to get available subcategories
     getAvailableSubcategories(): string[] {
       if (!this.selectedCategory || !this.categoryStructure[this.selectedCategory]) {
         return [];
@@ -452,20 +442,19 @@ export class ShopComponent implements OnInit, OnDestroy {
 
       return this.categoryStructure[this.selectedCategory];
     }
-
-  // Método para obtener las tallas disponibles según la subcategoría seleccionada
+  // Method to get available sizes according to selected subcategory
   getAvailableSizes(): string[] {
     if (!this.selectedSubcategory) {
-      // Si no hay subcategoría, mostrar tallas generales según la categoría principal
+      // If no subcategory, show general sizes according to main category
       return this.getDefaultSizesByCategory();
     }
 
-    // Convertir subcategoría a formato de key para sizeMappings
+    // Convert subcategory to key format for sizeMappings
     const subcategoryKey = this.selectedSubcategory.replace(/-/g, ' ').toLowerCase();
     return this.sizeMappings[subcategoryKey] || this.getDefaultSizesByCategory();
   }
 
-  // Método para obtener tallas por defecto según la categoría principal
+  // Method to get default sizes according to main category
   private getDefaultSizesByCategory(): string[] {
     switch (this.selectedCategory) {
       case 'menswear':

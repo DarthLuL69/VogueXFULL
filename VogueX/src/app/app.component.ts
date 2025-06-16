@@ -20,7 +20,7 @@ export class AppComponent implements OnInit {
     private readonly authService: AuthService,
     private readonly tokenStorage: TokenStorageService
   ) {}  ngOnInit(): void {
-    // Verificar el token al inicio de la aplicación
+    // Verifica el token 
     console.log('Iniciando aplicación, verificando autenticación...');
     
     // Comprobar si hay un token almacenado y validar la sesión
