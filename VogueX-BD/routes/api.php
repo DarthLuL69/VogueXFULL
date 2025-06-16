@@ -8,10 +8,6 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactMessageController;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,132 +22,6 @@ use Illuminate\Support\Facades\Log;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
-});
-
-// Ruta para probar la estructura de la tabla
-Route::get('/test/products-structure', function () {
-    try {
-        $columns = Schema::getColumnListing('products');
-        $hasTable = Schema::hasTable('products');
-        
-        $tableInfo = [];
-        if ($hasTable) {
-            $tableInfo = DB::select("DESCRIBE products");
-        }
-        
-        return response()->json([
-            'table_exists' => $hasTable,
-            'columns' => $columns,
-            'structure' => $tableInfo,
-            'message' => $hasTable ? 'Table exists' : 'Table does not exist'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage()
-        ], 500);
-    }
-});
-
-// Ruta de prueba para verificar el backend
-Route::get('/test/backend', function () {
-    return response()->json([
-        'message' => 'Backend funcionando correctamente',
-        'timestamp' => now(),
-        'storage_path' => storage_path('app/public'),
-        'storage_exists' => file_exists(storage_path('app/public')),
-        'products_dir_exists' => Storage::disk('public')->exists('products'),
-    ]);
-});
-
-// Ruta de diagnóstico mejorada
-Route::get('/test/diagnostic', function () {
-    $diagnostics = [
-        'timestamp' => now(),
-        'php_version' => PHP_VERSION,
-        'laravel_version' => app()->version(),
-        'storage_path' => storage_path('app/public'),
-        'storage_exists' => file_exists(storage_path('app/public')),
-        'storage_writable' => is_writable(storage_path('app/public')),
-        'products_dir_exists' => Storage::disk('public')->exists('products'),
-        'log_file_exists' => file_exists(storage_path('logs/laravel.log')),
-        'log_writable' => is_writable(storage_path('logs')),
-        'symlink_exists' => is_link(public_path('storage')),
-        'symlink_target' => is_link(public_path('storage')) ? readlink(public_path('storage')) : null,
-    ];
-    
-    // Intentar crear directorio de productos si no existe
-    try {
-        if (!Storage::disk('public')->exists('products')) {
-            Storage::disk('public')->makeDirectory('products');
-            $diagnostics['products_dir_created'] = true;
-        }
-    } catch (\Exception $e) {
-        $diagnostics['products_dir_error'] = $e->getMessage();
-    }
-    
-    return response()->json($diagnostics);
-});
-
-// Ruta de prueba simple para crear producto
-Route::post('/test/simple-product', function (Request $request) {
-    try {
-        Log::info('Test product creation started');
-        
-        $product = \App\Models\Product::create([
-            'name' => 'Test Product',
-            'brand' => 'Test Brand',
-            'description' => 'Test description for debugging',
-            'price' => 99.99,
-            'condition' => 'good',
-            'size' => 'M',
-            'main_category' => 'test',
-            'sub_category' => 'test',
-            'final_category' => 'test',
-            'images' => ['test-image.jpg'],
-            'image_url' => 'test-image.jpg',
-            'category_id' => 1,
-            'is_active' => true,
-            'status' => 'active',
-        ]);
-        
-        Log::info('Test product created successfully', ['product_id' => $product->id]);
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Test product created successfully',
-            'product' => $product
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Test product creation failed', [
-            'error' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ]);
-        
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine()
-        ], 500);
-    }
-});
-
-// Ruta de prueba simple para el controlador
-Route::post('/test/product-controller', [App\Http\Controllers\Api\ProductController::class, 'store']);
-
-// Ruta para probar datos de formulario
-Route::post('/test/form-data', function(Request $request) {
-    Log::info('Test form data received');
-    Log::info('All request data: ', $request->all());
-    Log::info('Request method: ' . $request->method());
-    Log::info('Content type: ' . $request->header('Content-Type'));
-    
-    return response()->json([
-        'received_data' => $request->all(),
-        'method' => $request->method(),
-        'content_type' => $request->header('Content-Type')
-    ]);
 });
 
 // Rutas de productos
@@ -170,134 +40,38 @@ Route::prefix('designers')->group(function () {
     Route::get('/popular', [DesignerController::class, 'popular']);
     Route::get('/featured', [DesignerController::class, 'featured']);
     Route::get('/check-update', [DesignerController::class, 'checkAndUpdate']);
+    Route::get('/letters', [DesignerController::class, 'letters']);
+    Route::get('/statistics', [\App\Http\Controllers\Api\DesignerImportController::class, 'getStatistics']);
     Route::get('/{designer}', [DesignerController::class, 'show']);
 });
 
-// Rutas de usuario (requiere autenticación)
-Route::middleware('auth:sanctum')->prefix('user')->group(function () {
-    Route::get('/profile', [UserController::class, 'getProfile']);
-    Route::put('/profile', [UserController::class, 'updateProfile']);
-    Route::post('/avatar', [UserController::class, 'uploadAvatar']);
-});
-
-// Ruta de debug para designers
-Route::get('/test/designers', function () {
-    try {
-        $designersCount = DB::table('designers')->count();
-        $designers = DB::table('designers')->limit(5)->get();
-        
-        return response()->json([
-            'designers_table_exists' => Schema::hasTable('designers'),
-            'designers_count' => $designersCount,
-            'sample_designers' => $designers,
-            'all_tables' => Schema::getConnection()->getDoctrineSchemaManager()->listTableNames()
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-});
-
-// Ruta para ejecutar el scraper de Grailed
-Route::post('/designers/scrape-grailed', function () {
-    try {
-        $scraperService = app(\App\Services\GrailedScraperService::class);
-        $result = $scraperService->scrapeAllDesigners();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Grailed scrape completed successfully',
-            'data' => $result
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Error during scraping: ' . $e->getMessage()
-        ], 500);
-    }
-});
-
-// Ruta para scraper de página de diseñadores
-Route::post('/designers/scrape-page', function () {
-    try {
-        $scraperService = app(\App\Services\GrailedDesignerPageScraper::class);
-        $result = $scraperService->scrapeAllDesigners();
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Designer page scrape completed successfully',
-            'data' => $result
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Error during scraping: ' . $e->getMessage()
-        ], 500);
-    }
-});
-
-// Ruta de test para verificar la API de Grailed
-Route::get('/test/grailed-api', function () {
-    try {
-        $grailedApi = app(\App\Services\GrailedApiService::class);
-        $response = $grailedApi->search('nike', 1, 10);
-        
-        return response()->json([
-            'success' => true,
-            'has_response' => !empty($response),
-            'has_hits' => isset($response['hits']),
-            'hits_count' => isset($response['hits']) ? count($response['hits']) : 0,
-            'sample_hit' => isset($response['hits'][0]) ? $response['hits'][0] : null,
-            'response_keys' => is_array($response) ? array_keys($response) : 'not_array'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-});
-
-// Ruta de test para contar diseñadores
-Route::get('/test/designers-count', function () {
-    try {
-        $total = \App\Models\Designer::count();
-        $popular = \App\Models\Designer::where('is_popular', true)->count();
-        $featured = \App\Models\Designer::where('is_featured', true)->count();
-        
-        $sampleDesigners = \App\Models\Designer::orderBy('name')->limit(10)->pluck('name');
-        
-        return response()->json([
-            'total_designers' => $total,
-            'popular_designers' => $popular,
-            'featured_designers' => $featured,
-            'sample_designers' => $sampleDesigners,
-            'letters_with_designers' => \DB::select("
-                SELECT LEFT(UPPER(name), 1) as letter, COUNT(*) as count 
-                FROM designers 
-                GROUP BY LEFT(UPPER(name), 1) 
-                ORDER BY letter
-            ")
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage()
-        ], 500);
-    }
-});
+// Rutas de diseñadores - importación
+Route::post('/designers/import', [\App\Http\Controllers\Api\DesignerImportController::class, 'importFromGrailed']);
+Route::get('/designers/import', [\App\Http\Controllers\Api\DesignerImportController::class, 'importFromGrailed']);
+Route::get('/designers/import-from-file', [\App\Http\Controllers\Api\DesignerImportController::class, 'importFromFile']);
 
 // Rutas de autenticación
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Rutas para noticias
+Route::get('/news/latest', [\App\Http\Controllers\Api\NewsController::class, 'latest']);
+
+// Contact form route (public)
+Route::post('/contact', [ContactMessageController::class, 'store']);
+
+// Rutas protegidas por autenticación
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
     
-    // Rutas para usuarios autenticados (cualquier rol)
+    // Rutas de usuario
+    Route::prefix('user')->group(function () {
+        Route::get('/profile', [UserController::class, 'getProfile']);
+        Route::put('/profile', [UserController::class, 'updateProfile']);
+        Route::post('/avatar', [UserController::class, 'uploadAvatar']);
+    });
+    
     // Chat routes
     Route::get('/chats', [\App\Http\Controllers\Api\ChatController::class, 'index']);
     Route::post('/chats', [\App\Http\Controllers\Api\ChatController::class, 'store']);
@@ -312,7 +86,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Offer routes
     Route::get('/chats/{chatId}/offers', [\App\Http\Controllers\Api\OfferController::class, 'index']);
     Route::post('/offers', [\App\Http\Controllers\Api\OfferController::class, 'store']);
-    Route::get('/offers/{id}', [\App\Http\Controllers\Api\OfferController::class, 'show']);    Route::patch('/offers/{id}', [\App\Http\Controllers\Api\OfferController::class, 'update']);
+    Route::get('/offers/{id}', [\App\Http\Controllers\Api\OfferController::class, 'show']);
+    Route::patch('/offers/{id}', [\App\Http\Controllers\Api\OfferController::class, 'update']);
     
     // Order routes
     Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']);
@@ -320,6 +95,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']);
     Route::patch('/orders/{id}/status', [\App\Http\Controllers\Api\OrderController::class, 'updateStatus']);
     Route::post('/orders/{id}/cancel', [\App\Http\Controllers\Api\OrderController::class, 'cancel']);
+    
+    // Payment routes
+    Route::post('/payments/initialize', [PaymentController::class, 'initialize']);
+    Route::post('/payments/process', [PaymentController::class, 'process']);
     
     // Rutas para administradores
     Route::middleware('admin')->prefix('admin')->group(function () {
@@ -347,45 +126,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/contact-messages/{id}', [ContactMessageController::class, 'destroy']);
         Route::get('/contact-messages/stats/overview', [ContactMessageController::class, 'stats']);
         
-        // Order routes
+        // Admin Order routes
         Route::get('/orders', [\App\Http\Controllers\Api\OrderController::class, 'index']);
         Route::get('/orders/{id}', [\App\Http\Controllers\Api\OrderController::class, 'show']);
         Route::post('/orders/process-payment', [\App\Http\Controllers\Api\OrderController::class, 'processPayment']);
         Route::patch('/orders/{id}/cancel', [\App\Http\Controllers\Api\OrderController::class, 'cancel']);
         Route::patch('/orders/{id}/status', [\App\Http\Controllers\Api\OrderController::class, 'updateStatus']);
-        
-        // Aquí puedes añadir más rutas administrativas
-        // Por ejemplo: 
-        // Route::resource('/users', AdminUserController::class);
-        // Route::resource('/products', AdminProductController::class);
     });
-});
-
-// Rutas para importar diseñadores desde Grailed
-Route::post('/designers/import', [\App\Http\Controllers\Api\DesignerImportController::class, 'importFromGrailed']);
-// También permitimos GET para facilitar pruebas e importaciones manuales
-Route::get('/designers/import', [\App\Http\Controllers\Api\DesignerImportController::class, 'importFromGrailed']);
-
-// Ruta para obtener estadísticas de diseñadores
-Route::get('/designers/statistics', [\App\Http\Controllers\Api\DesignerImportController::class, 'getStatistics']);
-
-// Ruta para importar diseñadores desde archivo
-Route::get('/designers/import-from-file', [\App\Http\Controllers\Api\DesignerImportController::class, 'importFromFile']);
-
-// Ruta para obtener todas las letras disponibles
-Route::get('/designers/letters', [\App\Http\Controllers\Api\DesignerController::class, 'letters']);
-
-// Rutas para noticias
-Route::get('/news/latest', [\App\Http\Controllers\Api\NewsController::class, 'latest']);
-
-// Contact form route (public)
-Route::post('/contact', [ContactMessageController::class, 'store']);
-
-// Temporary test endpoint without auth
-Route::post('/payments/test-initialize', [PaymentController::class, 'initialize']);
-
-Route::middleware('auth:sanctum')->group(function () {
-    // Payment routes
-    Route::post('/payments/initialize', [PaymentController::class, 'initialize']);
-    Route::post('/payments/process', [PaymentController::class, 'process']);
 });

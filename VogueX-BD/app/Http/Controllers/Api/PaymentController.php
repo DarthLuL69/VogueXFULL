@@ -268,19 +268,14 @@ class PaymentController extends Controller
                     'enabled' => true
                 ]
             ]
-        ]);    }
-
-    /**
+        ]);    }    /**
      * Send payment notification to seller via chat
      */
     private function sendPaymentNotificationToSeller($payment, $order)
     {
         try {
-            // Find the chat for this payment
-            $chat = \App\Models\Chat::where('buyer_id', $payment->buyer_id)
-                ->where('seller_id', $payment->seller_id)
-                ->where('product_id', $payment->offer->product_id)
-                ->first();
+            // Use the chat from the offer directly
+            $chat = $payment->offer->chat;
 
             if ($chat) {
                 // Create a system message notifying the seller
@@ -296,9 +291,20 @@ class PaymentController extends Controller
                 // Also send a message to the buyer
                 \App\Models\Message::create([
                     'chat_id' => $chat->id,
-                    'user_id' => $payment->seller_id, // From seller
+                    'user_id' => $chat->seller_id, // From seller (using chat's seller_id)
                     'content' => '✅ Hemos recibido tu pago. Tu pedido está siendo preparado para el envío. Te notificaremos cuando esté en camino.',
                     'type' => 'payment'
+                ]);
+
+                Log::info('Payment notifications sent', [
+                    'payment_id' => $payment->id,
+                    'chat_id' => $chat->id,
+                    'messages_created' => 2
+                ]);
+            } else {
+                Log::warning('No chat found for payment notification', [
+                    'payment_id' => $payment->id,
+                    'offer_id' => $payment->offer_id
                 ]);
             }
         } catch (\Exception $e) {
