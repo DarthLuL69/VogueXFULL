@@ -19,7 +19,6 @@ import { RouterModule } from '@angular/router';
         </div>
         <div class="flex items-center space-x-6">
           <div class="flex space-x-4">
-            <!-- Iconos de redes sociales (placeholders) -->
             <a href="#" class="hover:text-gray-900"><i class="fab fa-instagram"></i></a>
             <a href="#" class="hover:text-gray-900"><i class="fab fa-facebook-f"></i></a>
             <a href="#" class="hover:text-gray-900"><i class="fab fa-twitter"></i></a>
@@ -31,4 +30,4 @@ import { RouterModule } from '@angular/router';
   `,
   styles: []
 })
-export class FooterComponent {} 
+export class FooterComponent {}

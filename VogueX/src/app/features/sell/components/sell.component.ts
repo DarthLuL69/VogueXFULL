@@ -35,7 +35,6 @@ export class SellComponent implements OnInit {
   isDropdownOpen = false;
   hoveredCondition: ProductCondition | null = null;
 
-  // Categorías actualizadas
   categories: Category[] = [
     {
       id: 'menswear',
