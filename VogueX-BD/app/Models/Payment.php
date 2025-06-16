@@ -11,8 +11,7 @@ class Payment extends Model
     const STATUS_PROCESSING = 'processing';
     const STATUS_COMPLETED = 'completed';
     const STATUS_FAILED = 'failed';
-    
-    protected $fillable = [
+      protected $fillable = [
         'offer_id',
         'product_id',
         'buyer_id',
@@ -23,7 +22,8 @@ class Payment extends Model
         'currency',
         'transaction_id',
         'processed_at',
-        'shipping_address'
+        'shipping_address',
+        'payment_provider'
     ];    protected $casts = [
         'amount' => 'decimal:2',
         'processed_at' => 'datetime',

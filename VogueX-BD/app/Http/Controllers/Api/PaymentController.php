@@ -64,7 +64,8 @@ class PaymentController extends Controller
                 'amount' => $offer->amount,
                 'payment_method' => $validated['payment_method'],
                 'status' => 'pending',
-                'currency' => 'EUR'
+                'currency' => 'EUR',
+                'payment_provider' => 'stripe' // Por defecto
             ]);
 
             return response()->json([
@@ -133,9 +134,7 @@ class PaymentController extends Controller
             ]);
 
             // Update offer status to completed
-            $payment->offer->update(['status' => 'completed']);
-
-            // Create order record
+            $payment->offer->update(['status' => 'completed']);            // Create order record
             $order = \App\Models\Order::create([
                 'user_id' => $payment->buyer_id,
                 'product_id' => $payment->offer->product_id,
@@ -143,7 +142,8 @@ class PaymentController extends Controller
                 'total_amount' => $payment->amount,
                 'status' => 'processing',
                 'shipping_address' => json_encode($validated['shipping_address']),
-                'tracking_number' => 'VX' . strtoupper(uniqid())
+                'tracking_number' => 'VX' . strtoupper(uniqid()),
+                'order_number' => 'ORD' . strtoupper(uniqid())
             ]);
 
             // Send notification message to seller

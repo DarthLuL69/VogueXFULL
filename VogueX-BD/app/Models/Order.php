@@ -19,7 +19,8 @@ class Order extends Model
         'billing_address',
         'payment_method',
         'payment_status',
-        'tracking_number'
+        'tracking_number',
+        'order_number'
     ];
 
     protected $casts = [
