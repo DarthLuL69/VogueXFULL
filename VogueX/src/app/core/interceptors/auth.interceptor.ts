@@ -10,7 +10,8 @@ const publicUrls: string[] = [
   'api/register',
   'api/designers', // Permitir acceso público a la lista de diseñadores
   'api/products', // Permitir acceso público a la lista de productos (solo GET)
-  'api/categories' // Permitir acceso público a categorías
+  'api/categories', // Permitir acceso público a categorías
+  'api/payments/test-initialize' // Endpoint de prueba temporal
 ];
 
 // Función para determinar si una URL es pública

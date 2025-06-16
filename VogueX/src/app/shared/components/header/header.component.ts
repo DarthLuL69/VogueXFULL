@@ -2,8 +2,9 @@ import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import { AuthService, User } from '../../services/auth.service';
+import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-header',
@@ -47,10 +48,17 @@ import { AuthService, User } from '../../services/auth.service';
             <a routerLink="/favourites" class="text-2xl">♡</a>
             
             <!-- Enlace al panel de administración solo para administradores -->
-            <a *ngIf="isAdmin$ | async" routerLink="/admin" class="border border-red-500 text-red-500 px-4 py-2 rounded hover:bg-red-50">ADMIN</a>
-            
-            <a routerLink="/profile" class="w-8 h-8 bg-black rounded-full cursor-pointer flex items-center justify-center text-white">
-              {{ (currentUser$ | async)?.name?.charAt(0) ?? 'U' }}
+            <a *ngIf="isAdmin$ | async" routerLink="/admin" class="border border-red-500 text-red-500 px-4 py-2 rounded hover:bg-red-50">ADMIN</a>            
+            <a routerLink="/profile" class="w-8 h-8 bg-black rounded-full cursor-pointer flex items-center justify-center text-white overflow-hidden">
+              <img 
+                *ngIf="(currentUser$ | async)?.avatar" 
+                [src]="getAvatarUrl((currentUser$ | async)?.avatar)"
+                [alt]="(currentUser$ | async)?.name"
+                class="w-full h-full object-cover"
+              />
+              <span *ngIf="!(currentUser$ | async)?.avatar">
+                {{ (currentUser$ | async)?.name?.charAt(0) ?? 'U' }}
+              </span>
             </a>
             <button (click)="logout()" class="text-gray-600 hover:text-black">Logout</button>
           </ng-container>
@@ -151,9 +159,9 @@ import { AuthService, User } from '../../services/auth.service';
 export class HeaderComponent implements OnDestroy {
   isAuthenticated$: Observable<boolean>;
   currentUser$: Observable<User | null>;
-  isAdmin$: Observable<boolean>;
-  searchControl = new FormControl();
+  isAdmin$: Observable<boolean>;  searchControl = new FormControl();
   searchResults: any[] | undefined;
+  showSearchResults = false;
   private readonly searchSubscription: Subscription | undefined;
 
   // Dropdown states
@@ -182,29 +190,55 @@ export class HeaderComponent implements OnDestroy {
     { name: 'Boots', subcategories: ['Ankle Boots', 'Combat Boots', 'Chelsea Boots', 'Work Boots', 'Hiking Boots', 'Desert Boots'] },
     { name: 'Casual', subcategories: ['Loafers', 'Moccasins', 'Boat Shoes', 'Espadrilles', 'Canvas Shoes'] },
     { name: 'Sandals', subcategories: ['Flip Flops', 'Slides', 'Sport Sandals', 'Dress Sandals'] },
-    { name: 'Formal', subcategories: ['Oxford Shoes', 'Derby Shoes', 'Brogues', 'Monk Straps', 'Dress Boots'] }  ];
-
-  constructor(
+    { name: 'Formal', subcategories: ['Oxford Shoes', 'Derby Shoes', 'Brogues', 'Monk Straps', 'Dress Boots'] }
+  ];  constructor(
     private readonly router: Router,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly userService: UserService
   ) {
+    // Inicializar las propiedades de autenticación
     this.isAuthenticated$ = this.authService.isAuthenticated$;
     this.currentUser$ = this.authService.currentUser$;
     this.isAdmin$ = this.authService.isAdmin$;
+    
+    // Búsqueda simplificada sin API externa
+    this.searchSubscription = this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(query => {
+      if (query && query.length > 2) {
+        // Por ahora no hay búsqueda, se puede implementar con el API local más tarde
+        this.searchResults = [];
+        this.showSearchResults = true;
+      } else {
+        this.searchResults = [];
+        this.showSearchResults = false;
+      }
+    });
   }
 
   ngOnDestroy(): void {
     if (this.searchSubscription) {
       this.searchSubscription.unsubscribe();
-    }  }
-
-  selectSearchResult(result: any): void {
-    const searchTerm = result.name ?? result.title ?? this.searchControl.value;
-    this.router.navigate(['/shop'], { queryParams: { search: searchTerm } });
-    this.searchResults = undefined;
-    this.searchControl.setValue('', { emitEvent: false });
+    }
   }
 
+  selectSearchResult(result: any): void {
+    // Lógica al seleccionar un resultado
+    console.log('Selected search result:', result);
+    // Navegar a la página de la tienda con la consulta o detalles del producto si es posible
+    // Dependiendo de la estructura de la API, podrías navegar a una página de detalles
+    // si el resultado es un producto específico, o a la página de la tienda con un filtro
+    // si es un diseñador o marca.
+
+    // Por ahora, navegamos a la página de la tienda con el término de búsqueda.
+    // Podrías refinar esto si la API indica el tipo de resultado (producto, diseñador, etc.)
+    const searchTerm = result.name || result.title || this.searchControl.value;
+    this.router.navigate(['/shop'], { queryParams: { search: searchTerm } });
+    this.searchResults = undefined; // Ocultar los resultados después de seleccionar
+     this.searchControl.setValue('', { emitEvent: false }); // Limpiar el input sin activar otra búsqueda
+  }
+  // Método para cerrar sesión
   logout(): void {
     this.authService.logout();
   }
@@ -254,4 +288,7 @@ export class HeaderComponent implements OnDestroy {
     this.hideAllDropdowns();
   }
 
+  getAvatarUrl(avatar?: string): string {
+    return this.userService.getAvatarUrl(avatar);
+  }
 }

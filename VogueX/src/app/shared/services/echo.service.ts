@@ -1,96 +1,132 @@
 // Echo configuration for real-time chat messaging
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
 
-// Declare types for window extensions
-declare global {
-  interface Window {
-    Pusher: any;
-    Echo: any;
-  }
-}
+// Make Pusher available globally
+(window as any).Pusher = Pusher;
 
 @Injectable({
   providedIn: 'root'
 })
 export class EchoService {
-  private echoInitialized: boolean = false;
+  private echo: Echo<any> | null = null;
+  private echoInitialized = false;
 
-  constructor() {
+  constructor(private authService: AuthService) {
     this.initEcho();
   }
 
   /**
    * Initialize Laravel Echo
    */
-  private async initEcho(): Promise<void> {
-    if (this.echoInitialized) return;
-
+  private initEcho(): void {
     try {
-      // Dynamically import the libraries only when needed
-      const { default: Echo } = await import('laravel-echo');
-      const { default: Pusher } = await import('pusher-js');
-      
-      // Set up Pusher instance
-      window.Pusher = Pusher;
-      
-      // Initialize Laravel Echo
-      window.Echo = new Echo({
+      // Check if Pusher is properly configured
+      if (!environment.pusher?.key || environment.pusher.key === 'your_pusher_key') {
+        console.warn('Pusher not configured properly. Real-time features disabled.');
+        return;
+      }
+
+      this.echo = new Echo({
         broadcaster: 'pusher',
-        key: environment.pusherKey ?? 'your_pusher_key', // Replace with your actual Pusher key
-        cluster: environment.pusherCluster ?? 'mt1',
-        wsHost: window.location.hostname,
-        wsPort: 6001,
-        wssPort: 6001,
-        forceTLS: false,
-        disableStats: true,
+        key: environment.pusher.key,
+        cluster: environment.pusher.cluster ?? 'eu',
+        forceTLS: environment.pusher.forceTLS,
+        authEndpoint: `${environment.apiUrl}/broadcasting/auth`,
+        auth: {
+          headers: {
+            Authorization: `Bearer ${this.authService.getToken()}`
+          }
+        },
         enabledTransports: ['ws', 'wss'],
       });
       
       this.echoInitialized = true;
-      console.log('Echo initialized');
+      console.log('Echo initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize Echo:', error);
+      console.error('Error initializing Echo:', error);
+      this.echoInitialized = false;
     }
   }
 
   /**
-   * Listen to private chat channel
-   * @param chatId ID of the chat to listen to
-   * @param callback Callback function when a new message is received
-   * @returns Echo subscription object
+   * Subscribe to a channel
    */
-  listenToChat(chatId: number, callback: (data: any) => void): any {
-    if (!window.Echo) {
-      console.warn('Echo not initialized, trying to initialize now');
-      this.initEcho().then(() => this.listenToChat(chatId, callback));
-      return;
+  subscribeToChannel(channelName: string) {
+    if (!this.echo || !this.echoInitialized) {
+      console.warn('Echo not initialized');
+      return null;
     }
 
-    return window.Echo.private(`chat.${chatId}`)
-      .listen('.new.message', (e: any) => {
-        callback(e);
-      });
+    try {
+      return this.echo.channel(channelName);
+    } catch (error) {
+      console.error(`Error subscribing to channel ${channelName}:`, error);
+      return null;
+    }
   }
 
   /**
-   * Stop listening to a chat channel
-   * @param chatId ID of the chat to stop listening to
+   * Subscribe to a private channel
+   */
+  subscribeToPrivateChannel(channelName: string) {
+    if (!this.echo || !this.echoInitialized) {
+      console.warn('Echo not initialized');
+      return null;
+    }
+
+    try {
+      return this.echo.private(channelName);
+    } catch (error) {
+      console.error(`Error subscribing to private channel ${channelName}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Listen to an event on a channel
+   */
+  listen(channelName: string, eventName: string, callback: (data: any) => void) {
+    const channel = this.subscribeToChannel(channelName);
+    if (channel) {
+      channel.listen(eventName, callback);
+    }
+  }
+
+  /**
+   * Listen to chat events
+   */
+  listenToChat(chatId: number, callback: (data: any) => void) {
+    const channelName = `chat.${chatId}`;
+    const channel = this.subscribeToPrivateChannel(channelName);
+    if (channel) {
+      channel.listen('MessageSent', callback);
+    }
+  }
+
+  /**
+   * Stop listening to chat events
    */
   stopListeningToChat(chatId: number): void {
-    if (window.Echo) {
-      window.Echo.leave(`chat.${chatId}`);
+    if (this.echo) {
+      const channelName = `chat.${chatId}`;
+      this.echo.leave(channelName);
     }
   }
 
   /**
-   * Disconnect from Laravel Echo Server
+   * Disconnect Echo
    * This should be called when the user logs out
    */
   disconnectEcho(): void {
-    if (window.Echo) {
-      window.Echo.disconnect();
+    if (this.echo) {
+      this.echo.disconnect();
+      this.echo = null;
       this.echoInitialized = false;
+      console.log('Echo disconnected');
     }
   }
 }

@@ -1,11 +1,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ChatService } from '../../shared/services/chat.service';
 import { MessageService } from '../../shared/services/message.service';
 import { OfferService } from '../../shared/services/offer.service';
 import { AuthService } from '../../shared/services/auth.service';
+import { UserService } from '../../shared/services/user.service';
 import { ApiService } from '../../core/services/api.service';
 import { Chat, Message, Offer } from '../../shared/models/chat.model';
 import { Subject } from 'rxjs';
@@ -14,783 +15,546 @@ import { takeUntil } from 'rxjs/operators';
 @Component({
   selector: 'app-chat-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-    <div class="chat-container">
-      <div class="chat-list">
-        <h2>Conversaciones</h2>
-        <div class="chat-search">
-          <input type="text" placeholder="Buscar chats..." [(ngModel)]="searchTerm" (input)="filterChats()">
-        </div>
-        <div class="chat-items">
-          <div 
-            *ngFor="let chat of filteredChats" 
-            class="chat-item" 
-            [class.active]="selectedChat?.id === chat.id"
-            (click)="selectChat(chat)">
-            <div class="chat-avatar">
-              <img 
-                [src]="getOtherUserAvatar(chat)" 
-                alt="User avatar" 
-                onerror="this.src='assets/images/default-avatar.png'">
-            </div>
-            <div class="chat-info">
-              <div class="chat-name">{{ getOtherUserName(chat) }}</div>
-              <div class="chat-product">{{ chat.product?.name }}</div>
-              <div class="chat-last-message">
-                {{ chat.lastMessage?.content || 'No hay mensajes aún' }}
+  imports: [CommonModule, FormsModule],  template: `    <div class="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 p-4">
+      <div class="max-w-7xl mx-auto">
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+          <div class="flex h-[calc(100vh-8rem)]">
+            
+            <!-- Chat List Sidebar -->
+            <div class="w-80 bg-gradient-to-b from-slate-50 to-gray-100 border-r border-gray-200 flex flex-col">              <!-- Header -->
+              <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900">
+                <h2 class="text-xl font-bold text-white mb-2">💬 Conversaciones</h2>
+                <p class="text-slate-300 text-sm">Gestiona tus chats activos</p>
+              </div>
+                <!-- Search -->
+              <div class="p-4 border-b border-gray-200 bg-white">
+                <div class="relative">
+                  <input 
+                    type="text" 
+                    placeholder="Buscar conversaciones..." 
+                    [(ngModel)]="searchTerm" 
+                    (input)="filterChats()"
+                    class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl 
+                           focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent
+                           placeholder-gray-500 text-sm transition-all duration-200 hover:border-gray-400">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Chat Items -->
+              <div class="flex-1 overflow-y-auto bg-gradient-to-b from-white to-gray-50">
+                <div 
+                  *ngFor="let chat of filteredChats; trackBy: trackByChat"                  class="group relative flex items-center p-4 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 
+                         cursor-pointer transition-all duration-300 border-b border-gray-100 hover:border-slate-200"
+                  [class.bg-gradient-to-r]="selectedChat?.id === chat.id"
+                  [class.from-slate-100]="selectedChat?.id === chat.id"
+                  [class.to-blue-100]="selectedChat?.id === chat.id"
+                  [class.border-slate-300]="selectedChat?.id === chat.id"
+                  (click)="selectChat(chat)">                  <!-- Avatar with status -->
+                  <div class="relative flex-shrink-0 mr-3">
+                    <div class="w-12 h-12 rounded-full overflow-hidden ring-2 ring-white shadow-lg">
+                      <div 
+                        *ngIf="getOtherUserAvatar(chat); else avatarPlaceholder" 
+                        class="w-full h-full">
+                        <img 
+                          [src]="getOtherUserAvatar(chat)" 
+                          alt="User avatar" 
+                          class="w-full h-full object-cover">
+                      </div>
+                      <ng-template #avatarPlaceholder>
+                        <div 
+                          class="w-full h-full flex items-center justify-center text-white font-bold text-lg"
+                          [ngClass]="getAvatarBackgroundColor(getOtherUserName(chat))">
+                          {{ getUserInitials(getOtherUserName(chat)) }}
+                        </div>
+                      </ng-template>
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white shadow-sm"></div>
+                  </div>
+                  
+                  <!-- Chat Info -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-1">
+                      <h3 class="font-semibold text-gray-900 text-sm truncate">
+                        {{ getOtherUserName(chat) }}
+                      </h3>
+                      <span class="text-xs text-gray-500">
+                        {{ chat.updated_at | date:'shortTime' }}
+                      </span>
+                    </div>
+                      <div class="flex items-center justify-between mb-1">
+                      <p class="text-xs text-slate-600 font-medium truncate">
+                        {{ chat.product?.name }}
+                      </p>
+                      <span class="text-xs font-bold text-emerald-600">
+                        {{ chat.product?.price | currency:'EUR':'symbol':'1.0-0' }}
+                      </span>
+                    </div>
+                    
+                    <p class="text-xs text-gray-600 truncate">
+                      {{ chat.lastMessage?.content || 'No hay mensajes aún' }}
+                    </p>
+                  </div>
+                  
+                  <!-- Unread indicator -->
+                  <div *ngIf="isChatUnread(chat)" 
+                       class="absolute top-2 right-2 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                </div>
+                
+                <div *ngIf="filteredChats.length === 0" 
+                     class="flex flex-col items-center justify-center p-8 text-center">                  <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                  </div>
+                  <p class="text-slate-500 text-sm">No se encontraron conversaciones</p>
+                </div>
               </div>
             </div>
-            <div class="chat-meta">
-              <div class="chat-time">
-                {{ chat.updated_at | date:'shortTime' }}
+            
+            <!-- Chat Messages Area -->
+            <div class="flex-1 flex flex-col" *ngIf="selectedChat; else selectChatPrompt">
+                <!-- Chat Header -->
+              <div class="p-4 bg-gradient-to-r from-slate-800 via-gray-800 to-slate-900 text-white">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <button class="lg:hidden mr-3 p-2 hover:bg-white/20 rounded-lg transition-colors" 
+                            (click)="closeChat()">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                      </svg>
+                    </button>
+                      <div class="flex items-center">
+                      <div class="w-10 h-10 rounded-full overflow-hidden ring-2 ring-white/50 mr-3">
+                        <div 
+                          *ngIf="getOtherUserAvatar(selectedChat); else headerAvatarPlaceholder" 
+                          class="w-full h-full">
+                          <img 
+                            [src]="getOtherUserAvatar(selectedChat)" 
+                            alt="User avatar" 
+                            class="w-full h-full object-cover">
+                        </div>
+                        <ng-template #headerAvatarPlaceholder>
+                          <div 
+                            class="w-full h-full flex items-center justify-center text-white font-bold text-sm"
+                            [ngClass]="getAvatarBackgroundColor(getOtherUserName(selectedChat))">
+                            {{ getUserInitials(getOtherUserName(selectedChat)) }}
+                          </div>
+                        </ng-template>
+                      </div>
+                      <div>
+                        <h3 class="font-semibold text-white">{{ getOtherUserName(selectedChat) }}</h3>                        <div class="flex items-center text-slate-300 text-sm">
+                          <span>{{ selectedChat.product?.name }}</span>
+                          <span class="mx-2">•</span>
+                          <span class="font-semibold text-emerald-400">{{ selectedChat.product?.price | currency:'EUR':'symbol':'1.0-0' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="flex items-center space-x-2">
+                    <button class="p-2 hover:bg-white/20 rounded-lg transition-colors" title="Información">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div class="chat-unread" *ngIf="isChatUnread(chat)">
-                <span class="unread-badge"></span>
+              
+              <!-- Messages Container -->
+              <div class="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-4">
+                <div *ngFor="let item of getCombinedMessages(); trackBy: trackByMessage" 
+                     class="flex" 
+                     [class.justify-end]="isOwnItem(item)">
+                  
+                  <!-- Message Bubble -->
+                  <div class="max-w-xs lg:max-w-md" 
+                       [class.order-2]="isOwnItem(item)">
+                    
+                    <!-- Regular Message -->
+                    <div *ngIf="item.messageType === 'message'" 
+                         class="relative group">
+                      <div class="px-4 py-3 rounded-2xl shadow-sm"
+                           [class.bg-gradient-to-r]="isOwnItem(item)"
+                           [class.from-blue-500]="isOwnItem(item)"
+                           [class.to-purple-600]="isOwnItem(item)"
+                           [class.text-white]="isOwnItem(item)"
+                           [class.bg-white]="!isOwnItem(item)"
+                           [class.text-gray-800]="!isOwnItem(item)"
+                           [class.border]="!isOwnItem(item)"
+                           [class.border-gray-200]="!isOwnItem(item)">
+                        <p class="text-sm">{{ item.content }}</p>
+                      </div>
+                      <div class="flex items-center mt-1"
+                           [class.justify-end]="isOwnItem(item)">
+                        <span class="text-xs text-gray-500">
+                          {{ item.created_at | date:'shortTime' }}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <!-- Offer Message -->
+                    <div *ngIf="item.messageType === 'offer'" 
+                         class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
+                      
+                      <!-- Offer Header -->
+                      <div class="bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center">
+                            <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                              <span class="text-lg">💰</span>
+                            </div>
+                            <div>
+                              <h4 class="font-semibold text-sm">Oferta</h4>
+                              <p class="text-xs text-amber-100">{{ getOfferTypeText(item, userId) }}</p>
+                            </div>
+                          </div>
+                          <div class="text-right">
+                            <div class="text-2xl font-bold">{{ item.amount | currency:'EUR':'symbol':'1.0-0' }}</div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Offer Status -->
+                      <div class="p-4">
+                        <div class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-3"
+                             [class.bg-yellow-100]="item.status === 'pending'"
+                             [class.text-yellow-800]="item.status === 'pending'"
+                             [class.bg-green-100]="item.status === 'accepted'"
+                             [class.text-green-800]="item.status === 'accepted'"
+                             [class.bg-red-100]="item.status === 'rejected'"
+                             [class.text-red-800]="item.status === 'rejected'">
+                          <span class="mr-1">{{ getStatusIcon(item.status) }}</span>
+                          {{ getStatusText(item.status) }}
+                        </div>
+                        
+                        <!-- Offer Actions for Seller -->
+                        <div *ngIf="item.status === 'pending' && canRespondToOffer(item)" 
+                             class="flex gap-2 mb-3">
+                          <button (click)="acceptOffer(item.id)" 
+                                  class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg 
+                                         text-sm font-medium transition-colors duration-200 flex items-center justify-center">
+                            <span class="mr-1">✓</span>
+                            Aceptar
+                          </button>
+                          <button (click)="rejectOffer(item.id)" 
+                                  class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg 
+                                         text-sm font-medium transition-colors duration-200 flex items-center justify-center">
+                            <span class="mr-1">✗</span>
+                            Rechazar
+                          </button>
+                        </div>
+                        
+                        <div *ngIf="item.status === 'pending' && canRespondToOffer(item)" 
+                             class="mb-3">
+                          <button (click)="openCounterOfferModal(item)" 
+                                  class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg 
+                                         text-sm font-medium transition-colors duration-200 flex items-center justify-center">
+                            <span class="mr-1">🔄</span>
+                            Contraoferta
+                          </button>
+                        </div>
+                        
+                        <!-- Status for Buyer when pending -->
+                        <div *ngIf="item.status === 'pending' && !canRespondToOffer(item)" 
+                             class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                          <div class="flex items-center text-yellow-700">
+                            <span class="text-lg mr-2">⏳</span>
+                            <span class="text-sm font-medium">Oferta enviada - Esperando respuesta del vendedor</span>
+                          </div>
+                        </div>
+                        
+                        <!-- Payment section for accepted offers (ONLY for buyer) -->
+                        <div *ngIf="item.status === 'accepted' && item.buyer_id === userId" 
+                             class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-white shadow-lg mb-3">
+                          <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                              <span class="text-lg">🎉</span>
+                            </div>
+                            <div>
+                              <p class="font-semibold text-sm">¡Oferta aceptada!</p>
+                              <p class="text-xs text-green-100">Procede al pago para completar la compra</p>
+                            </div>
+                          </div>
+                          <button (click)="proceedToPayment(item)" 
+                                  class="w-full bg-white text-green-600 font-bold py-3 px-4 rounded-lg 
+                                         hover:bg-gray-50 transition-all duration-200 flex items-center justify-center
+                                         shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                            <span class="mr-2 text-xl">💳</span>
+                            <span>Proceder al pago</span>
+                          </button>
+                        </div>
+                        
+                        <!-- Status for Seller when accepted -->
+                        <div *ngIf="item.status === 'accepted' && canRespondToOffer(item)" 
+                             class="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                          <div class="flex items-center text-green-700">
+                            <span class="text-lg mr-2">✅</span>
+                            <span class="text-sm font-medium">Oferta aceptada - Esperando pago del comprador</span>
+                          </div>
+                        </div>
+                        
+                        <div class="text-xs text-gray-500 text-center">
+                          {{ item.created_at | date:'short' }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                    <!-- Avatar for other user's messages -->
+                  <div *ngIf="!isOwnItem(item)" class="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0 self-end">
+                    <div 
+                      *ngIf="getOtherUserAvatar(selectedChat); else messageAvatarPlaceholder" 
+                      class="w-full h-full">
+                      <img [src]="getOtherUserAvatar(selectedChat)" 
+                           alt="User avatar" 
+                           class="w-full h-full object-cover">
+                    </div>
+                    <ng-template #messageAvatarPlaceholder>
+                      <div 
+                        class="w-full h-full flex items-center justify-center text-white font-bold text-xs"
+                        [ngClass]="getAvatarBackgroundColor(getOtherUserName(selectedChat))">
+                        {{ getUserInitials(getOtherUserName(selectedChat)) }}
+                      </div>
+                    </ng-template>
+                  </div>
+                </div>
+                
+                <div *ngIf="messages.length === 0 && offers.length === 0" 
+                     class="flex flex-col items-center justify-center py-12 text-center">
+                  <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                  </div>
+                  <h3 class="text-lg font-semibold text-gray-900 mb-2">¡Inicia la conversación!</h3>
+                  <p class="text-gray-500 text-sm">Envía un mensaje o haz una oferta para comenzar</p>
+                </div>
+              </div>
+              
+              <!-- Message Input -->
+              <div class="bg-white border-t border-gray-200 p-4">
+                <div class="flex items-center space-x-3">
+                  <!-- Action Buttons -->
+                  <div class="flex space-x-1">
+                    <button (click)="toggleEmojiPicker()" 
+                            class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Agregar emoji">
+                      <span class="text-xl">😊</span>
+                    </button>
+                    <button (click)="openOfferModal()" 
+                            *ngIf="selectedChat"
+                            class="p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                            title="Enviar oferta">
+                      <span class="text-xl">💰</span>
+                    </button>
+                  </div>
+                  
+                  <!-- Message Input -->
+                  <div class="flex-1 relative">
+                    <input 
+                      type="text" 
+                      class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl 
+                             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                             placeholder-gray-400 text-sm transition-all duration-200"
+                      placeholder="Escribe un mensaje..." 
+                      [(ngModel)]="newMessage" 
+                      (keyup.enter)="sendMessage()"
+                      [disabled]="isTyping">
+                  </div>
+                  
+                  <!-- Send Button -->
+                  <button (click)="sendMessage()" 
+                          [disabled]="!newMessage.trim() || isTyping"
+                          class="p-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl
+                                 hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed
+                                 transition-all duration-200 flex items-center justify-center
+                                 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:transform-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                  </button>
+                </div>
+                
+                <!-- Emoji Picker -->
+                <div *ngIf="showEmojiPicker" 
+                     class="absolute bottom-20 left-4 bg-white rounded-xl shadow-xl border border-gray-200 p-4 z-10">
+                  <div class="grid grid-cols-5 gap-2">
+                    <button *ngFor="let emoji of commonEmojis" 
+                            (click)="addEmoji(emoji)" 
+                            class="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors">
+                      <span class="text-lg">{{emoji}}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div *ngIf="filteredChats.length === 0" class="no-chats">
-            No se encontraron conversaciones
+            
+            <!-- No Chat Selected -->
+            <ng-template #selectChatPrompt>
+              <div class="flex-1 flex items-center justify-center bg-gray-50">
+                <div class="text-center">
+                  <div class="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                  </div>
+                  <h3 class="text-2xl font-bold text-gray-900 mb-2">Selecciona una conversación</h3>
+                  <p class="text-gray-500 text-lg">Elige una conversación de la lista para empezar a chatear</p>
+                </div>
+              </div>
+            </ng-template>
           </div>
         </div>
       </div>
-      
-      <div class="chat-messages" *ngIf="selectedChat; else selectChatPrompt">
-        <div class="chat-header">
-          <div class="chat-back" (click)="closeChat()">
-            <i class="fas fa-arrow-left"></i>
-          </div>
-          <div class="chat-avatar">
-            <img 
-              [src]="getOtherUserAvatar(selectedChat)" 
-              alt="User avatar" 
-              onerror="this.src='assets/images/default-avatar.png'">
-          </div>
-          <div class="chat-user-info">
-            <div class="chat-name">{{ getOtherUserName(selectedChat) }}</div>
-            <div class="chat-product">{{ selectedChat.product?.name }} - {{ selectedChat.product?.price | currency }}</div>
-          </div>
-        </div>
-          <div class="messages-container">
-          <!-- Messages and Offers combined -->
-          <div *ngFor="let item of getCombinedMessages()" class="message" 
-               [class.own]="isOwnItem(item)" 
-               [class.offer-message]="item.type === 'offer' || item.type === 'offer_response'">
-            
-            <!-- Regular Message -->
-            <div *ngIf="item.messageType === 'message'" class="message-content">
-              <div class="message-text">
-                {{ item.content }}
-              </div>
-              <div class="message-time">
-                {{ item.created_at | date:'shortTime' }}
-              </div>
-            </div>
-            
-            <!-- Offer Display -->
-            <div *ngIf="item.messageType === 'offer'" class="offer-content">
-              <div class="offer-header">
-                <span class="offer-icon">💰</span>
-                <span class="offer-title">Oferta</span>
-                <span class="offer-amount">{{item.amount | currency}}</span>
-              </div>
-              <div class="offer-status" [class]="'status-' + item.status">
-                {{ getStatusText(item.status) }}
-              </div>
-              
-              <!-- Offer Actions for Receiver -->
-              <div *ngIf="item.status === 'pending' && canRespondToOffer(item)" class="offer-actions">
-                <button class="accept-btn" (click)="acceptOffer(item.id)">
-                  ✓ Aceptar
-                </button>
-                <button class="reject-btn" (click)="rejectOffer(item.id)">
-                  ✗ Rechazar
-                </button>
-                <button class="counter-btn" (click)="openCounterOfferModal(item)">
-                  🔄 Contraoferta
-                </button>
-              </div>
-              
-              <div class="offer-time">
-                {{ item.created_at | date:'short' }}
-              </div>
-            </div>
-          </div>
-          
-          <div *ngIf="messages.length === 0 && offers.length === 0" class="no-messages">
-            No hay mensajes aún. ¡Inicia la conversación!
-          </div>
-        </div>
+    </div>
         
-        <div class="message-input-container">
-          <div class="message-input-wrapper">
-            <div class="input-actions">
-              <button class="emoji-btn" (click)="toggleEmojiPicker()" title="Agregar emoji">
-                😊
-              </button>
-              <button class="offer-btn" (click)="openOfferModal()" *ngIf="selectedChat" title="Enviar oferta">
-                💰
-              </button>
+    <!-- Offer Modal -->
+    <div *ngIf="showOfferModal" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        
+        <!-- Modal Header -->
+        <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-t-2xl">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                <span class="text-xl">💰</span>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold">Enviar Oferta</h3>
+                <p class="text-amber-100 text-sm">Haz tu mejor propuesta</p>
+              </div>
             </div>
-            <input 
-              type="text" 
-              class="message-input"
-              placeholder="Escribe un mensaje..." 
-              [(ngModel)]="newMessage" 
-              (keyup.enter)="sendMessage()"
-              [disabled]="isTyping">
-            <button class="send-btn" (click)="sendMessage()" [disabled]="!newMessage.trim() || isTyping">
-              <i class="fas fa-paper-plane"></i>
+            <button (click)="closeOfferModal()" 
+                    class="p-2 hover:bg-white/20 rounded-lg transition-colors">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
             </button>
           </div>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="p-6">          <!-- Product Info -->
+          <div *ngIf="selectedChat?.product" 
+               class="flex items-center p-4 bg-gray-50 rounded-xl mb-6">
+            <img [src]="selectedChat?.product?.image_url ?? 'assets/images/product-placeholder.png'" 
+                 [alt]="selectedChat?.product?.name ?? 'Product'" 
+                 class="w-16 h-16 object-cover rounded-lg mr-4">
+            <div class="flex-1">
+              <h4 class="font-semibold text-gray-900 mb-1">{{selectedChat?.product?.name}}</h4>
+              <p class="text-sm text-gray-600 mb-1">Precio original</p>
+              <p class="text-lg font-bold text-green-600">{{selectedChat?.product?.price | currency:'EUR':'symbol':'1.0-0'}}</p>
+            </div>
+          </div>
           
-          <!-- Emoji Picker -->
-          <div class="emoji-picker" *ngIf="showEmojiPicker">
-            <div class="emoji-grid">
-              <span *ngFor="let emoji of commonEmojis" (click)="addEmoji(emoji)" class="emoji-item">{{emoji}}</span>
+          <!-- Offer Form -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Tu oferta</label>
+              <div class="relative">
+                <input 
+                  type="number" 
+                  [(ngModel)]="offerAmount" 
+                  placeholder="0"
+                  min="1"
+                  step="0.01"
+                  class="w-full pl-4 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl 
+                         focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                         text-lg font-semibold text-gray-900 transition-all duration-200">
+                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <span class="text-gray-500 font-semibold">EUR</span>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">Mensaje (opcional)</label>
+              <textarea 
+                [(ngModel)]="offerMessage" 
+                placeholder="Agrega un mensaje a tu oferta..."
+                rows="3"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl 
+                       focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent
+                       text-sm text-gray-900 transition-all duration-200 resize-none"></textarea>
             </div>
           </div>
         </div>
         
-        <!-- Offer Modal -->
-        <div class="offer-modal-overlay" *ngIf="showOfferModal" (click)="closeOfferModal()">
-          <div class="offer-modal" (click)="$event.stopPropagation()">
-            <div class="offer-modal-header">
-              <h3>Enviar Oferta</h3>
-              <button class="close-btn" (click)="closeOfferModal()">×</button>
-            </div>
-            <div class="offer-modal-body">
-              <div class="product-info" *ngIf="selectedChat?.product">
-                <img [src]="selectedChat.product?.image_url || 'assets/images/product-placeholder.png'" 
-                     [alt]="selectedChat.product?.name || 'Product'" 
-                     class="product-image">
-                <div class="product-details">
-                  <h4>{{selectedChat.product?.name}}</h4>
-                  <p class="original-price">Precio original: {{selectedChat.product?.price | currency}}</p>
-                </div>
-              </div>
-              <div class="offer-form">
-                <label>Tu oferta:</label>
-                <div class="price-input">
-                  <input 
-                    type="number" 
-                    [(ngModel)]="offerAmount" 
-                    placeholder="0.00"
-                    min="1"
-                    step="0.01"
-                    class="offer-price">
-                  <span class="currency">€</span>
-                </div>
-                <label>Mensaje (opcional):</label>
-                <textarea 
-                  [(ngModel)]="offerMessage" 
-                  placeholder="Agrega un mensaje a tu oferta..."
-                  class="offer-message"></textarea>
-              </div>
-            </div>
-            <div class="offer-modal-footer">
-              <button class="cancel-btn" (click)="closeOfferModal()">Cancelar</button>
-              <button class="send-offer-btn" (click)="sendOffer()" [disabled]="!offerAmount || isTyping">
-                {{isTyping ? 'Enviando...' : 'Enviar Oferta'}}
-              </button>
-            </div>
+        <!-- Modal Footer -->
+        <div class="p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+          <div class="flex gap-3">
+            <button (click)="closeOfferModal()" 
+                    class="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold
+                           hover:bg-gray-300 transition-colors duration-200">
+              Cancelar
+            </button>
+            <button (click)="sendOffer()" 
+                    [disabled]="!offerAmount || isTyping"
+                    class="flex-1 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-semibold
+                           hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed
+                           transition-all duration-200 shadow-lg hover:shadow-xl">
+              {{isTyping ? 'Enviando...' : 'Enviar Oferta'}}
+            </button>
           </div>
         </div>
       </div>
-      
-      <ng-template #selectChatPrompt>
-        <div class="no-chat-selected">
-          <div class="prompt">
-            <i class="fas fa-comments"></i>
-            <h3>Selecciona una conversación</h3>
-            <p>Elige una conversación de la lista para empezar a chatear</p>
-          </div>
-        </div>
-      </ng-template>
     </div>
-  `,
-  styles: [`
+  `,  styles: [`
+    /* Minimal custom styles since we're using Tailwind */
     .chat-container {
-      display: flex;
-      height: 100vh;
-      max-height: 600px;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      background: white;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     
-    .chat-list {
-      width: 320px;
-      border-right: 1px solid #eee;
-      background: #fff;
-      display: flex;
-      flex-direction: column;
+    /* Custom scrollbar */
+    .overflow-y-auto::-webkit-scrollbar {
+      width: 4px;
     }
     
-    .chat-list h2 {
-      padding: 20px;
-      margin: 0;
-      border-bottom: 1px solid #eee;
-      font-size: 18px;
+    .overflow-y-auto::-webkit-scrollbar-track {
+      background: transparent;
     }
     
-    .chat-search {
-      padding: 15px;
-      border-bottom: 1px solid #eee;
+    .overflow-y-auto::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 2px;
     }
     
-    .chat-search input {
-      width: 100%;
-      padding: 10px 15px;
-      border: 1px solid #ddd;
-      border-radius: 20px;
-      outline: none;
-      font-size: 14px;
+    .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+      background: #a0aec0;
     }
     
-    .chat-items {
-      flex: 1;
-      overflow-y: auto;
+    /* Smooth animations */
+    .transition-all {
+      transition-property: all;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 200ms;
     }
     
-    .chat-item {
-      display: flex;
-      padding: 15px;
-      border-bottom: 1px solid #f0f0f0;
-      cursor: pointer;
-      transition: background 0.2s;
+    /* Custom shadows */
+    .shadow-custom {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     
-    .chat-item:hover, .chat-item.active {
-      background: #f8f9fa;
-    }
-    
-    .chat-avatar {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      overflow: hidden;
-      margin-right: 12px;
-      flex-shrink: 0;
-    }
-    
-    .chat-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    
-    .chat-info {
-      flex: 1;
-      overflow: hidden;
-    }
-    
-    .chat-name {
-      font-weight: 600;
-      margin-bottom: 4px;
-      font-size: 14px;
-    }
-    
-    .chat-product {
-      font-size: 12px;
-      color: #888;
-      margin-bottom: 4px;
-    }
-    
-    .chat-last-message {
-      font-size: 13px;
-      color: #666;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    .chat-meta {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      flex-shrink: 0;
-    }
-    
-    .chat-time {
-      font-size: 11px;
-      color: #888;
-    }
-    
-    .unread-badge {
-      width: 8px;
-      height: 8px;
-      background: #ff4747;
-      border-radius: 50%;
-      margin-top: 4px;
-    }
-    
-    .chat-messages {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background: #f5f5f5;
-    }
-    
-    .chat-header {
-      display: flex;
-      padding: 15px 20px;
-      background: #fff;
-      border-bottom: 1px solid #eee;
-      align-items: center;
-    }
-    
-    .chat-header .chat-avatar {
-      width: 35px;
-      height: 35px;
-      margin-right: 12px;
-    }
-    
-    .chat-user-info .chat-name {
-      font-weight: 600;
-      font-size: 15px;
-      margin-bottom: 2px;
-    }
-    
-    .chat-user-info .chat-product {
-      color: #666;
-      font-size: 12px;
-    }
-    
-    .messages-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
+    /* Message animation */
+    @keyframes messageSlide {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     
     .message {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 12px;
-      max-width: 70%;
-    }
-    
-    .message.own {
-      align-self: flex-end;
-      align-items: flex-end;
-    }
-    
-    .message-content {
-      padding: 10px 15px;
-      border-radius: 18px;
-      word-wrap: break-word;
-    }
-    
-    .message:not(.own) .message-content {
-      background: #fff;
-      color: #333;
-      border-bottom-left-radius: 4px;
-    }
-    
-    .message.own .message-content {
-      background: #007bff;
-      color: #fff;
-      border-bottom-right-radius: 4px;
-    }
-      .message-time {
-      font-size: 10px;
-      color: #888;
-      margin-top: 4px;
-    }
-
-    /* Offer Message Styles */
-    .offer-message {
-      max-width: 300px;
-    }
-
-    .offer-content {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      border: 2px solid #28a745;
-      border-radius: 12px;
-      padding: 15px;
-      color: #333;
-    }
-
-    .message.own .offer-content {
-      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-      border-color: #2196f3;
-    }
-
-    .offer-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-      font-weight: bold;
-    }
-
-    .offer-icon {
-      font-size: 18px;
-    }
-
-    .offer-title {
-      color: #28a745;
-      font-size: 14px;
-    }
-
-    .message.own .offer-title {
-      color: #2196f3;
-    }
-
-    .offer-amount {
-      margin-left: auto;
-      font-size: 16px;
-      font-weight: bold;
-      color: #28a745;
-    }
-
-    .message.own .offer-amount {
-      color: #2196f3;
-    }
-
-    .offer-status {
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-
-    .status-pending {
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeaa7;
-    }
-
-    .status-accepted {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .status-rejected {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-
-    .offer-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .accept-btn, .reject-btn, .counter-btn {
-      flex: 1;
-      padding: 8px 12px;
-      border: none;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .accept-btn {
-      background: #28a745;
-      color: white;
-    }
-
-    .accept-btn:hover {
-      background: #218838;
-    }
-
-    .reject-btn {
-      background: #dc3545;
-      color: white;
-    }
-
-    .reject-btn:hover {
-      background: #c82333;
-    }
-
-    .counter-btn {
-      background: #17a2b8;
-      color: white;
-    }
-
-    .counter-btn:hover {
-      background: #138496;
-    }
-
-    .offer-time {
-      font-size: 10px;
-      color: #888;
-      margin-top: 8px;
-      text-align: right;
-    }
-    
-    .message-input-container {
-      background: #fff;
-      border-top: 1px solid #eee;
-    }
-    
-    .message-input-wrapper {
-      display: flex;
-      align-items: center;
-      padding: 15px 20px;
-      gap: 10px;
-    }
-    
-    .input-actions {
-      display: flex;
-      gap: 5px;
-    }
-    
-    .emoji-btn, .offer-btn {
-      background: none;
-      border: none;
-      font-size: 18px;
-      padding: 8px;
-      border-radius: 50%;
-      cursor: pointer;
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .emoji-btn:hover, .offer-btn:hover {
-      background: #f0f0f0;
-    }
-    
-    .message-input {
-      flex: 1;
-      padding: 10px 15px;
-      border: 1px solid #ddd;
-      border-radius: 20px;
-      outline: none;
-      font-size: 14px;
-    }
-    
-    .send-btn {
-      background: #007bff;
-      color: white;
-      border: none;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .send-btn:disabled {
-      background: #ccc;
-    }
-    
-    .emoji-picker {
-      position: absolute;
-      bottom: 100%;
-      left: 20px;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    
-    .emoji-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 5px;
-    }
-    
-    .emoji-item {
-      padding: 5px;
-      border-radius: 4px;
-      cursor: pointer;
-      text-align: center;
-      font-size: 16px;
-    }
-    
-    .emoji-item:hover {
-      background: #f0f0f0;
-    }
-    
-    .offer-modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    
-    .offer-modal {
-      background: white;
-      border-radius: 8px;
-      width: 90%;
-      max-width: 400px;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    
-    .offer-modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      border-bottom: 1px solid #eee;
-    }
-    
-    .offer-modal-header h3 {
-      margin: 0;
-      font-size: 16px;
-    }
-    
-    .close-btn {
-      background: none;
-      border: none;
-      font-size: 20px;
-      cursor: pointer;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-    }
-    
-    .offer-modal-body {
-      padding: 20px;
-    }
-    
-    .product-info {
-      display: flex;
-      align-items: center;
-      margin-bottom: 20px;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 6px;
-    }
-    
-    .product-image {
-      width: 50px;
-      height: 50px;
-      object-fit: cover;
-      border-radius: 4px;
-      margin-right: 15px;
-    }
-    
-    .offer-form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-    
-    .offer-form label {
-      font-weight: 600;
-      font-size: 14px;
-    }
-    
-    .price-input {
-      position: relative;
-    }
-    
-    .offer-price {
-      width: 100%;
-      padding: 10px 35px 10px 15px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 16px;
-      font-weight: bold;
-    }
-    
-    .currency {
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #666;
-    }
-    
-    .offer-message {
-      padding: 10px 15px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      resize: vertical;
-      min-height: 60px;
-      font-family: inherit;
-    }
-    
-    .offer-modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      padding: 20px;
-      border-top: 1px solid #eee;
-    }
-    
-    .cancel-btn, .send-offer-btn {
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    
-    .cancel-btn {
-      border: 1px solid #ddd;
-      background: white;
-      color: #666;
-    }
-    
-    .send-offer-btn {
-      border: none;
-      background: #28a745;
-      color: white;
-    }
-    
-    .send-offer-btn:disabled {
-      background: #ccc;
-    }
-    
-    .no-chat-selected {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: #666;
-    }
-    
-    .no-messages, .no-chats {
-      text-align: center;
-      color: #666;
-      padding: 20px;
-      font-style: italic;
-    }
-    
-    @media (max-width: 768px) {
-      .chat-container {
-        height: 100vh;
-      }
-      
-      .chat-list {
-        width: 100%;
-        position: absolute;
-        left: 0;
-        z-index: 10;
-      }
-      
-      .chat-messages {
-        width: 100%;
-      }
-      
-      .chat-back {
-        display: block !important;
-      }
+      animation: messageSlide 0.3s ease-out;
     }
   `]
 })
@@ -811,26 +575,31 @@ export class ChatListComponent implements OnInit, OnDestroy {
   showOfferModal: boolean = false;
   offerAmount: number | null = null;
   offerMessage: string = '';
-  isTyping: boolean = false;  
-  private readonly destroy$ = new Subject<void>();
-  private userId: number = 1; // Will be updated from auth service
+  isTyping: boolean = false;    private readonly destroy$ = new Subject<void>();
+  public userId: number = 1; // Will be updated from auth service
   
   constructor(
     private readonly chatService: ChatService,
     private readonly messageService: MessageService,
     private readonly offerService: OfferService,
     private readonly authService: AuthService,
+    private readonly userService: UserService,
     private readonly route: ActivatedRoute,
-    private readonly apiService: ApiService
+    private readonly apiService: ApiService,
+    private readonly router: Router
   ) {}
-    ngOnInit(): void {
-    // Get current user first
+  
+  ngOnInit(): void {// Get current user first
     this.authService.getCurrentUser()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.success && response.data) {
             this.userId = response.data.id;
+            console.log('🔍 Current user loaded:', {
+              userId: this.userId,
+              userData: response.data
+            });
             this.loadChats();
           }
         },
@@ -858,14 +627,16 @@ export class ChatListComponent implements OnInit, OnDestroy {
       this.messageService.unsubscribeFromChat(this.selectedChat.id);
     }
   }
-  
-  loadChats(): void {
+    loadChats(): void {
     this.chatService.getChats()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.success) {
-            this.chats = response.data;
+            // Filtrar chats donde el usuario no se está chateando consigo mismo
+            this.chats = response.data.filter(chat => 
+              chat.buyer_id !== this.userId || chat.seller_id !== this.userId
+            );
             this.filterChats();
           }
         },
@@ -940,9 +711,11 @@ export class ChatListComponent implements OnInit, OnDestroy {
     // Load offers
     this.offerService.getOffers(chat.id)
       .pipe(takeUntil(this.destroy$))
-      .subscribe({        next: (response) => {
+      .subscribe({
+        next: (response) => {
           if (response.success) {
             this.offers = response.data;
+            console.log('Offers loaded:', this.offers);
           }
         },
         error: (error) => {          console.error('Error loading offers:', error);
@@ -1040,66 +813,12 @@ export class ChatListComponent implements OnInit, OnDestroy {
       }
     });
   }
-  
-  getOtherUserName(chat: Chat | null): string {
+    getOtherUserName(chat: Chat | null): string {
     if (!chat) return 'Usuario';
     
     return this.userId === chat.buyer_id 
       ? chat.seller?.name ?? 'Vendedor'
       : chat.buyer?.name ?? 'Comprador';
-  }
-  
-  getOtherUserAvatar(chat: Chat | null): string {
-    if (!chat) return 'assets/images/default-avatar.png';
-    
-    return this.userId === chat.buyer_id
-      ? chat.seller?.avatar ?? 'assets/images/default-avatar.png'
-      : chat.buyer?.avatar ?? 'assets/images/default-avatar.png';
-  }
-    isOwnMessage(message: Message): boolean {
-    return message.user_id === this.userId;
-  }
-    isChatUnread(chat: Chat): boolean {
-    if (this.userId === chat.buyer_id) {
-      return !chat.buyer_read_at || new Date(chat.buyer_read_at) < new Date(chat.updated_at);
-    } else {
-      return !chat.seller_read_at || new Date(chat.seller_read_at) < new Date(chat.updated_at);
-    }
-  }
-
-  // Offer-related functions
-  getCombinedMessages(): any[] {
-    const combined: any[] = [];
-    
-    // Add messages
-    this.messages.forEach(message => {
-      combined.push({
-        ...message,
-        messageType: 'message'
-      });
-    });
-    
-    // Add offers
-    this.offers.forEach(offer => {
-      combined.push({
-        ...offer,
-        messageType: 'offer'
-      });
-    });
-    
-    // Sort by creation date
-    return combined.sort((a, b) => 
-      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
-  }
-
-  isOwnItem(item: any): boolean {
-    if (item.messageType === 'message') {
-      return item.user_id === this.userId;
-    } else if (item.messageType === 'offer') {
-      return item.buyer_id === this.userId;
-    }
-    return false;
   }
 
   getStatusText(status: string): string {
@@ -1114,15 +833,23 @@ export class ChatListComponent implements OnInit, OnDestroy {
 
   canRespondToOffer(offer: any): boolean {
     // The receiver (seller) can respond to offers from the buyer
+    console.log('🔍 canRespondToOffer check:', {
+      userId: this.userId,
+      offerSellerId: offer.seller_id,
+      offerBuyerId: offer.buyer_id,
+      offerId: offer.id,
+      canRespond: this.userId === offer.seller_id
+    });
     return this.userId === offer.seller_id;
   }
 
   acceptOffer(offerId: number): void {
     this.offerService.updateOfferStatus(offerId, 'accepted')
       .pipe(takeUntil(this.destroy$))
-      .subscribe({        next: (response) => {
+      .subscribe({
+        next: (response) => {
           if (response.success) {
-            this.loadOffers();
+            this.loadMessages();
           }
         },
         error: (error) => {
@@ -1134,9 +861,10 @@ export class ChatListComponent implements OnInit, OnDestroy {
   rejectOffer(offerId: number): void {
     this.offerService.updateOfferStatus(offerId, 'rejected')
       .pipe(takeUntil(this.destroy$))
-      .subscribe({        next: (response) => {
+      .subscribe({
+        next: (response) => {
           if (response.success) {
-            this.loadOffers();
+            this.loadMessages();
           }
         },
         error: (error) => {
@@ -1149,6 +877,15 @@ export class ChatListComponent implements OnInit, OnDestroy {
     this.offerAmount = originalOffer.amount;
     this.offerMessage = `Contraoferta para ${originalOffer.amount}`;
     this.showOfferModal = true;
+  }
+  proceedToPayment(offer: any): void {
+    console.log('🔍 Proceeding to payment for offer:', offer);
+    console.log('🔍 User ID:', this.userId);
+    console.log('🔍 Buyer ID:', offer.buyer_id);
+    console.log('🔍 Offer status:', offer.status);
+    
+    // Navigate directly to payment page
+    this.router.navigate(['/payment', offer.id]);
   }
 
   private loadOffers(): void {
@@ -1166,5 +903,116 @@ export class ChatListComponent implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  private loadMessages(): void {
+    if (this.selectedChat) {
+      this.messageService.getMessages(this.selectedChat.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.messages = response.data;
+            }
+          },
+          error: (error) => {
+            console.error('Error loading messages:', error);
+          }
+        });
+    }
+  }
+
+  isChatUnread(chat: Chat): boolean {
+    return false; // Implement unread logic as needed
+  }
+
+  isOwnItem(item: any): boolean {
+    if (item.messageType === 'message') {
+      return item.sender_id === this.userId;
+    } else if (item.messageType === 'offer') {
+      return item.buyer_id === this.userId;
+    }
+    return false;
+  }
+
+  getCombinedMessages(): any[] {
+    const combined: any[] = [];
+    
+    // Add messages
+    this.messages.forEach(message => {
+      combined.push({
+        ...message,
+        messageType: 'message',
+        created_at: message.created_at
+      });
+    });
+    
+    // Add offers
+    this.offers.forEach(offer => {
+      combined.push({
+        ...offer,
+        messageType: 'offer',
+        created_at: offer.created_at
+      });
+    });
+    
+    // Sort by created_at
+    return combined.sort((a, b) => 
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+  }  getOtherUserAvatar(chat: Chat): string | null {
+    if (!chat) return null;
+    
+    const otherUser = this.userId === chat.buyer_id ? chat.seller : chat.buyer;
+    if (!otherUser?.avatar) return null;
+    
+    // Use UserService to get full avatar URL
+    return this.userService.getAvatarUrl(otherUser.avatar);
+  }
+
+  getOtherUser(chat: Chat): any {
+    if (!chat) return null;
+    return this.userId === chat.buyer_id ? chat.seller : chat.buyer;
+  }
+
+  getUserInitials(name: string): string {
+    if (!name) return 'U';
+    return name.charAt(0).toUpperCase();
+  }
+  getAvatarBackgroundColor(name: string): string {
+    if (!name) return 'bg-slate-500';
+    
+    const elegantColors = [
+      'bg-slate-600', 'bg-gray-600', 'bg-zinc-600', 'bg-stone-600',
+      'bg-rose-500', 'bg-pink-500', 'bg-fuchsia-500', 'bg-purple-500',
+      'bg-violet-500', 'bg-indigo-500', 'bg-blue-500', 'bg-sky-500',
+      'bg-cyan-500', 'bg-teal-500', 'bg-emerald-500', 'bg-green-500',
+      'bg-lime-500', 'bg-amber-500', 'bg-orange-500', 'bg-red-500'
+    ];
+    
+    const charCode = name.charCodeAt(0);
+    return elegantColors[charCode % elegantColors.length];
+  }
+
+  getOfferTypeText(offer: any, userId: number): string {
+    return offer.buyer_id === userId ? 'Oferta enviada' : 'Oferta recibida';
+  }
+
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'pending': return '⏳';
+      case 'accepted': return '✅';
+      case 'rejected': return '❌';
+      case 'expired': return '⏰';
+      default: return '📋';
+    }
+  }
+
+  trackByChat(index: number, chat: Chat): number {
+    return chat.id;
+  }
+
+  trackByMessage(index: number, item: any): string {
+    return `${item.messageType}-${item.id}`;
   }
 }

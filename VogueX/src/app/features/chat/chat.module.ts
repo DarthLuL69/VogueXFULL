@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatRoutingModule } from './chat-routing.module';
 import { ChatListComponent } from './chat-list.component';
-import { OfferPanelComponent } from './offer-panel.component';
 
 @NgModule({
   declarations: [],
@@ -11,8 +10,7 @@ import { OfferPanelComponent } from './offer-panel.component';
     CommonModule,
     FormsModule,
     ChatRoutingModule,
-    ChatListComponent,
-    OfferPanelComponent
+    ChatListComponent
   ]
 })
 export class ChatModule { }

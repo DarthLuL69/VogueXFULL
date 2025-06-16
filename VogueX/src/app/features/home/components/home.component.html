@@ -57,41 +57,37 @@
 
 <!-- SECCIONES DE PRODUCTOS -->
 <div class="container mx-auto px-4 py-12">
-
-  <!-- Sección para Diseñadores -->
-  <div class="mb-12">
-    <button (click)="toggleDesigners()" class="text-xl font-bold mb-4 underline">BROWSE DESIGNERS</button>
-    <div *ngIf="showDesigners" class="bg-gray-100 p-6 rounded-lg">
-      <h3 class="text-lg font-semibold mb-4">All Designers (A-Z)</h3>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div *ngFor="let designer of designers" class="text-sm">{{ designer }}</div>
-      </div>
-       <div *ngIf="designers.length === 0 && showDesigners" class="text-gray-500">Cargando diseñadores...</div>
-    </div>
-  </div>
   <!-- Menswear -->
   <h2 class="text-xl font-bold mb-4">MENSWEAR</h2>
-  <div class="grid grid-cols-2 md:grid-cols-6 gap-6 mb-12">
+  <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-12">
     <button *ngFor="let item of menswear" 
-         class="bg-gray-100 flex items-center justify-center aspect-square cursor-pointer hover:shadow-lg transition-shadow border-0"
+         class="group relative overflow-hidden bg-white cursor-pointer hover:shadow-md transition-all duration-300 border-0 rounded-none"
          (click)="navigateToShop('menswear', item.category)"
          [attr.aria-label]="'Ver ' + item.name">
-      <div class="text-center">
-        <img [src]="item.img" [alt]="item.name" class="max-h-40 object-contain mb-2" />
-        <p class="font-medium text-sm">{{ item.name }}</p>
+      <div class="relative" style="aspect-ratio: 3/4;">
+        <img [src]="item.img" [alt]="item.name" 
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+          <p class="text-white font-medium text-sm uppercase tracking-wide">{{ item.name }}</p>
+        </div>
       </div>
     </button>
   </div>
   <!-- Womenswear -->
   <h2 class="text-xl font-bold mb-4">WOMENSWEAR</h2>
-  <div class="grid grid-cols-2 md:grid-cols-6 gap-6">
+  <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
     <button *ngFor="let item of womenswear" 
-         class="bg-gray-100 flex items-center justify-center aspect-square cursor-pointer hover:shadow-lg transition-shadow border-0"
+         class="group relative overflow-hidden bg-white cursor-pointer hover:shadow-md transition-all duration-300 border-0 rounded-none"
          (click)="navigateToShop('womenswear', item.category)"
          [attr.aria-label]="'Ver ' + item.name">
-      <div class="text-center">
-        <img [src]="item.img" [alt]="item.name" class="max-h-40 object-contain mb-2" />
-        <p class="font-medium text-sm">{{ item.name }}</p>
+      <div class="relative" style="aspect-ratio: 3/4;">
+        <img [src]="item.img" [alt]="item.name" 
+             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+          <p class="text-white font-medium text-sm uppercase tracking-wide">{{ item.name }}</p>
+        </div>
       </div>
     </button>
   </div>

@@ -50,12 +50,23 @@ export interface Offer {
 export interface Payment {
   id: number;
   offer_id: number;
+  buyer_id: number;
+  seller_id: number;
+  product_id: number;
   user_id: number;
   amount: number;
+  currency: string;
   payment_method: 'visa' | 'debit' | 'apple_pay' | 'paypal';
-  status: 'pending' | 'completed' | 'failed';
+  payment_provider?: string;
+  provider_payment_id?: string;
+  provider_intent_id?: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'cancelled';
   transaction_id: string;
   paid_at: string | null;
+  completed_at?: string | null;
+  refunded_at?: string | null;
+  metadata?: any;
+  shipping_address?: any;
   created_at: string;
   updated_at: string;
   offer?: Offer;

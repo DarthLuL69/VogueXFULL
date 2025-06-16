@@ -138,11 +138,14 @@
             </p>
             <p class="text-xs text-gray-500 mb-2">{{ getSizeType() }}</p>
           </div>
-          
-          <!-- Tallas dinámicas -->
+            <!-- Tallas dinámicas -->
           <div *ngIf="hasSizesAvailable()" class="grid grid-cols-3 gap-2">
             <label *ngFor="let size of getAvailableSizes()" class="flex items-center cursor-pointer">
-              <input type="checkbox" class="mr-2">
+              <input 
+                type="checkbox" 
+                class="mr-2"
+                [checked]="isSizeSelected(size)"
+                (change)="onSizeFilterChange(size, $event)">
               <span class="text-sm">{{ size }}</span>
             </label>
           </div>
@@ -233,11 +236,23 @@
         <h3 class="text-lg font-semibold mb-2 cursor-pointer flex justify-between items-center" (click)="toggleFilter('price')">
           Price
           <svg class="w-4 h-4 transition-transform duration-300" [class.rotate-180]="isFilterExpanded('price')" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-        </h3>
-         <div class="text-sm" *ngIf="isFilterExpanded('price')">
+        </h3>         <div class="text-sm" *ngIf="isFilterExpanded('price')">
             <div class="flex gap-2">
-              <input type="text" placeholder="€ Min" class="w-1/2 p-2 border border-gray-300 rounded-md text-center focus:outline-none focus:border-black">
-              <input type="text" placeholder="€ Max" class="w-1/2 p-2 border border-gray-300 rounded-md text-center focus:outline-none focus:border-black">
+              <input 
+                type="number" 
+                placeholder="€ Min" 
+                [value]="minPrice || ''"
+                (input)="onPriceFilterChange('min', $event)"
+                class="w-1/2 p-2 border border-gray-300 rounded-md text-center focus:outline-none focus:border-black">
+              <input 
+                type="number" 
+                placeholder="€ Max" 
+                [value]="maxPrice || ''"
+                (input)="onPriceFilterChange('max', $event)"
+                class="w-1/2 p-2 border border-gray-300 rounded-md text-center focus:outline-none focus:border-black">
+            </div>
+            <div class="mt-2 text-xs text-gray-500" *ngIf="minPrice || maxPrice">
+              Rango: {{ minPrice || 0 }}€ - {{ maxPrice || '∞' }}€
             </div>
         </div>
       </div>

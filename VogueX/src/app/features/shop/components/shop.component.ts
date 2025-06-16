@@ -5,14 +5,13 @@ import { FormsModule } from '@angular/forms';
 import { FavoriteService } from '../../../shared/services';
 import { ApiService } from '../../../core/services';
 import { DesignersService, Designer } from '../../../shared/services';
-import { HttpClientModule } from '@angular/common/http';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-shop',
   standalone: true,
-  imports: [CommonModule, RouterModule, HttpClientModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule],
   templateUrl: './shop.component.html',
   styles: [`
     .hide-scrollbar::-webkit-scrollbar {
@@ -36,6 +35,15 @@ export class ShopComponent implements OnInit, OnDestroy {
     price: true
   };
   products: any[] = [];
+  filteredProducts: any[] = [];
+  allProducts: any[] = []; // Mantener todos los productos sin filtrar
+
+  // Price filter properties
+  minPrice: number | null = null;
+  maxPrice: number | null = null;
+
+  // Size filter
+  selectedSizes: string[] = [];
 
   // Offer functionality
   showOfferModal: boolean = false;
@@ -46,21 +54,23 @@ export class ShopComponent implements OnInit, OnDestroy {
 
   // Hacer Object disponible en el template
   Object = Object;
-
-  // Categorías organizadas según los dropdowns del header
+  // Categorías organizadas según los dropdowns del header - Estilo Grailed
   categoryStructure: { [key: string]: { [key: string]: string[] } } = {
     menswear: {
-      tops: ['T-Shirts', 'Shirts', 'Hoodies', 'Sweaters', 'Polos'],
-      bottoms: ['Jeans', 'Pants', 'Shorts', 'Joggers'],
-      outerwear: ['Jackets', 'Coats', 'Blazers', 'Vests'],
-      accessories: ['Belts', 'Watches', 'Bags', 'Hats']
+      tops: ['T-Shirts', 'Shirts', 'Hoodies', 'Sweaters', 'Polos', 'Tank Tops'],
+      bottoms: ['Jeans', 'Pants', 'Shorts', 'Joggers', 'Chinos'],
+      outerwear: ['Jackets', 'Coats', 'Blazers', 'Vests', 'Bombers', 'Parkas'],
+      footwear: ['Sneakers', 'Boots', 'Dress Shoes', 'Casual Shoes', 'Sandals'],
+      accessories: ['Belts', 'Watches', 'Jewelry', 'Hats', 'Bags'],
+      tailoring: ['Suits', 'Blazers', 'Dress Shirts', 'Trousers', 'Vests']
     },
     womenswear: {
-      tops: ['Blouses', 'T-Shirts', 'Sweaters', 'Tank Tops'],
-      bottoms: ['Jeans', 'Skirts', 'Pants', 'Shorts'],
-      dresses: ['Casual Dresses', 'Evening Dresses', 'Maxi Dresses'],
-      outerwear: ['Jackets', 'Coats', 'Cardigans'],
-      accessories: ['Bags', 'Jewelry', 'Scarves', 'Belts']
+      tops: ['Blouses', 'T-Shirts', 'Sweaters', 'Tank Tops', 'Crop Tops'],
+      bottoms: ['Jeans', 'Skirts', 'Pants', 'Shorts', 'Leggings'],
+      outerwear: ['Jackets', 'Coats', 'Cardigans', 'Blazers', 'Vests'],
+      footwear: ['Sneakers', 'Boots', 'Heels', 'Flats', 'Sandals'],
+      accessories: ['Bags', 'Jewelry', 'Scarves', 'Belts', 'Sunglasses'],
+      bags: ['Handbags', 'Backpacks', 'Clutches', 'Tote Bags', 'Crossbody']
     },
     sneakers: {
       sneakers: ['Low Top Sneakers', 'High Top Sneakers', 'Mid Top Sneakers', 'Slip-On Sneakers', 'Running Shoes', 'Basketball Shoes'],
@@ -70,8 +80,7 @@ export class ShopComponent implements OnInit, OnDestroy {
       formal: ['Oxford Shoes', 'Derby Shoes', 'Brogues', 'Monk Straps', 'Dress Boots']
     }
   };
-
-  // Sistema de tallas actualizado para coincidir con sell
+  // Sistema de tallas actualizado - Estilo Grailed
   sizeMappings: { [key: string]: string[] } = {
     // Ropa superior
     't-shirts': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
@@ -81,61 +90,63 @@ export class ShopComponent implements OnInit, OnDestroy {
     'hoodies': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'blouses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'tank-tops': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'crop-tops': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     
     // Ropa inferior
     'jeans': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'pants': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'shorts': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'joggers': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'chinos': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48'],
     'skirts': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48', 'XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'leggings': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     
-    // Calzado - todas las subcategorías específicas
+    // Footwear - todas las subcategorías
+    'sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'dress-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'casual-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'sandals': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'heels': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    'flats': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+    
+    // Calzado específico (mantener compatibilidad)
     'low-top-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
     'high-top-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
     'mid-top-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
     'slip-on-sneakers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
     'running-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
     'basketball-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'ankle-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'combat-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'chelsea-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'work-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'hiking-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'desert-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'loafers': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'moccasins': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'boat-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'espadrilles': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'canvas-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'flip-flops': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'slides': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'sport-sandals': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'dress-sandals': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'oxford-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'derby-shoes': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'brogues': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'monk-straps': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
-    'dress-boots': ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
     
-    // Abrigos y chaquetas
+    // Outerwear
     'jackets': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'coats': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'blazers': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'vests': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'bombers': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    'parkas': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     'cardigans': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
 
-    // Vestidos
-    'casual-dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'evening-dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    'maxi-dresses': ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
+    // Tailoring
+    'suits': ['36', '38', '40', '42', '44', '46', '48', '50', '52', '54'],
+    'dress-shirts': ['14', '14.5', '15', '15.5', '16', '16.5', '17', '17.5', '18'],
+    'trousers': ['28', '30', '32', '34', '36', '38', '40', '42', '44', '46', '48'],
 
     // Accesorios
-    'belts': ['S', 'M', 'L', 'XL'],
+    'belts': ['S', 'M', 'L', 'XL', '85', '90', '95', '100', '105', '110'],
     'watches': ['One Size'],
-    'bags': ['One Size'],
-    'hats': ['S', 'M', 'L', 'XL'],
     'jewelry': ['One Size'],
-    'scarves': ['One Size']
+    'hats': ['S', 'M', 'L', 'XL'],
+    'sunglasses': ['One Size'],
+    'scarves': ['One Size'],
+    
+    // Bags
+    'handbags': ['One Size'],
+    'backpacks': ['One Size'],
+    'clutches': ['One Size'],
+    'tote-bags': ['One Size'],
+    'crossbody': ['One Size'],
+    'bags': ['One Size']
   };
 
   // Designer search functionality
@@ -191,18 +202,25 @@ export class ShopComponent implements OnInit, OnDestroy {
 
       // Cargar productos de nuestra API local primero
       this.loadLocalProducts({ 
-        category: this.selectedCategory,        subcategory: this.selectedSubcategory, 
+        category: this.selectedCategory, 
+        subcategory: this.selectedSubcategory, 
         search: searchTerm,
         designer: designerFilter 
-      });
+      });      // Additional search logic can be added here if needed
+      console.log('Search completed for:', searchTerm);      // Initialize with static designers list
+      this.designers = [
+        'Supreme', 'Off-White', 'Stone Island', 'Nike', 'Adidas', 'Balenciaga',
+        'Gucci', 'Louis Vuitton', 'Prada', 'Versace', 'Armani', 'Dolce & Gabbana'
+      ];
+      console.log('Using static designers list:', this.designers);
     });
   }
-
   private loadLocalProducts(filters: any): void {
     this.apiService.getProducts(filters).subscribe({
       next: (response: any) => {
         console.log('Local products response:', response);
-        if (response && response.success && response.data) {          this.products = response.data.map((product: any) => ({            
+        if (response && response.success && response.data) {
+          this.allProducts = response.data.map((product: any) => ({            
             id: product.id,
             name: product.name,
             brand: product.brand || 'Sin marca',
@@ -217,13 +235,18 @@ export class ShopComponent implements OnInit, OnDestroy {
             user: product.user || null,
             userName: product.user ? product.user.name : 'Usuario anónimo'
           }));
-          console.log('Productos locales procesados:', this.products);
+          
+          // Aplicar todos los filtros
+          this.applyAllFilters();
+          console.log('Productos locales procesados:', this.allProducts);
         } else {
+          this.allProducts = [];
           this.products = [];
         }
       },
       error: (error: any) => {
         console.error('Error loading local products:', error);
+        this.allProducts = [];
         this.products = [];
       }
     });
@@ -372,17 +395,17 @@ export class ShopComponent implements OnInit, OnDestroy {
      else if (weeks < 4) return weeks + ' weeks ago';
      else if (months < 12) return months + ' months ago';
      else return years + ' years ago';
-   }
-
-   onCategoryChange(category: string, event: any): void {
+   }   onCategoryChange(category: string, event: any): void {
       if (event.target.checked) {
         this.selectedCategory = category;
         this.selectedSubcategory = null; // Reset subcategory when main category changes
-        // Aquí podrías recargar productos según la categoría si lo deseas
       } else {
         this.selectedCategory = null;
         this.selectedSubcategory = null;
       }
+      
+      // Apply filters when category changes
+      this.applyAllFilters();
     }
 
     onSubcategoryChange(subcategory: string, event: any): void {
@@ -391,6 +414,9 @@ export class ShopComponent implements OnInit, OnDestroy {
       } else {
         this.selectedSubcategory = null;
       }
+      
+      // Apply filters when subcategory changes
+      this.applyAllFilters();
     }
 
     // Helper method to format subcategory for URL
@@ -487,11 +513,10 @@ export class ShopComponent implements OnInit, OnDestroy {
       this.showDesignerSuggestions = false;
     }, 200);
   }
-
   selectDesigner(designer: Designer): void {
     if (!this.selectedDesigners.includes(designer.name)) {
       this.selectedDesigners.push(designer.name);
-      this.applyDesignerFilter();
+      this.applyAllFilters();
     }
     
     this.designerSearchControl.setValue('');
@@ -500,30 +525,29 @@ export class ShopComponent implements OnInit, OnDestroy {
 
   removeSelectedDesigner(designerName: string): void {
     this.selectedDesigners = this.selectedDesigners.filter(name => name !== designerName);
-    this.applyDesignerFilter();
+    this.applyAllFilters();
   }
 
   private applyDesignerFilter(): void {
-    // Aquí puedes implementar la lógica para filtrar productos por diseñadores seleccionados
-    console.log('Filtering by designers:', this.selectedDesigners);
-      if (this.selectedDesigners.length > 0) {
-      this.loadLocalProducts({
-        category: this.selectedCategory,
-        subcategory: this.selectedSubcategory,
-        designer: this.selectedDesigners.join(',')
-      });
-    }
+    // Use the new unified filter system
+    this.applyAllFilters();
+  }
+  
+  private searchProductsByDesigners(designerQuery: string): void {
+    // This method is now handled by applyAllFilters
+    this.applyAllFilters();
+    console.log('Searching products by designers:', designerQuery);
   }
 
+  // Check if designer is selected
   isDesignerSelected(designerName: string): boolean {
     return this.selectedDesigners.includes(designerName);
-  }
-  // Handle designer checkbox change
+  }  // Handle designer checkbox change
   onDesignerCheckboxChange(designerName: string, event: any): void {
     if (event.target.checked) {
       if (!this.selectedDesigners.includes(designerName)) {
         this.selectedDesigners.push(designerName);
-        this.applyDesignerFilter();
+        this.applyAllFilters();
       }
     } else {
       this.removeSelectedDesigner(designerName);
@@ -630,7 +654,91 @@ export class ShopComponent implements OnInit, OnDestroy {
         console.error('Error creating chat:', error);
         this.isSubmittingOffer = false;
         alert('Error al crear el chat. Por favor intenta de nuevo.');
+      }    });
+  }
+
+  // Filter methods
+  applyAllFilters(): void {
+    let filtered = [...this.allProducts];
+
+    // Apply category filter
+    if (this.selectedCategory) {
+      filtered = filtered.filter(product => 
+        product.category === this.selectedCategory || 
+        product.department === this.selectedCategory
+      );
+    }
+
+    // Apply subcategory filter
+    if (this.selectedSubcategory) {
+      filtered = filtered.filter(product => 
+        product.subcategory === this.selectedSubcategory ||
+        product.category === this.selectedSubcategory
+      );
+    }
+
+    // Apply designer filter
+    if (this.selectedDesigners.length > 0) {
+      filtered = filtered.filter(product => 
+        this.selectedDesigners.some(designer => 
+          product.brand?.toLowerCase().includes(designer.toLowerCase()) ||
+          product.name?.toLowerCase().includes(designer.toLowerCase())
+        )
+      );
+    }
+
+    // Apply size filter
+    if (this.selectedSizes.length > 0) {
+      filtered = filtered.filter(product => 
+        this.selectedSizes.includes(product.size)
+      );
+    }
+
+    // Apply price filter
+    if (this.minPrice !== null || this.maxPrice !== null) {
+      filtered = filtered.filter(product => {
+        const price = parseFloat(product.price);
+        if (isNaN(price)) return false;
+        
+        if (this.minPrice !== null && price < this.minPrice) return false;
+        if (this.maxPrice !== null && price > this.maxPrice) return false;
+        
+        return true;
+      });
+    }
+
+    this.products = filtered;
+    console.log('Filtered products:', this.products.length, 'of', this.allProducts.length);
+  }
+
+  onPriceFilterChange(type: 'min' | 'max', event: any): void {
+    const value = event.target.value;
+    const numericValue = value ? parseFloat(value) : null;
+    
+    if (type === 'min') {
+      this.minPrice = numericValue;
+    } else {
+      this.maxPrice = numericValue;
+    }
+    
+    // Apply filters when price changes
+    this.applyAllFilters();
+  }
+
+  onSizeFilterChange(size: string, event: any): void {
+    if (event.target.checked) {
+      if (!this.selectedSizes.includes(size)) {
+        this.selectedSizes.push(size);
       }
-    });
+    } else {
+      this.selectedSizes = this.selectedSizes.filter(s => s !== size);
+    }
+    
+    // Apply filters when size changes
+    this.applyAllFilters();
+  }
+
+  isSizeSelected(size: string): boolean {
+    return this.selectedSizes.includes(size);
   }
 }

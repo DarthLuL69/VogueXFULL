@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { OfferService } from '../../shared/services/offer.service';
 import { PaymentService } from '../../shared/services/payment.service';
 import { Chat, Offer } from '../../shared/models/chat.model';
@@ -75,16 +76,39 @@ import { takeUntil } from 'rxjs/operators';
               <div class="offer-info">
               <span>from {{ offer.buyer?.name || 'User' }}</span>
               <span>{{ offer.created_at | date:'short' }}</span>
+            </div>            <!-- Actions for pending offers - ONLY for sellers -->
+            <div class="offer-actions" *ngIf="offer.status === 'pending' && isOfferReceiver(offer)">
+              <div class="debug-info" style="font-size: 12px; color: #666; margin-bottom: 8px;">
+                Debug: User ID: {{userId}}, Seller ID: {{offer.seller_id}}, Buyer ID: {{offer.buyer_id}}
+              </div>
+              <button class="accept" (click)="respondToOffer(offer.id, 'accepted')">Aceptar oferta</button>
+              <button class="reject" (click)="respondToOffer(offer.id, 'rejected')">Rechazar oferta</button>
             </div>
             
-            <!-- Actions for pending offers -->
-            <div class="offer-actions" *ngIf="offer.status === 'pending' && isOfferReceiver(offer)">
-              <button class="accept" (click)="respondToOffer(offer.id, 'accepted')">Accept</button>
-              <button class="reject" (click)="respondToOffer(offer.id, 'rejected')">Reject</button>
+            <!-- Status for pending offers - for buyers -->
+            <div class="offer-actions" *ngIf="offer.status === 'pending' && offer.buyer_id === userId">
+              <div class="status-info">
+                <p class="status-text">⏳ Oferta enviada - Esperando respuesta del vendedor</p>
+              </div>
             </div>
-              <!-- Payment button for accepted offers -->
-            <div class="offer-actions" *ngIf="offer.status === 'accepted' && offer.buyer_id === userId">
-              <button class="payment" (click)="openPaymentModal(offer)">Make Payment</button>
+            
+            <!-- Payment button for accepted offers - for buyers -->
+            <div class="offer-actions payment-section" *ngIf="offer.status === 'accepted' && offer.buyer_id === userId">
+              <div class="payment-info">
+                <p class="payment-text">¡Oferta aceptada! Procede al pago</p>
+                <p class="amount">{{ offer.amount | currency:'EUR':'symbol':'1.2-2' }}</p>
+              </div>
+              <button class="payment-btn" (click)="proceedToPayment(offer)">
+                <i class="fas fa-credit-card"></i>
+                Proceder al pago
+              </button>
+            </div>
+            
+            <!-- Status for accepted offers - for sellers -->
+            <div class="offer-actions" *ngIf="offer.status === 'accepted' && offer.seller_id === userId">
+              <div class="status-info">
+                <p class="status-text">✅ Oferta aceptada - Esperando pago del comprador</p>
+              </div>
             </div>
           </div>
         </div>
@@ -340,6 +364,76 @@ import { takeUntil } from 'rxjs/operators';
       color: white;
     }
     
+    /* New payment section styles */
+    .payment-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .payment-info {
+      margin-bottom: 12px;
+    }
+    
+    .payment-text {
+      color: white;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+      font-size: 14px;
+    }
+    
+    .amount {
+      color: #ffd700;
+      font-weight: bold;
+      font-size: 18px;
+      margin: 0;
+    }
+    
+    .payment-btn {
+      background: #ffd700;
+      color: #333;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 25px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      width: 100%;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+    }
+    
+    .payment-btn:hover {
+      background: #ffed4e;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+    }
+    
+    .payment-btn i {
+      font-size: 16px;
+    }
+    
+    .status-info {
+      background: #e8f5e8;
+      border: 1px solid #4caf50;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    
+    .status-text {
+      color: #2e7d32;
+      font-weight: 500;
+      margin: 0;
+      font-size: 14px;
+    }
+    
     .no-offers {
       text-align: center;
       padding: 20px;
@@ -464,10 +558,10 @@ export class OfferPanelComponent implements OnInit, OnDestroy {
   paymentResult: any = null;
   
   private readonly destroy$ = new Subject<void>();
-  
-  constructor(
+    constructor(
     private readonly offerService: OfferService,
-    private readonly paymentService: PaymentService
+    private readonly paymentService: PaymentService,
+    private readonly router: Router
   ) {
     this.paymentMethods = this.paymentService.getSupportedPaymentMethods();
   }
@@ -484,9 +578,11 @@ export class OfferPanelComponent implements OnInit, OnDestroy {
   get isBuyer(): boolean {
     return !!this.chat && this.userId === this.chat.buyer_id;
   }
-  
-  loadOffers(): void {
+    loadOffers(): void {
     if (!this.chat) return;
+    
+    console.log('🔍 Loading offers for chat:', this.chat.id);
+    console.log('🔍 Current user ID:', this.userId);
     
     this.offerService.getOffers(this.chat.id)
       .pipe(takeUntil(this.destroy$))
@@ -494,6 +590,21 @@ export class OfferPanelComponent implements OnInit, OnDestroy {
         next: (response) => {
           if (response.success) {
             this.offers = response.data;
+            console.log('🔍 Loaded offers:', this.offers);
+            
+            // Debug each offer
+            this.offers.forEach((offer, index) => {
+              console.log(`🔍 Offer ${index + 1}:`, {
+                id: offer.id,
+                buyer_id: offer.buyer_id,
+                seller_id: offer.seller_id,
+                status: offer.status,
+                amount: offer.amount,
+                currentUserId: this.userId,
+                isBuyer: offer.buyer_id === this.userId,
+                isSeller: offer.seller_id === this.userId
+              });
+            });
           }
         },
         error: (error) => {
@@ -503,7 +614,7 @@ export class OfferPanelComponent implements OnInit, OnDestroy {
   }
   
   isValidOffer(): boolean {
-    if (!this.chat || !this.chat.product) return false;
+    if (!this.chat?.product) return false;
     
     return this.offerAmount > 0 && this.offerAmount <= (this.chat.product.price * 1.1);
   }
@@ -528,6 +639,7 @@ export class OfferPanelComponent implements OnInit, OnDestroy {
       });
   }
     isOfferReceiver(offer: Offer): boolean {
+    // Fix the syntax error - make sure brackets and parentheses match correctly
     return offer.seller_id === this.userId;
   }
   
@@ -551,11 +663,19 @@ export class OfferPanelComponent implements OnInit, OnDestroy {
         }
       });
   }
-  
   openPaymentModal(offer: Offer): void {
-    this.selectedOffer = offer;
-    this.selectedPaymentMethod = null;
-    this.showPaymentModal = true;
+    // Navigate to payment component
+    this.router.navigate(['/payment', offer.id]);
+  }
+  
+  proceedToPayment(offer: Offer): void {
+    console.log('Proceeding to payment for offer:', offer);
+    console.log('User ID:', this.userId);
+    console.log('Buyer ID:', offer.buyer_id);
+    console.log('Offer status:', offer.status);
+    
+    // Navigate directly to payment page
+    this.router.navigate(['/payment', offer.id]);
   }
   
   processPayment(): void {

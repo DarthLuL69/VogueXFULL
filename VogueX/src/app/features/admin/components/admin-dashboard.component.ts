@@ -17,9 +17,7 @@ import { RouterModule } from '@angular/router';
       
       <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
         {{ error }}
-      </div>
-
-      <div *ngIf="!loading && !error" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      </div>      <div *ngIf="!loading && !error" class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
           <h2 class="text-xl font-semibold mb-2">Usuarios</h2>
           <p class="text-3xl font-bold">{{ stats.total_users || 0 }}</p>
@@ -36,6 +34,15 @@ import { RouterModule } from '@angular/router';
           <h2 class="text-xl font-semibold mb-2">Diseñadores</h2>
           <p class="text-3xl font-bold">{{ stats.total_designers || 0 }}</p>
           <a routerLink="/admin/designers" class="text-blue-600 hover:underline mt-4 inline-block">Gestionar diseñadores →</a>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+          <h2 class="text-xl font-semibold mb-2">Mensajes</h2>
+          <p class="text-3xl font-bold">{{ stats.total_messages || 0 }}</p>
+          <div class="flex items-center mt-2">
+            <span class="text-sm text-red-600 font-medium">{{ stats.unread_messages || 0 }} sin leer</span>
+          </div>
+          <a routerLink="/admin/messages" class="text-blue-600 hover:underline mt-4 inline-block">Ver buzón de mensajes →</a>
         </div>
       </div>
       

@@ -1,0 +1,12 @@
+{
+  "offer_id": 1,
+  "amount": 120.00,
+  "payment_method": "visa",
+  "shipping_address": {
+    "street": "Calle Principal 123",
+    "city": "Madrid",
+    "state": "Madrid",
+    "postal_code": "28001",
+    "country": "España"
+  }
+}

@@ -3,58 +3,28 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Payment } from '../models/chat.model';
+import { PaymentRequest, PaymentProcessRequest, PaymentResponse, ShippingAddress } from '../models/order.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PaymentService {
-  private readonly apiUrl = `${environment.apiUrl}/payments`;
+  private readonly apiUrl = environment.apiUrl;
   private readonly supportedPaymentMethods = environment.supportedPaymentMethods;
   
   constructor(private readonly http: HttpClient) { }
-
   /**
-   * Get payment details
-   * @param id Payment ID
+   * Process payment for an accepted offer
    */
-  getPayment(id: number): Observable<{ success: boolean, data: Payment }> {
-    return this.http.get<{ success: boolean, data: Payment }>(`${this.apiUrl}/${id}`);
+  processPayment(paymentRequest: PaymentRequest | PaymentProcessRequest): Observable<PaymentResponse> {
+    return this.http.post<PaymentResponse>(`${this.apiUrl}/payments/process`, paymentRequest);
   }
 
   /**
-   * Get all payments for the authenticated user
+   * Get user's saved shipping addresses
    */
-  getPayments(): Observable<{ success: boolean, data: { as_buyer: Payment[], as_seller: Payment[] } }> {
-    return this.http.get<{ success: boolean, data: { as_buyer: Payment[], as_seller: Payment[] } }>(this.apiUrl);
-  }
-
-  /**
-   * Initialize a payment after an offer is accepted
-   * @param offerId Offer ID
-   * @param paymentMethod Payment method ('visa', 'debit', 'apple_pay', 'paypal')
-   */
-  initializePayment(
-    offerId: number,
-    paymentMethod: 'visa' | 'debit' | 'apple_pay' | 'paypal'
-  ): Observable<{ 
-    success: boolean,
-    message: string,
-    data: {
-      payment: Payment,
-      payment_link: string
-    } 
-  }> {
-    return this.http.post<{
-      success: boolean,
-      message: string,
-      data: {
-        payment: Payment,
-        payment_link: string
-      }
-    }>(
-      `${this.apiUrl}/initialize`,
-      { offer_id: offerId, payment_method: paymentMethod }
-    );
+  getShippingAddresses(): Observable<{ success: boolean, data: ShippingAddress[] }> {
+    return this.http.get<{ success: boolean, data: ShippingAddress[] }>(`${this.apiUrl}/payments/shipping-addresses`);
   }
 
   /**
@@ -65,13 +35,39 @@ export class PaymentService {
   }
 
   /**
-   * Process payment (for demo purposes)
-   * In a real app, this would be handled by a payment gateway
-   * @param paymentId Payment ID
+   * Check if Apple Pay is available
    */
-  processPayment(paymentId: number): Observable<{ success: boolean, message: string, data: Payment }> {
-    return this.http.get<{ success: boolean, message: string, data: Payment }>(
-      `${environment.apiUrl}/payments/process/${paymentId}`
-    );
+  isApplePayAvailable(): boolean {
+    // Check if running on macOS/iOS and Apple Pay is supported
+    if (typeof window !== 'undefined' && 'ApplePaySession' in window) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Validate payment method availability
+   */
+  isPaymentMethodSupported(method: string): boolean {
+    return this.supportedPaymentMethods.includes(method);
+  }  /**
+   * Initialize a payment after an offer is accepted
+   */
+  initializePayment(
+    offerId: number,
+    paymentMethod: 'visa' | 'debit' | 'apple_pay' | 'paypal'
+  ): Observable<{ 
+    success: boolean,
+    message: string,
+    data: { payment: Payment }
+  }> {
+    return this.http.post<{ 
+      success: boolean,
+      message: string,
+      data: { payment: Payment }
+    }>(`${this.apiUrl}/payments/initialize`, { 
+      offer_id: offerId, 
+      payment_method: paymentMethod 
+    });
   }
 }

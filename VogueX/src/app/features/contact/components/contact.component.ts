@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ContactService } from '../../../shared/services/contact.service';
 
 @Component({
   selector: 'app-contact',
@@ -22,31 +23,41 @@ export class ContactComponent {
   errorMessage = '';
   loading = false;
 
+  constructor(private contactService: ContactService) {}
+
   submitForm() {
     if (!this.name || !this.email || !this.message || !this.foundUs) {
-      this.errorMessage = 'Please fill in the required fields.';
+      this.errorMessage = 'Por favor completa todos los campos requeridos.';
       return;
     }
 
     this.loading = true;
     this.errorMessage = '';
 
-    // Simular envío de formulario
-    setTimeout(() => {
-      this.submitted = true;
-      this.loading = false;
-      console.log({
-        name: this.name,
-        email: this.email,
-        phone: this.phone,
-        foundUs: this.foundUs,
-        services: this.services,
-        urgency: this.urgency,
-        newsletter: this.newsletter,
-        message: this.message
-      });
-      this.clearForm();
-    }, 2000);
+    const contactData = {
+      name: this.name,
+      email: this.email,
+      subject: this.foundUs,
+      message: this.message
+    };
+
+    this.contactService.sendMessage(contactData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.submitted = true;
+          this.loading = false;
+          this.clearForm();
+        } else {
+          this.errorMessage = 'Ocurrió un error al enviar el mensaje.';
+          this.loading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error sending contact message:', error);
+        this.errorMessage = error.error?.message || 'Error al enviar el mensaje. Por favor intenta de nuevo.';
+        this.loading = false;
+      }
+    });
   }
 
   clearForm() {

@@ -1,0 +1,203 @@
+<div class="max-w-4xl mx-auto p-6">
+  <h1 class="text-3xl font-bold mb-8">Mi Perfil</h1>
+  
+  <!-- Estado de carga -->
+  <div *ngIf="loading" class="text-center py-8">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+    <p class="mt-4 text-gray-600">Cargando perfil...</p>
+  </div>
+
+  <!-- Mensajes de error -->
+  <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Mensajes de éxito -->
+  <div *ngIf="message" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+    {{ message }}
+  </div>
+
+  <!-- Contenido del perfil -->
+  <div *ngIf="user && !loading" class="space-y-6">
+    <!-- Información básica -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-semibold">Información Personal</h2>
+        <button 
+          (click)="toggleEditMode()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          {{ isEditing ? 'Cancelar' : 'Editar Perfil' }}
+        </button>
+      </div>
+      
+      <!-- Avatar y datos básicos -->
+      <div class="flex items-center space-x-6 mb-6">        <div class="relative">
+          <div class="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center shadow-lg">
+            <img 
+              *ngIf="getAvatarUrl()" 
+              [src]="getAvatarUrl()" 
+              [alt]="user.name"
+              class="w-full h-full object-cover"
+            />
+            <div 
+              *ngIf="!getAvatarUrl()"
+              [class]="getAvatarBackgroundColor() + ' w-full h-full flex items-center justify-center text-white text-2xl font-bold'"
+            >
+              {{ getInitials() }}
+            </div>
+          </div>
+          <button 
+            *ngIf="!isEditing"
+            (click)="fileInput.click()"
+            class="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </button>
+          <input 
+            #fileInput 
+            type="file" 
+            accept="image/*" 
+            (change)="onFileSelected($event)"
+            class="hidden"
+          />
+        </div>
+        <div>
+          <h3 class="text-lg font-medium">{{ user.name }}</h3>
+          <p class="text-gray-600">{{ user.email }}</p>
+          <p class="text-sm text-gray-500">Miembro desde {{ user.created_at | date:'MMM yyyy' }}</p>
+        </div>
+      </div>
+
+      <!-- Modo edición -->
+      <form *ngIf="isEditing" (ngSubmit)="saveProfile()" #profileForm="ngForm" class="space-y-4">        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+            <input
+              type="text"
+              id="name"
+              [(ngModel)]="formData.name"
+              name="name"
+              required
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            />
+          </div>
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input
+              type="email"
+              id="email"
+              [(ngModel)]="formData.email"
+              name="email"
+              required
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            />
+          </div>
+        </div>
+        
+        <div>
+          <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+          <input
+            type="tel"
+            id="phone"
+            [(ngModel)]="formData.phone"
+            name="phone"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+          />
+        </div>
+        
+        <div>
+          <label for="bio" class="block text-sm font-medium text-gray-700 mb-2">Biografía</label>
+          <textarea
+            id="bio"
+            [(ngModel)]="formData.bio"
+            name="bio"
+            rows="3"
+            maxlength="500"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+            placeholder="Cuéntanos algo sobre ti..."
+          ></textarea>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ (formData.bio || '').length }}/500 caracteres
+          </p>
+        </div>
+
+        <div class="flex gap-3">
+          <button
+            type="submit"
+            [disabled]="loading || profileForm.invalid"
+            class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
+          >
+            {{ loading ? 'Guardando...' : 'Guardar Cambios' }}
+          </button>
+          <button
+            type="button"
+            (click)="toggleEditMode()"
+            class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>      <!-- Modo vista -->
+      <div *ngIf="!isEditing" class="space-y-4">
+        <div>
+          <h4 class="block text-sm font-medium text-gray-700">Teléfono</h4>
+          <p class="mt-1 text-sm text-gray-900">{{ user.phone || 'No especificado' }}</p>
+        </div>
+        
+        <div>
+          <h4 class="block text-sm font-medium text-gray-700">Biografía</h4>
+          <p class="mt-1 text-sm text-gray-900">{{ user.bio || 'No hay biografía disponible' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones rápidas -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h3 class="text-lg font-semibold mb-4">Acciones Rápidas</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button 
+          (click)="goToChats()"
+          class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.991 8.991 0 01-4.867-1.424L6 21l1.424-2.133A8.991 8.991 0 013 12c0-4.418 3.582-8 8-8s8 3.582 8 8z"></path>
+          </svg>
+          Mis Chats
+        </button>
+        <button 
+          (click)="goToFavorites()"
+          class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+          </svg>
+          Mis Favoritos
+        </button>
+        <button 
+          (click)="goToOrders()"
+          class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+        >
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+          Mis Pedidos
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Si no hay usuario -->
+  <div *ngIf="!user && !loading" class="text-center py-8">
+    <p class="text-gray-500">No se pudo cargar la información del perfil.</p>
+    <button 
+      (click)="loadUserProfile()"
+      class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+    >
+      Reintentar
+    </button>
+  </div>
+</div>

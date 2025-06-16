@@ -11,28 +11,22 @@ import { NewsService, NewsItem } from '../../../shared/services/news.service';
   styles: []
 })
 export class HomeComponent implements OnInit, OnDestroy {
-  designers: string[] = [];
-  showDesigners = false;
-
   newsItems: NewsItem[] = [];
   currentSlide = 0;
-  private slideInterval: any;
-  menswear = [
-    { name: 'Blazer', img: 'https://i.imgur.com/1.png', category: 'blazers' },
-    { name: 'Sneakers', img: 'https://i.imgur.com/2.png', category: 'low-top-sneakers' },
-    { name: 'Camiseta Gucci', img: 'https://i.imgur.com/3.png', category: 't-shirts' },
-    { name: 'Bomber', img: 'https://i.imgur.com/4.png', category: 'jackets' },
-    { name: 'Gafas', img: 'https://i.imgur.com/5.png', category: 'watches' }, // Usando watches como equivalente a accesorios
-    { name: 'Jeans', img: 'https://i.imgur.com/6.png', category: 'jeans' },
-  ];
-  
-  womenswear = [
-    { name: 'Top', img: 'https://i.imgur.com/7.png', category: 'blouses' },
-    { name: 'Bolso', img: 'https://i.imgur.com/8.png', category: 'bags' },
-    { name: 'Falda', img: 'https://i.imgur.com/9.png', category: 'skirts' },
-    { name: 'Gafas', img: 'https://i.imgur.com/10.png', category: 'jewelry' }, // Usando jewelry como equivalente a accesorios
-    { name: 'Bomber', img: 'https://i.imgur.com/11.png', category: 'jackets' },
-    { name: 'Bufanda', img: 'https://i.imgur.com/12.png', category: 'scarves' },
+  private slideInterval: any;  menswear = [
+    { name: 'Tops', img: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=400&h=500&fit=crop&crop=center&q=80', category: 'tops' },
+    { name: 'Bottoms', img: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=500&fit=crop&crop=center&q=80', category: 'bottoms' },
+    { name: 'Outerwear', img: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=500&fit=crop&crop=center&q=80', category: 'outerwear' },
+    { name: 'Footwear', img: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=400&h=500&fit=crop&crop=center&q=80', category: 'footwear' },
+    { name: 'Accessories', img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=500&fit=crop&crop=center&q=80', category: 'accessories' },
+    { name: 'Tailoring', img: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=500&fit=crop&crop=center&q=80', category: 'tailoring' },
+  ];  womenswear = [
+    { name: 'Tops', img: 'https://images.unsplash.com/photo-1485462537746-965f33f7f6a7?w=400&h=500&fit=crop&crop=center&q=80', category: 'tops' },
+    { name: 'Bottoms', img: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=400&h=500&fit=crop&crop=center&q=80', category: 'bottoms' },
+    { name: 'Outerwear', img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=500&fit=crop&crop=center&q=80', category: 'outerwear' },
+    { name: 'Footwear', img: 'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400&h=500&fit=crop&crop=center&q=80', category: 'footwear' },
+    { name: 'Accessories', img: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=500&fit=crop&crop=center&q=80', category: 'accessories' },
+    { name: 'Bags', img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=500&fit=crop&crop=center&q=80', category: 'bags' },
   ];
   constructor(
     private readonly newsService: NewsService,
@@ -69,10 +63,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
   openNewsLink(url: string): void {
     window.open(url, '_blank');
-  }
-
-  toggleDesigners(): void {
-    this.showDesigners = !this.showDesigners;
   }
 
   loadLatestNews(): void {

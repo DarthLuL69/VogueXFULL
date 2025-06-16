@@ -4,10 +4,14 @@ export const routes: Routes = [  {
     path: '',
     redirectTo: 'home',
     pathMatch: 'full'
-  },
-  {
+  },  {
     path: 'admin',
     loadComponent: () => import('./features/admin/components/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+    canActivate: [() => import('./shared/guards/admin.guard').then(m => m.adminGuard)]
+  },
+  {
+    path: 'admin/messages',
+    loadComponent: () => import('./features/admin/admin-messages/admin-messages.component').then(m => m.AdminMessagesComponent),
     canActivate: [() => import('./shared/guards/admin.guard').then(m => m.adminGuard)]
   },
   {
@@ -66,10 +70,24 @@ export const routes: Routes = [  {
   },  {
     path: 'designers',
     loadComponent: () => import('./features/designers/components/designers.component').then(m => m.DesignersComponent)
-  },
-  {
+  },  {
     path: 'chats',
     loadChildren: () => import('./features/chat/chat.module').then(m => m.ChatModule),
+    canActivate: [() => import('./shared/guards/auth.guard').then(m => m.authGuard)]
+  },
+  {
+    path: 'payment/:offerId',
+    loadComponent: () => import('./features/payment/components/payment.component').then(m => m.PaymentComponent),
+    canActivate: [() => import('./shared/guards/auth.guard').then(m => m.authGuard)]
+  },
+  {
+    path: 'orders',
+    loadComponent: () => import('./features/orders/components/orders.component').then(m => m.OrdersComponent),
+    canActivate: [() => import('./shared/guards/auth.guard').then(m => m.authGuard)]
+  },
+  {
+    path: 'orders/:id',
+    loadComponent: () => import('./features/orders/components/order-detail.component').then(m => m.OrderDetailComponent),
     canActivate: [() => import('./shared/guards/auth.guard').then(m => m.authGuard)]
   }
 ];
